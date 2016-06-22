@@ -1,0 +1,5 @@
+token = '202015838966397724415948304821134716232363283729412312713'
+language = 'python'
+framework = 'unittest'
+output_directory = 'C:\Users\bzalakos\Desktop\Snippets-1\py\hiptest\'
+push_format = 'tap'

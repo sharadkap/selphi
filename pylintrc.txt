@@ -1,0 +1,3 @@
+[MESSAGES CONTROL]
+disable=W0312
+#W0312 is using tabs instead of spaces.

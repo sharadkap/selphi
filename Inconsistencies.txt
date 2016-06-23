@@ -57,3 +57,9 @@ VIC
 WA
 	Slide 3,4: BR has these two slides in the wrong order, with Where Is WA before Introducing WA
 	Slide 26: KR has this slide split into two.
+
+GOLF
+	Slide 19:
+		The View Enlarged Map button:	Default: 708, JP: 988, ID: 989
+		The Close Map button: Default: 710, ID: 994
+		The Next Button: Default: 706, ID: 990

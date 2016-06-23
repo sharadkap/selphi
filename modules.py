@@ -11,19 +11,20 @@ DRIVER.implicitly_wait(30)
 DRIVER.maximize_window()
 MINIWAIT = 0.5
 MOD_STEM = 'https://prod.aussiespecialist.com/content/asp/captivate/{0}_{1}/index.html'
-SCREENSHOT_DIR = os.path.split(__file__)[0]
+SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
 RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.txt')
+os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 def new_drag_drop(source: str, target: str):
 	"""Like the ActionChains drag and drop,
 	but updates the mouse position just after mousedown."""
 	# Command.MOVE_TO, desite taking a css id string, does not actually perform a DOM lookup.
-	def getid(lo):
+	def getid(loc):
 		"""Interpret whether input is a locator or a series or alternate locators."""
-		if isinstance(lo, str):
-			return DRIVER.find_element_by_id(lo).id
-		elif isinstance(lo, list):
-			return pick_from_possibilities(lo).id
+		if isinstance(loc, str):
+			return DRIVER.find_element_by_id(loc).id
+		elif isinstance(loc, list):
+			return pick_from_possibilities(loc).id
 		else:
 			raise TypeError('You broke it. String, or List only.')
 	source,	target = getid(source), getid(target)
@@ -68,7 +69,7 @@ def full_languages_modules_run():
 	"""Run all of the modules in all of the locales.
 	Might take a while, might not even work."""
 	# for mod in MODULES:
-	mod = MODULES[11]
+	mod = MODULES[14]
 	for lang in LANGS:
 	# lang = LANGS[12]
 		froze = True	# Not really, but how else to get into the while?
@@ -79,7 +80,7 @@ def full_languages_modules_run():
 				for elem in SCRIPTS[mod]:
 					domo(elem)
 				with open(RESULTS_FILE, mode='a') as log:
-					log.write('{2}: Module {0} in locale {1} passed without issue.'\
+					log.write('{2}: Module {0} in locale {1} passed without issue.\n'\
 						.format(mod, lang, time.asctime()))
 			except WebDriverException as ex:
 				# First, check if that was just the Loading Screen.
@@ -92,7 +93,7 @@ def full_languages_modules_run():
 					froze = True
 					continue	# Bit of a mess, but how else to 'redo' a For Iteration Step.
 				with open(RESULTS_FILE, mode='a') as log:
-					log.write('{3}: Module {0} in Locale {1} failed because "{2}".'\
+					log.write('\n{3}: Module {0} in Locale {1} failed because "{2}".\n'\
 						.format(mod, lang, ex.msg, time.asctime()))
 				dirname = os.path.join(SCREENSHOT_DIR, mod)
 				filename = dirname + r"\{}.png".format(lang.split('/')[0])
@@ -102,8 +103,8 @@ def full_languages_modules_run():
 					fil.write(imgdata)
 
 full_languages_modules_run()
-# DRIVER.get(MOD_STEM.format(LANGS[5], MODULES[11]))
-# for el in SCRIPTS[MODULES[11]]:
+# DRIVER.get(MOD_STEM.format(LANGS[8], MODULES[12]))
+# for el in SCRIPTS[MODULES[12]]:
 # 	domo(el)
 
 # Do remember to do this.

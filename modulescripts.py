@@ -657,9 +657,88 @@ RA_SCRIPT = ['Button_33', \
 's60_mc2_a', 'Button_674', 'Button_669', \
 'Button_684']
 
-WALKS_SCRIPT = []
+WALKS_SCRIPT = ['Button_33', \
+'Button_29', 'Button_30', 'Button_31', 'Button_18', \
+'Button_566', \
+'Button_720', \
+'Button_724', \
+'Button_270', 'Button_273', 'Button_268', \
+'Button_533', 'Button_534', 'Button_366', \
+'Button_593', \
+'Button_731', \
+'s27_tf1', 'Button_405', 'Button_400', \
+'Button_539', 'Button_540', 'Button_498', \
+'Button_579', \
+'Button_737', \
+'Button_743', \
+'Button_749', \
+'Button_755', \
+'Button_761', \
+'Button_767', \
+'Button_773', \
+('ACT_Drag1', 'ACT_Drop2'), ('ACT_Drag2', 'ACT_Drop1'), \
+	('ACT_Drag3', 'ACT_Drop3'), 'si14422', 'Button_106', \
+'s13_radio3', 'Button_235', 'Button_230', \
+'Button_669', 'Button_670', 'Button_666', \
+'Button_779', \
+'Button_785', \
+'s21_tf1', 'Button_357', 'Button_352', \
+('Text_Caption_1204', 'SmartShape_275'), ('Text_Caption_1205', 'SmartShape_272'), \
+	('Text_Caption_1206', 'SmartShape_273'), 'Button_26', 'Button_550', \
+'Button_806', 'Button_807', 'Button_803', \
+'Button_791', \
+'Button_811', \
+'s35_tf2', 'Button_463', 'Button_458', \
+'Button_821', 'Button_822', 'Button_818', \
+'Button_826', \
+'Button_832', \
+'s38_tf1', 'Button_489', 'Button_484', \
+'Button_835', \
+'Button_859', \
+'Button_525']
 
-WINE_SCRIPT = []
+WINE_SCRIPT = ['Button_33', \
+'Button_29', 'Button_30', 'Button_31', 'Button_18', \
+'Button_195', \
+'Button_566', \
+'Button_527', 'Button_528', 'Button_56', \
+'Button_573', \
+'Button_579', \
+'Button_585', \
+('ACT_Drag2', 'ACT_Drop1'), ('ACT_Drag1', 'ACT_Drop2'), \
+	('ACT_Drag3', 'ACT_Drop3'), 'si14422', 'Button_106', \
+'Button_588', 'Button_273', 'Button_268', \
+'Button_533', 'Button_534', 'Button_366', \
+'Button_593', \
+'Button_599', \
+'s27_tf1', 'Button_405', 'Button_400', \
+'s13_radio1', 'Button_235', 'Button_230', \
+'Button_609', 'Button_720', 'Button_606', \
+'Button_614', \
+'Button_620', \
+'Button_630', 'Button_721', 'Button_627', \
+'Button_647', \
+('Text_Caption_1204', 'SmartShape_273'), ('Text_Caption_1205', 'SmartShape_272'), \
+	('Text_Caption_1206', 'SmartShape_275'), 'Button_26', 'Button_550', \
+'Button_531', 'Button_532', 'Button_297', \
+'Button_653', \
+'s21_tf1', 'Button_357', 'Button_352', \
+'Button_537', 'Button_538', 'Button_472', \
+'Button_659', \
+'Button_669', 'Button_722', 'Button_666', \
+'Button_674', \
+'Button_684', 'Button_724', 'Button_681', \
+'Button_689', \
+('Text_Caption_1218', 'SmartShape_281'), ('Text_Caption_1217', 'SmartShape_282'), \
+	('Text_Caption_1219', 'SmartShape_284'), 'Button_28', 'Button_556', \
+'s35_tf1', 'Button_463', 'Button_458', \
+'Button_539', 'Button_540', 'Button_498', \
+'Button_695', \
+'Button_705', 'Button_725', 'Button_702', \
+'Button_710', \
+'Button_716', \
+'s38_tf2', 'Button_489', 'Button_484', \
+'Button_525']
 
 SCRIPTS = {MODULES[0]: MOD_1_SCRIPT, MODULES[1]: MOD_2_SCRIPT, MODULES[2]: MOD_3_SCRIPT, \
 MODULES[3]: ACT_SCRIPT, MODULES[4]: NSW_SCRIPT, MODULES[5]: NT_SCRIPT, \

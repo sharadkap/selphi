@@ -7,13 +7,34 @@ Because scrolling through all this really was tiresome."""
 # DE's nasty habit of picking button ids which are the same number as another locale's
 # Open Menu Button, so the z-index is added to be more specific.
 
-LANGS = ['en_ca/ca_en', 'en_in/in_en', 'en_my/my_en', 'en_sg/sg_en', 'en_uk/uk_en', 'en_us/us_en', \
-	'en_hk/hk_en', 'zh_hk/hk_zh', 'id_id/id_id', 'ja_jp/jp_ja', 'ko_kr/kr_ko', \
-	'pt_br/br_pt', 'es_cl/cl_es', 'de_de/de_de', 'fr_fr/fr_fr', 'it_it/it_it']
+LANGS_D = {'ca': 'en_ca/ca_en', 'in': 'en_in/in_en', 'my': 'en_my/my_en', \
+	'sg': 'en_sg/sg_en', 'gb': 'en_uk/uk_en', 'us': 'en_us/us_en', \
+'ehk':'en_hk/hk_en', 'zhk':'zh_hk/hk_zh', 'id': 'id_id/id_id', \
+	'jp': 'ja_jp/jp_ja', 'kr': 'ko_kr/kr_ko', \
+'br': 'pt_br/br_pt', 'cl': 'es_cl/cl_es', 'de': 'de_de/de_de', \
+	'fr': 'fr_fr/fr_fr', 'it': 'it_it/it_it'}
 
-MODULES = ['core_mod1', 'core_mod2', 'core_mod3', \
-'sto_act', 'sto_nsw', 'sto_nt', 'sto_qld', 'sto_sa', 'sto_tas', 'sto_vic', 'sto_wa', \
-'niche_aboriginal', 'niche_golf', 'niche_lodges', 'niche_ra', 'niche_walks', 'niche_wine']
+LANGS = {'ca': 'en-ca', 'in': 'en-in', 'my': 'en-my', 'sg': 'en-sg', \
+	'gb': 'en-gb', 'us': 'en-us', \
+'ehk': 'en-hk', 'zhk': 'zh-hk', 'id': 'id-id', 'jp': 'ja-jp', 'kr': 'ko-kr', \
+'br': 'pt-br', 'cl': 'es-cl', 'de': 'de-de', 'fr': 'fr-fr', 'it': 'it-it'}
+
+MODULES_D = {'1': 'core_mod1', '2': 'core_mod2', '3': 'core_mod3', \
+'act': 'sto_act', 'nsw': 'sto_nsw', 'nt': 'sto_nt', 'qld': 'sto_qld', \
+	'sa': 'sto_sa', 'tas': 'sto_tas', 'vic': 'sto_vic', 'wa': 'sto_wa', \
+'aboriginal': 'niche_aboriginal', 'golf': 'niche_golf', 'lodges': 'niche_lodges', \
+	'ra': 'niche_ra', 'walks': 'niche_walks', 'wine': 'niche_wine'}
+
+# So this happened.
+M = 'mandatory-modules/core-module'
+OPT = 'optional-modules/'
+S = OPT + 'state-and-territory/sto_'
+N = OPT + 'niche/niche_'
+MODULES = {'1': M + '1', '2': M + '2', '3': M + '3', \
+'act': S + 'act', 'nsw': S + 'nsw', 'nt': S + 'nt', 'qld': S + 'qld', \
+	'sa': S + 'sa', 'tas': S + 'tas', 'vic': S + 'vic', 'wa': S + 'wa', \
+'aboriginal': N + 'aboriginal', 'golf': N + 'golf', 'lodges': N + 'lodges', \
+	'ra': N + 'ra', 'walks': N + 'walks', 'wine': N + 'winery'}
 
 MOD_1_SCRIPT = ['Button_728', \
 ['Button_891', 'Button_902', 'Button_903', 'Button_953', \
@@ -740,9 +761,8 @@ WINE_SCRIPT = ['Button_33', \
 's38_tf2', 'Button_489', 'Button_484', \
 'Button_525']
 
-SCRIPTS = {MODULES[0]: MOD_1_SCRIPT, MODULES[1]: MOD_2_SCRIPT, MODULES[2]: MOD_3_SCRIPT, \
-MODULES[3]: ACT_SCRIPT, MODULES[4]: NSW_SCRIPT, MODULES[5]: NT_SCRIPT, \
-MODULES[6]: QLD_SCRIPT, MODULES[7]: SA_SCRIPT, MODULES[8]: TAS_SCRIPT, \
-MODULES[9]: VIC_SCRIPT, MODULES[10]: WA_SCRIPT, \
-MODULES[11]: ABORIGINAL_SCRIPT, MODULES[12]: GOLF_SCRIPT, MODULES[13]: LODGES_SCRIPT, \
-MODULES[14]: RA_SCRIPT, MODULES[15]: WALKS_SCRIPT, MODULES[16]: WINE_SCRIPT}
+SCRIPTS = {'1': MOD_1_SCRIPT, '2': MOD_2_SCRIPT, '3': MOD_3_SCRIPT, \
+'act': ACT_SCRIPT, 'nsw': NSW_SCRIPT, 'nt': NT_SCRIPT, 'qld': QLD_SCRIPT, \
+'sa': SA_SCRIPT, 'tas': TAS_SCRIPT, 'vic': VIC_SCRIPT, 'wa': WA_SCRIPT, \
+'aboriginal': ABORIGINAL_SCRIPT, 'golf': GOLF_SCRIPT, 'lodges': LODGES_SCRIPT, \
+'ra': RA_SCRIPT, 'walks': WALKS_SCRIPT, 'wine': WINE_SCRIPT}

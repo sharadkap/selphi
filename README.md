@@ -14,16 +14,16 @@ Placeholder for Python Selenium scripts
 
 ## Execution
 Currently, the ASP Website test suite is under refurbishment.
-The ASP Modules test suite is functionally complete, but lacks any sort of GUI or even CLI. 
-* Currently, to customize the suite, go to lines 71-74, and add comments and change indentation, or set the specific module/locale as needed.
-* To run an individual module, go to lines 105-108 and invert comments.
-* Changing the browser used will require altering lines 4 and 9.
-
-Simple command line arguments likely to be done first, along with a short .cmd file.
+The ASP Modules test suite is functionally complete, (except for logged in mode, be sure to use the `-d` flag!) and has a rudimentary CLI:
+* Opening the script from Windows Explorer will begin a test of all modules in all locales.
+* To customise the suite of tests to run, run the script from the command line, using the `-l`/`--locales` and `-m`/`--modules` options, use the `-h` option for specific values.
+* By default, will access the modules within the website, use the `-d`/`--direct` option to access the modules directly.
+* Chrome is the default browser used, can be changed with the `-b`/`--browser` option.
+	* Currently, Firefox is undergoing a transition to a new webdriver, FF47 is incompatible with selenium 2.5~something for now.
 
 A dialog box with a series of buttons and/or checkboxes may follow.
 
 ##Note
-When the test is running, refrain from moving the mouse pointer around the active window.
+When the test is running, refrain from moving the mouse pointer around in the active window.
 
-The Drag+Drop actions use emulated mouse position, and a real mouse position *will* interfere, likely breaking execution.
+The Drag+Drop actions use mouse position, so moving the mouse around will interfere with that, likely breaking execution.

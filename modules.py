@@ -78,9 +78,11 @@ def click_surely(ele):
 		DRIVER.execute(Command.CLICK)
 
 def pick_from_possibilities(locator):
-	"""Deal with alternate ids. Use a css selector to get any proposed elements."""
+	"""Deal with alternate ids. Use a css selector to get any proposed elements.
+	#projectBorder, while always present, comes before basically everything else in the DOM,
+	so grabbing the last one from the list should be a safe way to find the intended one."""
 	eles = DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))
-	return eles[0]
+	return eles.pop()
 
 def full_languages_modules_run(langfilter=None, modfilter=None):
 	"""Run the selected set of modules and locales, logging results,

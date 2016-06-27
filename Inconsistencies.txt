@@ -22,6 +22,8 @@ Core 2
 	Slide 2: The Next button.
 		Default: Button_3068
 		ID, ZH_HK, DE: Button_945
+	Slide 3: Those are not actual alternate ids, it's just that the map comes with
+		three sets of buttons for each completion stage.
 
 Core 3
 	Slide 4

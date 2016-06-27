@@ -4,7 +4,9 @@ Because scrolling through all this really was tiresome.
 Legend:
 Each new line represents a different slide, unless it is indented, in which case
 the line was just too long, and was wrapped to improve readability.
-Except those nine large blocks in mod2, that just looked better that way.
+Except those stateblocks in mod2, those aren't all on one slide, it just looked better.
+Also, VIC actually comes just after ACT in terms of slide number, but
+the NSW complete icon bounding box kind of interferes with it otherwise.
 
 A List, like ['Button_001', 'Button_010', 'Button_100'], is a workaround
 for alternate button ids. A css query is created that checks for the presence
@@ -53,7 +55,9 @@ MODULES = {'1': M + '1', '2': M + '2', '3': M + '3', \
 	'ra': N + 'ra', 'walks': N + 'walks', 'wine': N + 'winery'}
 
 MOD_1_SCRIPT = ['Button_728', \
-'Button_887', 'Button_890', 'Button_885', 'Button_889', 'Button_886', 'Button_888', \
+['Button_887', 'projectBorder'], ['Button_890', 'projectBorder'], \
+	['Button_885', 'projectBorder'], ['Button_889', 'projectBorder'], \
+	['Button_886', 'projectBorder'], ['Button_888', 'projectBorder'], \
 	['Button_891', 'Button_902', 'Button_903', 'Button_953', \
 	'Button_918', 'Button_900[style*="z-index: 15"]'], \
 'Button_484', 'Button_485', 'Button_554', \
@@ -83,58 +87,90 @@ MOD_1_SCRIPT = ['Button_728', \
 
 MOD_2_SCRIPT = ['P1_btn_LetsStart', \
 'Button_2815', 'Button_2816', ['Button_3068', 'Button_945'], \
-'map_qld', \
-	'Button_1791', 'Button_1789', 'Button_1817', 'Button_1961', 'Button_1971', \
-	'Button_2998', 'Button_3000', 'Button_1819', \
+['map_qld', 'Button_2878'], \
+	'Button_1791', \
+	'Button_1789', \
+	'Button_2617', 'Button_2649', 'Button_1817', \
+	'Button_2618', 'Button_2657', 'Button_1961', \
+	'Button_2619', 'Button_2658', 'Button_1971', \
+	'Button_2620', 'Button_2659', 'Button_2998', 'Button_3000', 'Button_1819', \
 	('Drag_GBR', 'drop_gbr'), ('Drag_Wildlife', 'drop_wild'), \
 		('Drag_IslandsBeaches', 'drop_island'), 'Button_15', 'Button_2688', \
 	('answer_nature', 'drop_nature'), ('answer_events', 'drop_events'), \
 		('answer_southbank', 'drop_southbank'), 'Button_17', 'qld_next', \
-'map_vic', \
-	'Button_2094', 'Button_2083', 'Button_2104', 'Button_2159', 'Button_2169', \
-	'Button_2457', 'Button_2459', 'Button_2455', \
+['map_vic', 'Button_2874'], \
+	'Button_2094', \
+	'Button_2083', \
+	'Button_2629', 'Button_2668', 'Button_2104', \
+	'Button_2630', 'Button_2669', 'Button_2159', \
+	'Button_2631', 'Button_2670', 'Button_2169', \
+	'Button_2632', 'Button_2671', 'Button_2457', 'Button_2459', 'Button_2455', \
 	('Drag_Yarra', 'drop_yarra'), ('Drag_Phillip', 'drop_phillip'), \
 		('Drag_GOR', 'drop_gor'), 'Button_26', 'Button_2710', \
 	('answer_fitzroy', 'drop_fitzroy'), ('answer_south', 'drop_south'), \
 		('answer_lane', 'drop_lane'), 'Button_50', 'vic_next', \
-'map_nsw', \
-	'Button_2002', 'Button_2077', 'Button_2012', 'Button_2022', 'Button_2471', \
-	'Button_2441', 'Button_2443', 'Button_2439', \
+['map_nsw', 'Button_2873'], \
+	'Button_2002', \
+	'Button_2077', \
+	'Button_2621', 'Button_2660', 'Button_2012', \
+	'Button_2622', 'Button_2661', 'Button_2022', \
+	'Button_2623', 'Button_2662', 'Button_2471', \
+	'Button_2624', 'Button_2663', 'Button_2441', 'Button_2443', 'Button_2439', \
 	('Drag_Byron', 'drop_byron'), ('Drag_Hunter', 'drop_hunter'), \
 		('Drag_BlueMountains', 'drop_blue_mountain'), 'Button_19', 'Button_2702', \
 	('answer_beaches', 'drop_beaches'), ('answer_opera', 'drop_opera'), \
 		('answer_harbour', 'drp_harbour'), 'Button_46', 'nsw_next', \
-'map_act', \
-	'Button_1892', 'Button_1881', 'Button_1902', 'Button_1981', 'Button_1991', \
-	'Button_3004', 'Button_3006', 'Button_1912', \
+['map_act', 'Button_2875'], \
+	'Button_1892', \
+	'Button_1881', \
+	'Button_2625', 'Button_2664', 'Button_1902', \
+	'Button_2626', 'Button_2665', 'Button_1981', \
+	'Button_2627', 'Button_2666', 'Button_1991', \
+	'Button_2628', 'Button_2667', 'Button_3004', 'Button_3006', 'Button_1912', \
 	('Drag_Food', 'drop_food'), ('Drag_Family', 'drop_family'), \
 		('Drag_Art', 'drop_art'), 'Button_22', 'Button_2706', \
 	('answer_gallery', 'drop_gallery'), ('answer_museum', 'drop_museum'), \
 		('answer_awm', 'drop_awm'), 'Button_54', 'act_next', \
-'map_tas', \
-	'Button_2184', 'Button_2173', 'Button_2194', 'Button_2234', 'Button_2224', \
-	'Button_3010', 'Button_3012', 'Button_2481', \
+['map_tas', 'Button_2877'], \
+	'Button_2184', \
+	'Button_2173', \
+	'Button_2633', 'Button_2672', 'Button_2194', \
+	'Button_2634', 'Button_2673', 'Button_2234', \
+	'Button_2635', 'Button_2674', 'Button_2224', \
+	'Button_2636', 'Button_2675', 'Button_3010', 'Button_3012', 'Button_2481', \
 	('Drag_CradleMountain', 'drop_cradle'), ('Drag_Strahan', 'drop_strahan'), \
 		('Drag_Freycinet', 'drop_freycinet'), 'Button_30', 'Button_2714', \
 	('answer_mount', 'drop_mount'), ('answer_market', 'drop_market'), \
 		('answer_mona', 'drop_mona'), 'Button_58', 'tas_next', \
-'map_sa', \
-	'Button_2249', 'Button_2238', 'Button_2259', 'Button_2289', 'Button_2299', \
-	'Button_2508', 'Button_2510', 'Button_2506', \
+['map_sa', 'Button_2876'], \
+	'Button_2249', \
+	'Button_2238', \
+	'Button_2637', 'Button_2676', 'Button_2259', \
+	'Button_2638', 'Button_2677', 'Button_2289', \
+	'Button_2639', 'Button_2678', 'Button_2299', \
+	'Button_2640', 'Button_2679', 'Button_2508', 'Button_2510', 'Button_2506', \
 	('Drag_Flinders', 'drop_flindert'), ('Drag_KangarooIsland', 'drop_kangaroo'), \
 		('Drag_Barossa', 'drop_barossa'), 'Button_34', 'Button_2718', \
 	('answer_glenelg', 'drop_glenelg'), ('answer_north', 'drop_north'), \
 		('answer_market_ade', 'drop_market_ade'), 'Button_62', 'sa_next', \
-'map_wa', \
-	'Button_2314', 'Button_2303', 'Button_2324', 'Button_2354', 'Button_2364', \
-	'Button_3016', 'Button_3018', 'Button_2538', \
+['map_wa', 'Button_2880'], \
+	'Button_2314', \
+	'Button_2303', \
+	'Button_2641', 'Button_2680', 'Button_2324', \
+	'Button_2642', 'Button_2681', 'Button_2354', \
+	'Button_2643', 'Button_2682', 'Button_2364', \
+	'Button_2644', 'Button_2683', 'Button_3016', 'Button_3018', 'Button_2538', \
 	('Drag_Margaret', 'drop_margaret'), ('Drag_Ningaloo', 'drop_ningaloo'), \
 		('Drag_Kimberley', 'drop_kimberley'), 'Button_38', 'Button_2722', \
 	('answer_parks', 'drop_parks'), ('answer_rottnest', 'drop_rottnest'), \
 		('answer_fremantle', 'drop_fremantle'), 'Button_66', 'wa_next', \
-'map_nt', \
-	'Button_2379', 'Button_2368', 'Button_2389', 'Button_2419', 'Button_2429', \
-	'Button_2524', 'Button_2526', 'Button_2522', \
+['map_nt', 'Button_2879'], \
+	'Button_2379', \
+	'Button_2368', \
+	'Button_2645', 'Button_2684', 'Button_2389', \
+	'Button_2646', 'Button_2685', 'Button_2419', \
+	'Button_2647', 'Button_2686', 'Button_2429', \
+	'Button_2648', 'Button_2687', 'Button_2524', 'Button_2526', 'Button_2522', \
 	('Drag_Alice', 'drop_alice'), ('Drag_Kakadu', 'drop_kakadu'), \
 		('Drag_Uluru', 'drop_uluru'), 'Button_42', 'Button_2726', \
 	('answer_waterfront', 'drop_waterfront'), ('answer_market_dar', 'drop_market_dar'), \
@@ -167,24 +203,36 @@ MOD_3_SCRIPT = ['P1_btn_LetsStart', \
 'climate_but_temperate', 'climate_but_tropical', 'climate_but_guide', 'Button_2095', \
 'Button_2409', 'Button_2410', 'Button_2411', 'Button_2412', \
 	'Button_2413', 'Button_2414', 'Button_2087', \
-('Sydney_Drag', 'Sydney_Drop'), ('Uluru_Drag', 'Uluru_Drop'), \
-	('Cairns_Drag', 'Cairns_Drop'), ('PortDouglas_Drag', 'PourtDouglas_Drop'), \
-	('KataTjuta_Drag', 'KataTjuta_Drop'), ('HunterValley_Drag', 'Hunter_Blue_Drop1'), \
-	('BlueMountainsDrag', 'Hunter_Blue_Drop2'), ('GreatBarrierReef_Drag', 'GreatBarrierReef_Drop'), \
+'Button_2256', 'Button_2254', ('Sydney_Drag', 'Sydney_Drop'), \
+	'Button_2258', 'Button_2266', ('Uluru_Drag', 'Uluru_Drop'), \
+	'Button_2259', 'Button_2267', ('Cairns_Drag', 'Cairns_Drop'), \
+	'Button_2260', 'Button_2268', ('PortDouglas_Drag', 'PourtDouglas_Drop'), \
+	'Button_2261', 'Button_2269', ('KataTjuta_Drag', 'KataTjuta_Drop'), \
+	'Button_2262', 'Button_2270', ('HunterValley_Drag', 'Hunter_Blue_Drop1'), \
+	'Button_2263', 'Button_2271', ('BlueMountainsDrag', 'Hunter_Blue_Drop2'), \
+	'Button_2264', 'Button_2272', ('GreatBarrierReef_Drag', 'GreatBarrierReef_Drop'), \
 	'si124915', 'Button_2249', \
-'Button_1971', \
-('kangaroo_drag', 'kangaroo_drop'), ('adelaide_drag', 'adel_drop'), \
-	('hobart_drag', 'hobart_drop'), ('melbourne_drag', 'melbourne_drop'), \
-	('bruny_drag', 'bruny_drop'), ('phillip_drag', 'phillip_drop'), \
-	('barossa_drag', 'bar_drop'), 'Button_24', 'Button_2790', \
-'Button_1975', \
-('Drag_Margaret_River', 'drop_Margaret'), ('Drag_Perth', 'drop_perth'), \
-	('Drag_Canberra', 'dropCanberra'), ('Drag_Sydney', 'drop_sydney'), \
-	('Drag_SouthCoast', 'Drop_south'), ('Drag_Dolphin', 'drop_dolphin'), \
-	('Drag_HotAirBalloon', 'drop_hot'), ('Drag_Rottnest', 'drop_rottnest'), \
-	(['Drag_SydneyHarbourCruise', 'Drag_Sydney_Harbour'], \
-		'drop_harbour'), 'Button_20', 'Button_2766', \
-'Button_2713', \
+'Button_2643', 'Button_2644', 'Button_1971', \
+'Button_2792', 'Button_2803', ('kangaroo_drag', 'kangaroo_drop'), \
+	'Button_2793', 'Button_2804', ('adelaide_drag', 'adel_drop'), \
+	'Button_2794', 'Button_2805', ('hobart_drag', 'hobart_drop'), \
+	'Button_2795', 'Button_2806', ('melbourne_drag', 'melbourne_drop'), \
+	'Button_2796', 'Button_2807', ('bruny_drag', 'bruny_drop'), \
+	'Button_2797', 'Button_2808', ('phillip_drag', 'phillip_drop'), \
+	'Button_2798', 'Button_2809', ('barossa_drag', 'bar_drop'), \
+	'Button_24', 'Button_2790', \
+'Button_2601', 'Button_2600', 'Button_1975', \
+'Button_2768', 'Button_2779', ('Drag_Margaret_River', 'drop_Margaret'), \
+	'Button_2769', 'Button_2780', ('Drag_Perth', 'drop_perth'), \
+	'Button_2770', 'Button_2781', ('Drag_Canberra', 'dropCanberra'), \
+	'Button_2771', 'Button_2782', ('Drag_Sydney', 'drop_sydney'), \
+	'Button_2787', 'Button_2788', ('Drag_SouthCoast', 'Drop_south'), \
+	'Button_2772', 'Button_2783', ('Drag_Dolphin', 'drop_dolphin'), \
+	'Button_2773', 'Button_2784', ('Drag_HotAirBalloon', 'drop_hot'), \
+	'Button_2774', 'Button_2785', ('Drag_Rottnest', 'drop_rottnest'), \
+	'Button_2775', 'Button_2786', (['Drag_SydneyHarbourCruise', \
+		'Drag_Sydney_Harbour'], 'drop_harbour'), 'Button_20', 'Button_2766', \
+'Button_2718', 'Button_2720', 'Button_2713', \
 'Button_2238', \
 'Button_2969', 's24_yesSubmit', 'Button_2973', \
 'Button_2995']

@@ -1,11 +1,28 @@
 """Moved all these scripts to a separate file.
-Because scrolling through all this really was tiresome."""
-# In case is't not clear, something like ['Button_001', 'Button_010', 'Image_100']
-# is a workaround for a page missing. The Image, which should be picked to only
-# show up in the applicable locales, is there as a kind of noop.
-# Also, something like that 'Button_2510[style*="z-index: 6"]' option is due to
-# DE's nasty habit of picking button ids which are the same number as another locale's
-# Open Menu Button, so the z-index is added to be more specific.
+Because scrolling through all this really was tiresome.
+
+Legend:
+Each new line represents a different slide, unless it is indented, in which case
+the line was just too long, and was wrapped to improve readability.
+Except those nine large blocks in mod2, that just looked better that way.
+
+A List, like ['Button_001', 'Button_010', 'Image_100'], is a workaround
+for alternate button ids. A css query is created that checks for the presence
+of any of the given alternates, and if any are found (there should only be one),
+picks the first one and does whatever with it, usually a click.
+If the last one, like in the example, looks like a
+different category entirely, it means there was an entire page difference,
+and this one acts as a sort of no-op to assist in regaining synchronisation.
+Also, something like that 'Button_2510[style*="z-index: 6"]' option is due to
+DE's nasty habit of picking button ids which are the same number as another locale's
+Open Menu Button, so the z-index is added to be more specific.
+A Tuple, like ('s15_GBR', 'gbr_drop') signifies a Drag And Drop, with the first
+one being dragged to the second. Note, Tuples can contain Lists too."""
+
+USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
+'sg': 'sgprodyyw', 'gb': 'gbwwwvjvz', 'us': 'usprokcmi', \
+'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
+'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb'}
 
 LANGS_D = {'ca': 'en_ca/ca_en', 'in': 'en_in/in_en', 'my': 'en_my/my_en', \
 	'sg': 'en_sg/sg_en', 'gb': 'en_uk/uk_en', 'us': 'en_us/us_en', \
@@ -124,9 +141,9 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
 		('answer_croc', 'drop_croc'), 'Button_70', 'nt_next', \
 'Button_2881', \
 	('drag_syd', 'drop_sydney'), ('drag_per', 'drop_perth'), \
-	('drag_melb', 'drop_melbourne'), ('drag_hob', 'drop_hobart'), \
-	('drag_dar', 'drop_darwin'), ('drag_can', 'drop_canberra'), \
-	('drag_bris', 'drop_brisbane'), ('drag_ade', 'drop_adelaide'), 'Button_2854', \
+		('drag_melb', 'drop_melbourne'), ('drag_hob', 'drop_hobart'), \
+		('drag_dar', 'drop_darwin'), ('drag_can', 'drop_canberra'), \
+		('drag_bris', 'drop_brisbane'), ('drag_ade', 'drop_adelaide'), 'Button_2854', \
 	'Button_2804', \
 	'Button_2882']
 

@@ -2,4 +2,5 @@
 /REGR.tap
 /module_results.txt
 geckodriver.log
-__pycache__/modulescripts.cpython-35.pyc
+debug.log
+*.pyc

@@ -5,7 +5,7 @@ import argparse
 from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webdriver import WebDriverException
-from modulescripts import LANGS, LANGS_D, MODULES, MODULES_D, SCRIPTS
+from modulescripts import LANGS, LANGS_D, MODULES, MODULES_D, SCRIPTS, USERS
 
 BROWSERS = {'chrome': Chrome, 'firefox': Firefox, 'ie': Ie, 'safari': Safari, \
 'opera': Opera, 'edge': Edge}
@@ -16,22 +16,21 @@ PARSER.add_argument('-l', '--locales', help='Which locales to test. One or more 
 	Default is all.', nargs='+', type=str, choices=LANGS.keys(), metavar='')
 PARSER.add_argument('-b', '--browser', help='Which browser to use. One or more of [%(choices)s]. \
 	Default is %(default)s', nargs=1, default='chrome', choices=BROWSERS.keys(), metavar='')
-PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', action='store_true')
+PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
+	action='store_true')
 ARGS = PARSER.parse_args()
 
-DRIVER = BROWSERS[ARGS.browser[0]]()
-DRIVER.implicitly_wait(30)
-DRIVER.maximize_window()
 MINIWAIT = 0.5
+IMPLICITLY_WAIT = 15
+DRIVER = BROWSERS[ARGS.browser]()
+DRIVER.implicitly_wait(IMPLICITLY_WAIT)
+DRIVER.maximize_window()
 MOD_STEM_D = 'https://prod.aussiespecialist.com/content/asp/captivate/{0}_{1}/index.html'
 MOD_STEM = 'https://prod.aussiespecialist.com/{0}/secure/training/training-summary/{1}.html'
 SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
 RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.txt')
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
-CHECK_LOADED = '''x=function(){var n=window.$&&$("iframe[src^='/content/']")[0],
-				t=n&&n.contentWindow&&n.contentWindow.$("#ScormContent")[0];
-				return t&&t.contentWindow||n&&n.contentWindow||window}();
-				return Number(x.cpInfoCurrentSlide) === Number(x.cpInfoSlideCount);'''
+RESET_MODULE = 'cpCmndGotoSlide=0'
 
 def new_drag_drop(source: str, target: str):
 	"""Like the ActionChains drag and drop,
@@ -94,33 +93,50 @@ def full_languages_modules_run(langfilter=None, modfilter=None):
 		stem = MOD_STEM
 		mods = MODULES
 		langs = LANGS
-	for mod in modfilter or mods.keys():
-		for lang in langfilter or langs.keys():
-			froze = True	# Not really, but how else to get into the while?
-			while froze:
-				froze = False
-				try:
-					DRIVER.get(stem.format(langs[lang], mods[mod]))
-					for elem in SCRIPTS[mod]:
-						domo(elem)
-					with open(RESULTS_FILE, mode='a') as log:
-						log.write('{2}: Module {0} in locale {1} passed without issue.\n'\
-							.format(mod, lang, time.asctime()))
-				except WebDriverException as ex:
-					# First, check if that was just the Loading Screen.
-					if DRIVER.execute_script(CHECK_LOADED):
-						DRIVER.refresh()
-						froze = True
-						continue	# Bit of a mess, but how else to 'redo' a For Iteration Step.
-					with open(RESULTS_FILE, mode='a') as log:
-						log.write('\n{3}: Module {0} in Locale {1} failed because "{2}".\n'\
-							.format(mod, lang, ex.msg, time.asctime()))
-					dirname = os.path.join(SCREENSHOT_DIR, mod)
-					filename = dirname + r"\{}.png".format(lang.split('/')[0])
-					os.makedirs(dirname, exist_ok=True)
-					imgdata = DRIVER.get_screenshot_as_png()
-					with open(filename, mode='wb') as fil:
-						fil.write(imgdata)
+	for lang in langfilter or langs.keys():
+		# Logout between locales. Turns out, you can't delete PROD cookies while on WWW
+		if not ARGS.direct:
+			DRIVER.get(stem.split('{0}')[0])
+			DRIVER.delete_all_cookies()
+		for mod in modfilter or mods.keys():
+			try:
+				DRIVER.get(stem.format(langs[lang], mods[mod]))
+				log_in_first(lang)
+				if ARGS.direct:
+					log_in_first(lang)
+				for elem in SCRIPTS[mod]:
+					domo(elem)
+				with open(RESULTS_FILE, mode='a') as log:
+					log.write('{2}: Module {0} in locale {1} passed without issue.\n'\
+						.format(mod, lang, time.asctime()))
+			except WebDriverException as ex:
+				with open(RESULTS_FILE, mode='a') as log:
+					log.write('\n{3}: Module {0} in Locale {1} failed because "{2}".\n'\
+						.format(mod, lang, ex.msg, time.asctime()))
+				dirname = os.path.join(SCREENSHOT_DIR, mod)
+				filename = dirname + r"\{}.png".format(lang.split('/')[0])
+				os.makedirs(dirname, exist_ok=True)
+				imgdata = DRIVER.get_screenshot_as_png()
+				with open(filename, mode='wb') as fil:
+					fil.write(imgdata)
+
+def log_in_first(lang):
+	"""If testing with login, first, have to go and log in and everything.
+	As it happens, restarting the module will also fix the Loading Forever bug."""
+	if not ARGS.direct:
+		DRIVER.implicitly_wait(MINIWAIT)
+		if len(DRIVER.find_elements_by_id('link-logout')) == 0:
+			DRIVER.find_element_by_css_selector('.link-signin-text').click()
+			DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
+			DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
+			DRIVER.find_element_by_id('usersignin').click()
+		DRIVER.implicitly_wait(IMPLICITLY_WAIT)
+		iframe = DRIVER.find_element_by_css_selector('iframe[src^="/content/"]')
+		DRIVER.switch_to.frame(iframe)
+	# Make sure the module is loaded first?
+	time.sleep(2)
+	DRIVER.find_element_by_id('projectBorder')
+	DRIVER.execute_script(RESET_MODULE)
 
 full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
 

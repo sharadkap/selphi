@@ -10,16 +10,17 @@ Placeholder for Python Selenium scripts
   * `pip install tap.py`
 3. Download the WebDriver application for the browser(s) you intend to use, and ensure the executable is located on your PATH.
   * For example, place it in the Scripts directory of your Python installation.
+	* IE also requires that Protected Mode is set to the same value for every Security Level, set that in  the Security tab in IE's Internet Options dialog.
 4. Clone this repository to some location in which you have file create/write access.
 
 ## Execution
 Currently, the ASP Website test suite is under refurbishment.
-The ASP Modules test suite is functionally complete, (except for logged in mode, be sure to use the `-d` flag!) and has a rudimentary CLI:
+The ASP Modules test suite is functionally complete, and has a rudimentary CLI:
 * Opening the script from Windows Explorer will begin a test of all modules in all locales.
-* To customise the suite of tests to run, run the script from the command line, using the `-l`/`--locales` and `-m`/`--modules` options, use the `-h` option for specific values.
+* To customise the suite of tests to run, run the script from the command line, using the `-l`/`--locales` and `-m`/`--modules` options, use the `-h` option to get specific values.
 * By default, will access the modules within the website, use the `-d`/`--direct` option to access the modules directly.
 * Chrome is the default browser used, can be changed with the `-b`/`--browser` option.
-	* Currently, Firefox is undergoing a transition to a new webdriver, FF47 is incompatible with selenium 2.5~something for now.
+	* Currently, Firefox is undergoing a transition to a new webdriver, and so FF47 is incompatible with selenium 2.5~something for now.
 
 A dialog box with a series of buttons and/or checkboxes may follow.
 

@@ -11,7 +11,7 @@ Placeholder for Python Selenium scripts
 3. Download the WebDriver application for the browser(s) you intend to use, and ensure the executable is located on your PATH.
   * For example, place it in the Scripts directory of your Python installation.
 	* IE also requires that Protected Mode is set to the same value for every Security Level, set that in  the Security tab in IE's Internet Options dialog.
-4. Clone this repository to some location in which you have file create/write access.
+4. Clone or download this repository to some location in which you have file create/write access.
 
 ## Execution
 Currently, the ASP Website test suite is under refurbishment.

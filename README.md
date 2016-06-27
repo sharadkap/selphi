@@ -28,3 +28,5 @@ A dialog box with a series of buttons and/or checkboxes may follow.
 When the test is running, refrain from moving the mouse pointer around in the active window.
 
 The Drag+Drop actions use mouse position, so moving the mouse around will interfere with that, likely breaking execution.
+
+Don't mind that EOFError, it's a workaround for the debugger.

@@ -1,6 +1,6 @@
 @rem | Downloads the test run method identifiers from HipTest, then runs the python script that applies them to the results file,
 @rem | (Assuming that the test suite has already been run), then finally, uploads the newly-converted file to HipTest again. 
-@rem | To use: navigate to this folder in cmd.exe, then execute 'hipub X', where X is the Test Run ID.
+@rem | To use: run this, and input the Test Run ID when prompted.
 
 @set /p testid="Enter Test Run ID for this run: "
 

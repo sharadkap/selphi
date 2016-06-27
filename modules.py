@@ -1,10 +1,13 @@
-"""Test file, seeing how well the Modules can be done."""
+"""Automated testing of the Modules"""
 import os
 import time
 import argparse
 from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webdriver import WebDriverException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from modulescripts import LANGS, LANGS_D, MODULES, MODULES_D, SCRIPTS, USERS
 
 BROWSERS = {'chrome': Chrome, 'firefox': Firefox, 'ie': Ie, 'safari': Safari, \
@@ -137,9 +140,17 @@ def log_in_first(lang):
 		DRIVER.implicitly_wait(IMPLICITLY_WAIT)
 		iframe = DRIVER.find_element_by_css_selector('iframe[src^="/content/"]')
 		DRIVER.switch_to.frame(iframe)
-	# Make sure the module is loaded first?
-	time.sleep(2)
-	DRIVER.find_element_by_id('projectBorder')
+	# Make sure the module is loaded first. Harder than it looks.
+	# First, make sure that something is in the DOM,
+	check = DRIVER.find_element_by_css_selector('[id^="Text_Caption_"]')
+	# Then, wait until it is actually drawn to the screen.
+	WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT)\
+		.until(EC.visibility_of(check))
+	# Then, wait until the loading overlay is gone.
+	WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT)\
+		.until_not(EC.visibility_of_element_located((By.ID, 'preloaderImage')))
+	# THEN, you can run the script that compensates for the loading screen breaking.
+	# Or a module being previously completed.
 	DRIVER.execute_script(RESET_MODULE)
 
 full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)

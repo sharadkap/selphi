@@ -17,12 +17,20 @@ Placeholder for Python Selenium scripts
 Currently, the ASP Website test suite is under refurbishment.
 The ASP Modules test suite is functionally complete, and has a rudimentary CLI:
 * Opening the script from Windows Explorer will begin a test of all modules in all locales.
-* To customise the suite of tests to run, run the script from the command line, using the `-l`/`--locales` and `-m`/`--modules` options, use the `-h` option to get specific values.
-* By default, will access the modules within the website, use the `-d`/`--direct` option to access the modules directly.
+* To customise the suite of tests, run the script from the command line, (with `py modules.py`) using the `-l`/`--locales` and `-m`/`--modules` options.
+* Use the `-h` option to get the list of possible values.
+* By default, it will access the modules within the website, use the `-d`/`--direct` option to access the modules directly.
 * Chrome is the default browser used, can be changed with the `-b`/`--browser` option.
 	* Currently, Firefox is undergoing a transition to a new webdriver, and so FF47 is incompatible with selenium 2.5~something for now.
 
 A dialog box with a series of buttons and/or checkboxes may follow.
+
+## Results
+After each module is completed (or failed), the execution status (and exception message) will be appended to `module_screenshots/module_results.csv` in the folder the repository was saved to (will be created if not already existing).
+
+In the case of a failure, a screenshot will be taken and saved as a PNG image file named after the locale, in a folder named after the module, in the `module_screenshots` folder.
+
+The selenium exceptions don't give a huge amount of information as to what went wrong, the screenshot should aid a manual investigation.
 
 ##Note
 When the test is running, refrain from moving the mouse pointer around in the active window.

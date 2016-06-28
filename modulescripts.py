@@ -12,7 +12,7 @@ A List, like ['Button_001', 'Button_010', 'Button_100'], is a workaround
 for alternate button ids. A css query is created that checks for the presence
 of any of the given alternates, and if any are found (there should only be one),
 picks the first one and does whatever with it, usually a click.
-If the last one is 'projectBorder', it means there was an entirely different page,
+If the last one is an 'Image_' or something, it means there was an entirely different page,
 and this acts as a sort of no-op to assist in regaining synchronisation.
 Also, something like that 'Button_2510[style*="z-index: 6"]' option is due to
 DE's nasty habit of picking button ids which are the same number as another locale's
@@ -55,11 +55,11 @@ MODULES = {'1': M + '1', '2': M + '2', '3': M + '3', \
 	'ra': N + 'ra', 'walks': N + 'walks', 'wine': N + 'winery'}
 
 MOD_1_SCRIPT = ['Button_728', \
-['Button_887', 'projectBorder'], ['Button_890', 'projectBorder'], \
-	['Button_885', 'projectBorder'], ['Button_889', 'projectBorder'], \
-	['Button_886', 'projectBorder'], ['Button_888', 'projectBorder'], \
-	['Button_891', 'Button_902', 'Button_903', 'Button_953', \
-	'Button_918', 'Button_900[style*="z-index: 15"]'], \
+['Button_902', 'Button_903', 'Button_953', 'Button_918', 'Button_900[style*="z-index: 15"]'], \
+	['Button_887', 'Text_Caption_375'], ['Button_890', 'Text_Caption_375'], \
+	['Button_885', 'Text_Caption_375'], ['Button_889', 'Text_Caption_375'], \
+	['Button_886', 'Text_Caption_375'], ['Button_888', 'Text_Caption_375'], \
+	['Button_891', 'Text_Caption_375'], \
 'Button_484', 'Button_485', 'Button_554', \
 's4_button2', 's4_button3', 's4_button4', 's4_button5', 'Button_836', 'Button_556', \
 ('s7Native', 'Image_95'), ('s7Reef', 'Image_95'), ('s7Forrect', 'Image_95'), \
@@ -75,9 +75,9 @@ MOD_1_SCRIPT = ['Button_728', \
 'radio_btn3', 'Button_826', 'Button_566', \
 's10_button2', 's10_button3', 's10_button4', 'Button_806', \
 ['Button_900', 'WhyIndiansLove_btn2', 'WhyMalaysiansLove_btn2', \
-		'WhySingaporeansLove_btn2', 's13_btn2', 'Button_935', 'projectBorder'], \
+		'WhySingaporeansLove_btn2', 's13_btn2', 'Button_935', 'Image_476'], \
 	['Button_901', 'WhyIndiansLove_btn3', 'WhyMalaysiansLove_btn3', \
-		'WhySingaporeansLove_btn3', 's13_btn3', 'Button_936', 'projectBorder'], \
+		'WhySingaporeansLove_btn3', 's13_btn3', 'Button_936', 'Image476'], \
 	['Button_908', 'Button_965', 'Button_1021', 'Button_1035', \
 		'Button_568', 'Button_943', 'Image_476'], \
 ('s15_GBR', 'gbr_drop'), ('s15_nt', 'NT_drop'), ('s15_SA', 'SA_drop'), ('s16_vic', 'VIC_drop'), \
@@ -431,8 +431,8 @@ TAS_SCRIPT = ['Button_2016', \
 'Button_2493', 'Button_2492', 'Button_1856', \
 'Button_1972', 'Button_1966', \
 ('Image_1621', 'dd_target'), 'si138403', 'Button_1978', \
-'Button_1986', ['Button_1987', 'projectBorder'], 'Button_1981', \
-	['Button_2504', 'Button_2510[style*="z-index: 6"]', 'projectBorder'], \
+'Button_1986', ['Button_1987', 'Image_1316'], 'Button_1981', \
+	['Button_2504', 'Button_2510[style*="z-index: 6"]', 'Image_1220'], \
 'Button_2114', 'Button_2175', 'Button_1862', \
 'Button_2139', 'Button_2173', 'Button_1873', \
 'Button_2500', 'Button_2501', 'Button_1895', \
@@ -528,7 +528,7 @@ WA_SCRIPT = ['Button_2016', \
 'Button_2468', 'Button_2509', 'Button_2424', 'Button_2427', 'Button_2421', \
 'a4_rb3', 'a4_submit', 'Button_2158', \
 'Button_2051', 'Button_2284', 'Button_2292', 'Button_2294', 'Button_2296', 'Button_2049', \
-'Button_2550', ['Button_2558', 'projectBorder'], \
+'Button_2550', ['Button_2558', 'tt1_img'], \
 'Button_2364', 'Button_2365', 'Button_2366', 'Button_2490', 'Button_2491', 'Button_2360', \
 'ff1_fact1', 'ff1_fact2', 'ff1_fact3', 'Button_1989', \
 'Button_2377', 'Button_2088', \

@@ -21,11 +21,16 @@ PARSER.add_argument('-b', '--browser', help='Which browser to use. One or more o
 	Default is %(default)s', nargs=1, default='chrome', choices=BROWSERS.keys(), metavar='')
 PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
 	action='store_true')
+PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding \
+	an element is missing. Default is %(default)s', default=15, type=int, nargs=1)
+PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
+	See https://docs.python.org/3/library/time.html#time.strftime for full formatting info. \
+	Default is %(default)s', default='%Y/%m/%d %H:%M', nargs=1)
 ARGS = PARSER.parse_args()
 
 MINIWAIT = 0.5
-IMPLICITLY_WAIT = 15
-TIME_FORMAT = '%Y/%m/%d %H:%M'
+IMPLICITLY_WAIT = ARGS.wait
+TIME_FORMAT = ARGS.timeformat
 DRIVER = BROWSERS[ARGS.browser]()
 DRIVER.implicitly_wait(IMPLICITLY_WAIT)
 DRIVER.maximize_window()

@@ -1,12 +1,15 @@
 """Test execution goes in here, but no browser interaction implementation details."""
 
-import unittest, re, random, hashlib
+import re
+import random
+import hashlib
+import unittest
 from tap import TAPTestRunner
 import drivery as DR
 import components as CP
 
-# The Main Test Suite.
 class REGR(unittest.TestCase):
+	"""The main test suite, a regression run of ASP Global"""
 	def setUp(self) -> None:
 		"""Called just before each test is run, sets up the browser and test records."""
 		# Initialise the browser connection.
@@ -41,25 +44,23 @@ class REGR(unittest.TestCase):
 		# Login and Register buttons should be present in the body content.
 		CP.BodyLoginButton()
 		CP.BodyRegisterButton()
-		elec('#loginCompButton > div > a.btn-primary.fancybox')
-		elec('#loginCompButton > div > a:nth-child(2)')
 		# The What You Can See Mosaic is displayed, contains five tiles.
-		self.assertEqual(len(elecs('.mosaic-item')), 5)
+		mosaic = CP.WhatYouCanSeeMosaic()
+		self.assertEqual(mosaic.tile_count(), 5)
 		# Play the video.
-		elec('.cts-icon-play').click()
+		video.play()
 		# Video loads and plays.
-		verf('.vjs-play-control')
+		self.assertTrue(video.is_playing())
 
 	def test_Navigation(self) -> None:
 		"""Checks that the contents of the Signed Out Nav Menu are correct."""
-		self.homepage()
+		DR.open_home_page()
 		# Click on 'About' in the Mega Menu.
-		about = elec('#nav-main-panel-1')
-		point(about)
+		about = CP.About()
+		about.point()
 		# The About section should have: About, Why Register,
 		# Program FAQ, Site Usage, Contact Us
-		aufi = blipper(about.find_element_by_css_selector)
-		aufi('[href*="about.html"]')
+		about.about().point()
 		aufi('[href*="about/benefits.html"]')
 		aufi('[href*="about/program-faq.html"]')
 		aufi('[href*="about/how-to-use-the-site.html"]')

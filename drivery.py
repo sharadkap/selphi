@@ -44,8 +44,8 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 # """A CSS description of the 'element-highlighted' style."""
 HIGHLIGHT_STYLE = 'background: yellow; border: 2px solid red; color: black;'
 
-def to_singleton(item) -> list:
-	"""This thing. Makes a thing into a list if it isn't already one."""
+def to_list(item) -> list:
+	"""Wraps the input into a list if it wasn't already one."""
 	return item if isinstance(item, list) else [item]
 
 def begin() -> None:
@@ -129,13 +129,13 @@ def blip_function(fiel: 'function -> WebElement') -> 'function -> WebElement':
 	# And return that new function.
 	return reul
 
-def check_visible_quick(selector: str) -> bool:
+def check_visible_quick(selector: str, within: WebElement=DRIVER) -> bool:
 	"""Look for an element without spending a lot of time polling the DOM.
 
 	Ususally used when asserting an element's absence, saves waiting the full timeout."""
 	DRIVER.implicitly_wait(SHORT_WAIT)
 	try:
-		element = DRIVER.find_element(by=By.CSS_SELECTOR, value=selector)
+		element = within.find_element(by=By.CSS_SELECTOR, value=selector)
 	except NoSuchElementException:
 		DRIVER.implicitly_wait(LONG_WAIT)
 		return False
@@ -155,4 +155,4 @@ def flashy_find_elements(selector: str, within: WebElement=DRIVER) -> [WebElemen
 
 	The browser-provided webdriver driver implementations seem to not return a
 	list when only one element matches, so fixing that here."""
-	return blip_element(to_singleton(within.find_elements_by_css_selector(selector)))
+	return blip_element(to_list(within.find_elements_by_css_selector(selector)))

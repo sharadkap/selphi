@@ -55,7 +55,8 @@ MODULES = {'1': M + '1', '2': M + '2', '3': M + '3', \
 	'ra': N + 'ra', 'walks': N + 'walks', 'wine': N + 'winery'}
 
 MOD_1_SCRIPT = ['Button_728', \
-['Button_902', 'Button_903', 'Button_953', 'Button_918', 'Button_900[style*="z-index: 15"]'], \
+['Button_902', 'Button_903', 'Button_953', 'Button_918', \
+	'Button_900[style*="z-index: 15"]', 'Text_Caption_632'], \
 	['Button_887', 'Text_Caption_375'], ['Button_890', 'Text_Caption_375'], \
 	['Button_885', 'Text_Caption_375'], ['Button_889', 'Text_Caption_375'], \
 	['Button_886', 'Text_Caption_375'], ['Button_888', 'Text_Caption_375'], \
@@ -77,7 +78,7 @@ MOD_1_SCRIPT = ['Button_728', \
 ['Button_900', 'WhyIndiansLove_btn2', 'WhyMalaysiansLove_btn2', \
 		'WhySingaporeansLove_btn2', 's13_btn2', 'Button_935', 'Image_476'], \
 	['Button_901', 'WhyIndiansLove_btn3', 'WhyMalaysiansLove_btn3', \
-		'WhySingaporeansLove_btn3', 's13_btn3', 'Button_936', 'Image476'], \
+		'WhySingaporeansLove_btn3', 's13_btn3', 'Button_936', 'Image_476'], \
 	['Button_908', 'Button_965', 'Button_1021', 'Button_1035', \
 		'Button_568', 'Button_943', 'Image_476'], \
 ('s15_GBR', 'gbr_drop'), ('s15_nt', 'NT_drop'), ('s15_SA', 'SA_drop'), ('s16_vic', 'VIC_drop'), \

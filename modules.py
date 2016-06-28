@@ -31,7 +31,7 @@ DRIVER.maximize_window()
 MOD_STEM_D = 'https://prod.aussiespecialist.com/content/asp/captivate/{0}_{1}/index.html'
 MOD_STEM = 'https://prod.aussiespecialist.com/{0}/secure/training/training-summary/{1}.html'
 SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
-RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.txt')
+RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 RESET_MODULE = 'cpCmndGotoSlide=0'
 
@@ -83,6 +83,8 @@ def click_surely(ele):
 def pick_from_possibilities(locator):
 	"""Deal with alternate ids. Use a css selector to get any proposed elements."""
 	eles = DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))
+	if len(eles) == 0:
+		raise WebDriverException("Didn't find {0}".format(locator))
 	return eles[0]
 
 def full_languages_modules_run(langfilter=None, modfilter=None):
@@ -96,32 +98,27 @@ def full_languages_modules_run(langfilter=None, modfilter=None):
 		stem = MOD_STEM
 		mods = MODULES
 		langs = LANGS
+	write_header_row(mods)
 	for lang in langfilter or langs.keys():
+		# New line in the results.
+		write_new_row(lang)
 		# Logout between locales. Turns out, you can't delete PROD cookies while on WWW
 		if not ARGS.direct:
 			DRIVER.get(stem.split('{0}')[0])
 			DRIVER.delete_all_cookies()
 		for mod in modfilter or mods.keys():
 			try:
+				# Try to do the module
 				DRIVER.get(stem.format(langs[lang], mods[mod]))
 				log_in_first(lang)
-				if ARGS.direct:
-					log_in_first(lang)
 				for elem in SCRIPTS[mod]:
 					domo(elem)
-				with open(RESULTS_FILE, mode='a') as log:
-					log.write('{2}: Module {0} in locale {1} passed without issue.\n'\
-						.format(mod, lang, time.asctime()))
+				write_success()
+			# Something goes wrong, document it and go to the next module.
 			except WebDriverException as ex:
-				with open(RESULTS_FILE, mode='a') as log:
-					log.write('\n{3}: Module {0} in Locale {1} failed because "{2}".\n'\
-						.format(mod, lang, ex.msg, time.asctime()))
-				dirname = os.path.join(SCREENSHOT_DIR, mod)
-				filename = dirname + r"\{}.png".format(lang.split('/')[0])
-				os.makedirs(dirname, exist_ok=True)
-				imgdata = DRIVER.get_screenshot_as_png()
-				with open(filename, mode='wb') as fil:
-					fil.write(imgdata)
+				write_failure(ex)
+				draw_failure(lang, mod)
+	write_footer_entry()
 
 def log_in_first(lang):
 	"""If testing with login, first, have to go and log in and everything.
@@ -148,6 +145,41 @@ def log_in_first(lang):
 	# THEN, you can run the script that compensates for the loading screen breaking.
 	# Or a module being previously completed.
 	DRIVER.execute_script(RESET_MODULE)
+
+def write_header_row(mods):
+	"""Adds the header row to the output file. Columns are for mods."""
+	with open(RESULTS_FILE, mode='a') as log:
+		log.write('"START: {0}",'.format(time.asctime()))	# Header corner.
+		log.write(','.join(mods).upper())
+
+def write_new_row(lang):
+	"""Adds a new line to the csv output file. Lines are for langs."""
+	with open(RESULTS_FILE, mode='a') as log:
+		log.write('\n' + lang.upper())
+
+def write_success():
+	"""Writes a successful outcome to the results."""
+	with open(RESULTS_FILE, mode='a') as log:
+		log.write(',"{0}: PASS"'.format(time.asctime()))
+
+def write_failure(ex):
+	"""Writes a failed outcome to the results."""
+	with open(RESULTS_FILE, mode='a') as log:
+		log.write(',"{0}: FAIL: {1}"'.format(time.asctime(), ex.msg.replace('"', '""')))
+
+def write_footer_entry():
+	"""Adds a bunch of newlines to the end of the file. Easier to read multiple runs."""
+	with open(RESULTS_FILE, mode='a') as log:
+		log.write('\n"FINISH: {0}"\n\n'.format(time.asctime()))
+
+def draw_failure(lang, mod):
+	"""Take a screenshot, save it to the screenshot folder."""
+	dirname = os.path.join(SCREENSHOT_DIR, mod)
+	filename = dirname + r"\{}.png".format(lang.split('/')[0])
+	os.makedirs(dirname, exist_ok=True)
+	imgdata = DRIVER.get_screenshot_as_png()
+	with open(filename, mode='wb') as fil:
+		fil.write(imgdata)
 
 full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
 

@@ -10,45 +10,43 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 	###Some Magic Numbers, default values.###
-"""This thing. Makes a thing into a list if it isn't already one."""
-TO_SINGLETON = lambda item: item if isinstance(item, list) else [item]
-"""Time, in seconds, for an element to remain highlighted when hit with blip()."""
+# """Time, in seconds, for an element to remain highlighted when hit with blip()."""
 BLINK_TIME = 0.5
-"""The default time, in seconds, to search the DOM before declaring an Element Not Found."""
+# """The default time, in seconds, to search the DOM before declaring an Element Not Found."""
 LONG_WAIT = 30
-"""Time in seconds to poll for something that should be absent or already here."""
+# """Time in seconds to poll for something that should be absent or already here."""
 SHORT_WAIT = 3
 
-"""The root website domain to access."""
+# """The root website domain to access."""
 BASE_URL = "https://www.aussiespecialist.cn"
-"""The Language-Country Code of the locale to test. Format: /\\w\\w-\\w\\w"""
+# """The Language-Country Code of the locale to test. Format: /\\w\\w-\\w\\w"""
 LOCALE = '/zh-cn'
-"""To aid in checking for Page Loaded Status, note the last link clicked. TODO: Add a property to this?"""
+# """To aid in checking for Page Loaded Status, note the last link clicked.
+	# TODO: Add a property to this?"""
 LAST_LINK = ''
 
-"""The Username with which to perform the test."""
+# """The Username with which to perform the test."""
 USERNAME = 'zhprozxcv'
-"""The password used with the given user."""
+# """The password used with the given user."""
 PASSWORD = 'Welcome1'
-"""The email address associated with the given user."""
+# """The email address associated with the given user."""
 EMAIL = 'testeratta@gmail.com'
 
-"""The main WebDriver runner reference."""
+# """The main WebDriver runner reference."""
 DRIVER = webdriver.Firefox()
 
-# Might use these later. They are the Module Page links.
-#bas = '/secure/training/training-summary/'
-#corm = 'mandatory-modules/core-module'
-#opti = 'optional-modules/state-and-territory/sto_'
-
-"""A Set of the full list of options in the splash page language selector."""
+# """A Set of the full list of options in the splash page language selector."""
 LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 	"/en-my.html", "/en-sg.html", "/id-id.html", "/de-de.html", "/zh-hk.html", \
 	"/en-hk.html", "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", \
 	"/pt-br.html", "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html", \
 	"https://www.aussiespecialist.cn/zh-cn"}
-"""A CSS description of the 'element-highlighted' style."""
+# """A CSS description of the 'element-highlighted' style."""
 HIGHLIGHT_STYLE = 'background: yellow; border: 2px solid red; color: black;'
+
+def to_singleton(item) -> list:
+	"""This thing. Makes a thing into a list if it isn't already one."""
+	return item if isinstance(item, list) else [item]
 
 def begin() -> None:
 	"""The test part calls this at the beginning of each test. Sets up DRIVER."""
@@ -157,4 +155,4 @@ def flashy_find_elements(selector: str, within: WebElement=DRIVER) -> [WebElemen
 
 	The browser-provided webdriver driver implementations seem to not return a
 	list when only one element matches, so fixing that here."""
-	return blip_element(TO_SINGLETON(within.find_elements_by_css_selector(selector)))
+	return blip_element(to_singleton(within.find_elements_by_css_selector(selector)))

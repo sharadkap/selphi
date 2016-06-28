@@ -4,5 +4,3 @@ module_results.txt
 geckodriver.log
 debug.log
 /__pycache__/*
-*.pyc
-*.pyc

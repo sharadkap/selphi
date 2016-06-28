@@ -1,4 +1,4 @@
-"""Test execution goes in here, but no browser interaction minutiae."""
+"""Test execution goes in here, but no browser interaction implementation details."""
 
 import unittest, re, random, hashlib
 from tap import TAPTestRunner
@@ -39,6 +39,8 @@ class REGR(unittest.TestCase):
 		# Video should be present.
 		video = CP.WelcomeVideo()
 		# Login and Register buttons should be present in the body content.
+		CP.BodyLoginButton()
+		CP.BodyRegisterButton()
 		elec('#loginCompButton > div > a.btn-primary.fancybox')
 		elec('#loginCompButton > div > a:nth-child(2)')
 		# The What You Can See Mosaic is displayed, contains five tiles.
@@ -133,24 +135,24 @@ class REGR(unittest.TestCase):
 		# Should link to the Sitemap page."
 		self.assertEqual(self.driver.current_url, self.base_url + self.locale + '/sitemap.html')
 		# Sitemap page should have links to each of the pages in the Nav Menu
-		navas = {x.get_attribute('href') for x in
-				 elecs('.main-nav-panel .nav-bar-nav.nav-bar-left a:not([href^="#"])')}
+		navas = {x.get_attribute('href') for x in \
+ 			elecs('.main-nav-panel .nav-bar-nav.nav-bar-left a:not([href^="#"])')}
 		simas = {x.get_attribute('href') for x in elecs('.sitemap a')}
 		self.assertTrue(navas.issubset(simas))
 		# And should also have Change Password, Unsubscribe, and Coming Soon links.
-		moras = {self.base_url + self.locale + x for x in
-				 ['/change.html', '/newsletter-unsubscribe.html', '/coming-soon.html']}
+		moras = {self.base_url + self.locale + x for x in \
+			 ['/change.html', '/newsletter-unsubscribe.html', '/coming-soon.html']}
 		self.assertTrue(moras.issubset(simas))
 
-	def search_for_results(self, FactMode: bool = False) -> None:
+	def search_for_results(self, FactMode: bool=False) -> None:
 		"""Randomly searches with a Filtered Search Component until it finds some results.
 
 		As the Fact Sheet one is different, includes a switch for whether it should
 		also check for the presence of a PDF Download link."""
 		# Enter Search Criteria into the Search Form dropdowns, Click Refresh Results,
 		for x in elecs('.atdw-refresh-results-wrapper select'):
-			x.send_keys(random.choice([y.get_attribute('value')
-									   for y in x.find_elements_by_tag_name('option')]))
+			x.send_keys(random.choice([y.get_attribute('value') \
+				for y in x.find_elements_by_tag_name('option')]))
 		elec('.btn-primary.transparent').click()
 		# Wait twice as long for loading, it is much slower than loading a page.
 		for i in range(impwa * 2):
@@ -325,7 +327,7 @@ class REGR(unittest.TestCase):
 		flf = elec('#flightFrom')
 		# Because it's a fancy custom select, can't just assign a value normally.
 		jeva('$(arguments[0]).val(arguments[1]).change();', flf,
-			 random.choice(flf.find_elements_by_css_selector(
+			 random.choice(flf.find_elements_by_css_selector(\
 				 'option:not([disabled]):not([value="0"])')).get_attribute('value'))
 		# Have to do them separately, as the To menu is not initially populated.
 		verf('#flightTo option:not([value="0"])')

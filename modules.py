@@ -25,7 +25,7 @@ PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding
 	an element is missing. Default is %(default)s', default=15, type=int, nargs=1)
 PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
 	See https://docs.python.org/3/library/time.html#time.strftime for full formatting info. \
-	Default is %(default)s', default='%Y/%m/%d %H:%M', nargs='+')
+	Default is %(default)s', default=['%Y/%m/%d %H:%M'], nargs='+', type=str)
 ARGS = PARSER.parse_args()
 
 MINIWAIT = 0.5
@@ -191,9 +191,8 @@ def draw_failure(lang, mod):
 	with open(filename, mode='wb') as fil:
 		fil.write(imgdata)
 
-full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
-
-# Do remember to do this.
-DRIVER.quit()
-
-raise EOFError("This is the end of the file.")
+if __name__ == '__main__':
+	full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
+	# Do remember to do this.
+	DRIVER.quit()
+	raise EOFError("This is the end of the file.")

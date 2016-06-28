@@ -25,6 +25,7 @@ ARGS = PARSER.parse_args()
 
 MINIWAIT = 0.5
 IMPLICITLY_WAIT = 15
+TIME_FORMAT = '%Y/%m/%d %H:%M'
 DRIVER = BROWSERS[ARGS.browser]()
 DRIVER.implicitly_wait(IMPLICITLY_WAIT)
 DRIVER.maximize_window()
@@ -98,7 +99,7 @@ def full_languages_modules_run(langfilter=None, modfilter=None):
 		stem = MOD_STEM
 		mods = MODULES
 		langs = LANGS
-	write_header_row(mods)
+	write_header_row(modfilter or mods)
 	for lang in langfilter or langs.keys():
 		# New line in the results.
 		write_new_row(lang)
@@ -146,10 +147,14 @@ def log_in_first(lang):
 	# Or a module being previously completed.
 	DRIVER.execute_script(RESET_MODULE)
 
+def get_time():
+	"""Get the time, and formatted as well."""
+	return time.strftime(TIME_FORMAT)
+
 def write_header_row(mods):
 	"""Adds the header row to the output file. Columns are for mods."""
 	with open(RESULTS_FILE, mode='a') as log:
-		log.write('"START: {0}",'.format(time.asctime()))	# Header corner.
+		log.write('"START: {0}",'.format(get_time()))	# Header corner.
 		log.write(','.join(mods).upper())
 
 def write_new_row(lang):
@@ -160,17 +165,17 @@ def write_new_row(lang):
 def write_success():
 	"""Writes a successful outcome to the results."""
 	with open(RESULTS_FILE, mode='a') as log:
-		log.write(',"{0}: PASS"'.format(time.asctime()))
+		log.write(',"{0}: PASS"'.format(get_time()))
 
 def write_failure(ex):
 	"""Writes a failed outcome to the results."""
 	with open(RESULTS_FILE, mode='a') as log:
-		log.write(',"{0}: FAIL: {1}"'.format(time.asctime(), ex.msg.replace('"', '""')))
+		log.write(',"{0}: FAIL: {1}"'.format(get_time(), ex.msg.replace('"', '""')))
 
 def write_footer_entry():
 	"""Adds a bunch of newlines to the end of the file. Easier to read multiple runs."""
 	with open(RESULTS_FILE, mode='a') as log:
-		log.write('\n"FINISH: {0}"\n\n'.format(time.asctime()))
+		log.write('\n"FINISH: {0}"\n\n'.format(get_time()))
 
 def draw_failure(lang, mod):
 	"""Take a screenshot, save it to the screenshot folder."""

@@ -3,4 +3,4 @@ REGR.tap
 module_results.txt
 geckodriver.log
 debug.log
-/__pycache__/*
+__pycache__/

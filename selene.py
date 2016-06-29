@@ -60,112 +60,87 @@ class REGR(unittest.TestCase):
 		about.point()
 		# The About section should have: About, Why Register,
 		# Program FAQ, Site Usage, Contact Us
-		about.about().point()
-		aufi('[href*="about/benefits.html"]')
-		aufi('[href*="about/program-faq.html"]')
-		aufi('[href*="about/how-to-use-the-site.html"]')
-		aufi('[href*="about/contact-us.html"]')
+		about.about()
+		about.benefits()
+		about.how_to_use_the_site()
+		about.program_faq()
+		about.contact_us()
 
 		# Click on 'Sales Resources' in the Mega Menu.
-		sales = elec('#nav-main-panel-2')
-		point(sales)
+		sales = CP.SalesResources()
+		sales.point()
 		# The Sales section should have: Sales Resources (Landing), Interactive Map,
 		# Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
 		# Itinerary Search, Australian Events, Destination FAQ
-		safi = blipper(sales.find_element_by_css_selector)
-		safi('[href*="sales-resources.html"]')
-		safi('[href*="sales-resources/interactive-map.html"]')
-		safi('[href*="sales-resources/itineraries-search-and-feature.html"]')
-		safi('[href*="sales-resources/fact-sheets-overview.html"]')
-		safi('[href*="sales-resources/events.html"]')
-		safi('[href*="sales-resources/useful-sites.html"]')
-		safi('[href*="sales-resources/destination-faq.html"]')
-		safi('[href*="sales-resources/image-and-video-galleries.html"]')
+		sales.sales-resources()
+		sales.interactive_map()
+		sales.itineraries_search_and_feature()
+		sales.fact_sheets_overview()
+		sales.events()
+		sales.useful_sites()
+		sales.destination_faq()
+		sales.image_and_video_galleries()
 
 		# Click on 'Training' in the Mega Menu.
-		train = elec('#nav-main-panel-3')
-		point(train)
+		train = CP.Training()
+		train.point()
 		# The Training section should have: *Training (Landing page only)
-		blipper(train.find_element_by_css_selector)('[href*="training.html"]')
+		train.training()
 
 		# Click on 'News & Products' in the Mega Menu.
-		news = elec('#nav-main-panel-4')
-		point(news)
+		news = CP.NewsAndProducts()
+		news.point()
 		# The News section should have: *News and Product Updates (Landing page only)
-		blipper(news.find_element_by_css_selector)('[href*="news-and-product-updates.html"]')
+		news.news_and_product_updates()
 
 		# Click on 'Aussie Specialist Club' in the Mega Menu.
-		club = elec('#nav-main-panel-5')
-		point(club)
+		club = CP.AussieSpecialistClub()
+		club.point()
 		# The Club section should have: *Aussie Specialist Club (Landing page only)
-		blipper(club.find_element_by_css_selector)('[href*="aussie-specialist-club.html"]')
+		club.aussie_specialist_club()
 
 	def test_Footer(self) -> None:
 		"""Checks the content of the Footer."""
-		self.homepage()
+		DR.open_home_page()
+		footer = CP.Footer()
 		# The Footer should have: Find us on: Social icons and links.
-		sofi = blipper(elec('.default-social-list').find_element_by_css_selector)
-		sofi('a[href="https://www.facebook.com/SeeAustralia"]')
-		sofi('a[href="https://twitter.com/australia"]')
-		sofi('a[href="https://plus.google.com/+australia"]')
-		sofi('a[href="http://instagram.com/australia"]')
-		sofi('a[href="http://www.youtube.com/user/australia"]')
+		footer.facebook()
+		footer.twitter()
+		footer.plus_google()
+		footer.instagram()
+		footer.youtube()
 		# About this site: links through to relevant pages
-		fiau = blipper(elec('.footer-type-light').find_element_by_css_selector)
-		fiau('a[href*="sitemap.html"]')
-		fiau('a[href*="privacy-policy.html"]')
-		fiau('a[href*="terms-and-conditions.html"]')
-		fiau('a[href*="terms-of-use.html"]')
-		fiau('a[href*="about/contact-us.html"]')
+		footer.sitemap()
+		footer.privacy_policy()
+		footer.terms_and_conditions()
+		footer.terms_of_use()
+		footer.contact_us()
 		# Other sites: Links through to Aus.com, Corporate site and Business Events.
-		fios = blipper(elec('.l-list-clean:not(.footer-type-light)').find_element_by_css_selector)
-		fios('a[href*="www.australia.com"]')
-		fios('a[href*="www.tourism.australia.com"]')
-		fios('a[href*="businessevents.australia.com/businessevents"]')
+		footer.australia()
+		footer.tourism_australia()
+		footer.businessevents_australia()
 		# Click the Change Your Country link.
-		elec('a[href="/splash.html"]').click()
+		footer.splash().click()
 		# Should link back to the Splash page.
-		verf('.splash-screen')
-		self.assertEqual(self.driver.current_url, self.base_url + '/splash.html')
+		DR.wait_for_page()
+		self.assertIn('/splash.html', DR.current_url)
 
 	def test_Sitemap(self) -> None:
 		"""Checks the Sitemap page links."""
-		self.homepage()
+		DR.open_home_page()
 		# Click the Sitemap link in the Footer.
-		elec('a[href*="sitemap.html"]').click()
+		CP.Footer().sitemap().click()
 		# Should link to the Sitemap page."
-		self.assertEqual(self.driver.current_url, self.base_url + self.locale + '/sitemap.html')
+		DR.wait_for_page()
+		self.assertIn('/sitemap.html', DR.current_url())
 		# Sitemap page should have links to each of the pages in the Nav Menu
-		navas = {x.get_attribute('href') for x in \
- 			elecs('.main-nav-panel .nav-bar-nav.nav-bar-left a:not([href^="#"])')}
-		simas = {x.get_attribute('href') for x in elecs('.sitemap a')}
-		self.assertTrue(navas.issubset(simas))
+		nav_links = CP.NavMenu().get_all_links()
+		sitemap_links = CP.Sitemap().get_all_links()
+		self.assertTrue(nav_links.issubset(sitemap_links))
 		# And should also have Change Password, Unsubscribe, and Coming Soon links.
-		moras = {self.base_url + self.locale + x for x in \
-			 ['/change.html', '/newsletter-unsubscribe.html', '/coming-soon.html']}
-		self.assertTrue(moras.issubset(simas))
-
-	def search_for_results(self, FactMode: bool=False) -> None:
-		"""Randomly searches with a Filtered Search Component until it finds some results.
-
-		As the Fact Sheet one is different, includes a switch for whether it should
-		also check for the presence of a PDF Download link."""
-		# Enter Search Criteria into the Search Form dropdowns, Click Refresh Results,
-		for x in elecs('.atdw-refresh-results-wrapper select'):
-			x.send_keys(random.choice([y.get_attribute('value') \
-				for y in x.find_elements_by_tag_name('option')]))
-		elec('.btn-primary.transparent').click()
-		# Wait twice as long for loading, it is much slower than loading a page.
-		for i in range(impwa * 2):
-			# If the Loading Bubbles are still present, keep waiting.
-			if nelec('.preload-no-transition-support-image.is-show-preload-animation'):
-				time.sleep(1)
-			else: break
-		else: self.fail("Loading Results Timed Out.")
-		# If no results are returned, try again, hopefully with different Search Terms.
-		if not nelec('.mosaic-item'): self.search_for_results()
-		# Factsheets test wants at least one PDF though
-		if FactMode and not nelec('.download-pdf'): self.search_for_results()
+		sitemap.change()
+		sitemap.newsletter_unsubscribe()
+		sitemap.coming_soon()
 
 	def look_at_search_results(self) -> None:
 		"""Validates the search results and the View More button."""

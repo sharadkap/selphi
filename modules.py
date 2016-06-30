@@ -18,7 +18,7 @@ PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more 
 PARSER.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
 	Default is all.', nargs='+', type=str, choices=LANGS.keys(), metavar='')
 PARSER.add_argument('-b', '--browser', help='Which browser to use. One or more of [%(choices)s]. \
-	Default is %(default)s', nargs=1, default='chrome', choices=BROWSERS.keys(), metavar='')
+	Default is %(default)s', nargs=1, default=['chrome'], choices=BROWSERS.keys(), metavar='')
 PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
 	action='store_true')
 PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding \
@@ -31,7 +31,7 @@ ARGS = PARSER.parse_args()
 MINIWAIT = 0.5
 IMPLICITLY_WAIT = ARGS.wait
 TIME_FORMAT = ' '.join(ARGS.timeformat)
-DRIVER = BROWSERS[ARGS.browser]()
+DRIVER = BROWSERS[ARGS.browser[0]]()
 DRIVER.implicitly_wait(IMPLICITLY_WAIT)
 DRIVER.maximize_window()
 MOD_STEM_D = 'https://prod.aussiespecialist.com/content/asp/captivate/{0}_{1}/index.html'

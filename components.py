@@ -1,5 +1,6 @@
 """Implements classes wrapping the behaviour for finding and manipulating web elements."""
 
+import re
 import random
 from selenium.webdriver.remote.webelement import WebElement
 import drivery as DR
@@ -182,6 +183,30 @@ class FilteredSearch(WrappedElement):
 	def __init__(self, fact_sheet_mode: bool=False) -> None:
 		self.element = DR.flashy_find_element('.filteredSearch')
 		self.fact_sheet_mode = fact_sheet_mode
+		# Hold up, have to wait for the initial results to come in first,
+		# they'll interrupt if they appear halfway through something else.
+		DR.quietly_find_element('.mosic-item')
+
+	class SearchResult(WrappedElement):
+		def __init__(self, which: WebElement):
+			self.element = which
+
+		def get_title(self) -> str:
+			"""Gets the page Title/Name of the result."""
+			return DR.flashy_find_element('.line-through-container', self.element).text()
+
+		def view_more_information(self) -> None:
+			"""Navigates to the result's main page, clicks the View More Info link."""
+			DR.flashy_find_element('.search-results-copy-container a', self.element)
+
+		def add_to_favourites(self) -> None:
+			"""Clicks the result's Heart Icon: Add To My Sales Tool Kit."""
+			DR.flashy_find_element('.search-favourite a', self.element)
+
+	def load_more(self) -> WrappedElement:
+		"""Clicks the Search Component's Load More button."""
+		DR.flashy_find_element('#btn-id', self.element).click()
+		DR.wait_until_gone('.filteredSearch .preload-image-wrapper img')
 
 	def random_search(self):
 		"""Picks random values in each of the search category droplists,
@@ -193,8 +218,28 @@ class FilteredSearch(WrappedElement):
 			DR.flashy_find_elements('#btn-id', self.element).click()
 			DR.wait_until_gone('.filteredSearch .preload-image-wrapper img')
 			# Check if any results are returned, and, if in Fact Sheet Mode, if any PDF links are present.
-			if(DR.check_visible_quick('.mosaic-item', self.element)):
+			if DR.check_visible_quick('.mosaic-item', self.element):
 				# If not in Fact mode, don't need pdf, so done. If in Fact, do need pdf.
 				if not self.fact_sheet_mode or (DR.check_visible_quick(\
 					'.mosaic-item-detail-container .search-favourite a[href$="pdf"]', self.element)):
 					break
+
+	def count_results(self) -> int:
+		"""Returns the number of search results currently displayed."""
+		return len(DR.flashy_find_elements('.mosaic-item', self.element))
+
+	def read_results_counter(self) -> (int, int) or None:
+		"""Returns the number of results the 'Showing X-Y of Z results' thing says there are:
+		A tuple as (shown, total), or a None if it's not shown, such as with Travel Club"""
+		counter = DR.flashy_find_element('.search-result-count-copy', self.element).text()
+		counter = [int(x) for x in re.findall(r'\d+', counter)]
+		if counter == []:
+			 return None
+		# Different languages can show the numbers in different orders.
+		counter.sort()
+		# The largest number has to be the total results, with the other two being 'this many shown'.
+		return (1 + counter[1] - counter[0], counter[2])
+
+	def get_random_result(self) -> WrappedElement:
+		"""Picks a random one from the search results."""
+		result = SearchResult()

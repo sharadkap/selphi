@@ -142,32 +142,20 @@ class REGR(unittest.TestCase):
 		sitemap.newsletter_unsubscribe()
 		sitemap.coming_soon()
 
-	def look_at_search_results(self) -> None:
+	def look_at_search_results(self, searcher: CP.FilteredSearch) -> None:
 		"""Validates the search results and the View More button."""
-		# If the counter is present on this page, count the number of results.
-		# Otherwise, never mind.
-		if nelec('.search-result-count-copy'):
-			# Get a list of all of the numbers that appear in the counter.
-			def shor():
-				return [int(x) for x in re.findall(r'\d+', elec('.search-result-count-copy').text)]
-			# Count the number of results.
-			co = len(elecs('.mosaic-item'))
-			# Different languages display the counter in different orders, so just make sure the
-			# right number is in there somewhere.
-			self.assertIn(co, shor())
-			# Click the View More button.
-			elec('.load-more').click()
-			# Wait for them to load.
-			for i in range(impwa * 2):
-				if nelec('.preload-no-transition-support-image.is-show-preload-animation'):
-					time.sleep(1)
-				else: break
-			else: self.fail("Loading More Timed Out.")
-			# At least five more results should be displayed, up to the maximum matching amount.
-			con = len(elecs('.mosaic-item'))
-			self.assertIn(con, shor())
-			self.assertTrue(con == co + 5 or con == max(shor()))
-		# Check the first result's title.
+		# If the counter is present on this page, validate it against the number of results.
+		count = searcher.read_results_counter()
+		if not count == None:
+			firstcount = searcher.count_results()
+			self.assertEqual(count[0], firstcount)
+			# Now see if it updates upon Loading More Results.
+			searcher.load_more()
+			secondcount = searcher.count_results()
+			count = searcher.read_results_counter()
+			# At most five more results should be displayed, up to the maximum matching amount.
+			self.assertEqual(secondcount, min(firstcount + 5, count[1]))
+		# Check a random result, make sure it links to the right page.
 		frst = elec('.mosaic-item')
 		firf = blipper(frst.find_element_by_css_selector)
 		nem = firf('.line-through-container-biline').text.casefold()
@@ -178,32 +166,32 @@ class REGR(unittest.TestCase):
 
 	def test_Filtered_Search__Itineraries(self) -> None:
 		"""Checks the Itineraries Search."""
-		self.homepage()
+		DR.open_home_page()
 		# Navigate to Sales Resources > Itinerary Suggestions.
-		point(elec('#nav-main-panel-2 > a'))
-		elec('#nav-main-panel-2 a[href*="itineraries-search-and-feature.html"]').click()
-		# First, wait until the initial results are loaded, or they'll interrupt later.
-		verf('.mosaic-item')
-		# Get some search results.
-		self.search_for_results()
-		# Check the search results
-		self.look_at_search_results()
+		sales = SalesResources()
+		sales.point()
+		sales.itineraries_search_and_feature().click()
+		# Do a random search.
+		search = CP.FilteredSearch()
+		search.random_search()
+		# Validate the search results
+		self.look_at_search_results(search)
 
 	def test_Filtered_Search__Fact_Sheets(self) -> None:
 		"""Tests the Fact Sheet Search."""
-		self.homepage()
+		DR.open_home_page()
 		# Navigate to Sales Resources > Fact Sheets.
-		point(elec('#nav-main-panel-2 > a'))
-		elec('#nav-main-panel-2 a[href*="fact-sheets-overview.html"]').click()
-		# First, wait until the initial results are loaded, or they'll interrupt later.
-		verf('.mosaic-item')
-		# Get Some Results. With a PDF download handy.
-		self.search_for_results(FactMode=True)
-		# Check the View More, look at one, should go to the right page.
+		sales = CP.SalesResources()
+		sales.point()
+		sales.fact_sheets_overview().click()
+		# Do a random search. In Fact Sheet Mode. So with PDF links.
+		search = CP.FilteredSearch(fact_sheet_mode=True)
+		search.random_search()
+		# Check the counting, the main link.
 		self.look_at_search_results()
-		# Click on a result's Download PDF link.
-		self.driver.back()
-		# Note the pdf source.
+		# Alright, done there back up.
+		DR.back()
+		# Click on a result's Download PDF link. Note the pdf source.
 		pdl = elec('.download-pdf')
 		pdh = pdl.get_attribute('href')
 		pdl.click()

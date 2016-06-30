@@ -40,7 +40,8 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 	"/pt-br.html", "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html", \
 	"https://www.aussiespecialist.cn/zh-cn"}
 # """A JS script that applies the 'element-highlighted' animation."""
-BLIP_SCRIPT = '$("head").append(<style>@keyframes selhian{50%{;background:yellow;}}</style>);\
+BLIP_SCRIPT = '$("head").append(<style>@keyframes selhian{0%{outline: 0px outset transparent;}\
+    50%{outline: 10px outset yellow;}100%{outline: 0px outset transparent;}}</style>);\
 	for(a of arguments[0]){window.scrollTo(0,a.getBoundingClientRect()\
 	.top+window.pageYOffset-window.innerHeight/2),a.style.animationDuration="0.5s",\
 	a.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, a)}'
@@ -75,6 +76,10 @@ def current_url() -> str:
 	"""Kind of a technicality. Returns the current url."""
 	return DRIVER.current_url
 
+def back() -> None:
+	"""The rule is, only the drivery module is allowed to invoke DRIVER."""
+	DRIVER.back()
+
 def wait_for_page() -> None:
 	"""Holds up execution until the current page's url contains the Last Link value
 	and its	document.readyState is 'complete'. A decent approximation?"""
@@ -89,7 +94,7 @@ def wait_until_gone(selector: str) -> None:
 
 ###Some methods to shorten Element Manipulation/Verification.###
 
-def blip_element(elle: 'WebElement or list(WebElement)') -> 'WebElement or list(WebElement)':
+def blip_element(elle: WebElement or list(WebElement)) -> WebElement or list(WebElement):
 	"""Scrolls (an) element(s) into view, and highlights (i)t(hem).
 	Returns the found element(s) as well, just for chaining purposes."""
 	# Kick off the highlight animation, list-wrapped for the sake of only writing one handler.

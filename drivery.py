@@ -1,6 +1,7 @@
 """This is where all the specific Webdriver implementation details go."""
 
 import time
+from types import FunctionType
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -91,6 +92,18 @@ def wait_until_gone(selector: str) -> None:
 	"""Holds up execution until the selectored element is not visibly present.
 	EC doesn't seem to support local searches, so be sure the selector is page-unique."""
 	WebDriverWait(DRIVER, LONG_WAIT).until(EC.invisibility_of_element_located(selector))
+
+def wait_until(condition: FunctionType) -> None:
+	"""Holds up execution, repeatedly calling the given function until it returns true."""
+	WebDriverWait(DRIVER, LONG_WAIT).until(condition())
+
+def switch_to_window(window: int) -> None:
+	"""Switch WebDriver's focus to the second open tab or window."""
+	DRIVER.switch_to.window(DRIVER.window_handles()[window])
+
+def switch_to_frame(selector: str) -> None:
+	"""Switches WebDriver's focus into the given iframe."""
+	DRIVER.switch_to.frame(flashy_find_element(selector))
 
 ###Some methods to shorten Element Manipulation/Verification.###
 

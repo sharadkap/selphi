@@ -19,6 +19,12 @@ class WrappedElement:
 		"""Moves the mouse cursor over the element."""
 		DR.execute_mouse_over(self.element)
 
+class MinorElement(WrappedElement):
+	"""Superclass for all the internally used minor elements; with no unique
+	properties, initialised with a css selector instead of self-founding."""
+	def __init__(self, selector: str, within: WrappedElement) -> None:
+		self.element = DR.flashy_find_element(selector, within)
+
 class SplashSelect(WrappedElement):
 	"""Represents the Language Selector on the Splash Page."""
 	def __init__(self) -> None:
@@ -66,17 +72,12 @@ class WhatYouCanSeeMosaic(WrappedElement):
 		"""Returns the number of tiles in the mosaic."""
 		return len(DR.quietly_find_elements('div.mosaic-item', self.element))
 
-class NavLink(WrappedElement):
-	"""Because creating fifty separate classes would be tiresome."""
-	def __init__(self, selector: str, within: WrappedElement) -> None:
-		self.element = DR.flashy_find_element(selector, within)
-
 def attach_link(section: WrappedElement, name: str, selector: str='[href*={}.html]') -> None:
-	"""A function that attaches an attribute that can be called to create a NavLink.
+	"""A function that attaches an attribute that can be called to create a simple link.
 	The 'name' argument should be the bit that .formats into the selector"""
 	def link_maker():
-		"""A function that can be called to create a NavLink"""
-		return NavLink(selector.format(name), section.element)
+		"""A function that can be called to create a simple link"""
+		return MinorElement(selector.format(name), section.element)
 	link_maker.__doc__ = 'Creates the {0}/{1} link representation'\
 		.format(type(section), name.replace('-', ' ').replace('.', ' ').title())
 	section.__setattr__(name.replace('-', '_').replace('.', '_'), link_maker)
@@ -188,6 +189,7 @@ class FilteredSearch(WrappedElement):
 		DR.quietly_find_element('.mosic-item')
 
 	class SearchResult(WrappedElement):
+		"""Represents a Result of a Filtered Search."""
 		def __init__(self, which: WebElement):
 			self.element = which
 
@@ -197,18 +199,37 @@ class FilteredSearch(WrappedElement):
 
 		def view_more_information(self) -> None:
 			"""Navigates to the result's main page, clicks the View More Info link."""
-			DR.flashy_find_element('.search-results-copy-container a', self.element)
+			link = DR.flashy_find_element('.search-results-copy-container a', self.element)
+			DR.LAST_LINK = link.get_attribute('href')
+			link.click()
+			DR.wait_for_page()
 
 		def add_to_favourites(self) -> None:
 			"""Clicks the result's Heart Icon: Add To My Sales Tool Kit."""
-			DR.flashy_find_element('.search-favourite a', self.element)
+			DR.flashy_find_element('a.btn-bubble', self.element).click()
 
-	def load_more(self) -> WrappedElement:
+		def download_pdf(self) -> None:
+			"""Clicks the Download PDF link."""
+			link = DR.flashy_find_element('a.download-pdf', self.element)
+			DR.LAST_LINK = link.get_attribute('href')
+			link.click()
+			DR.wait_for_page()
+
+		class SearchResultPage(WrappedElement):
+			"""Represents the full More Info page pointed to by a Filtered Search's result."""
+			def __init__(self) -> None:
+				self.element = DR.flashy_find_element('.home-hero-title')
+
+			def get_title(self) -> None:
+				"""Returns the title of the page the result was pointing to."""
+				return self.element.text()
+
+	def load_more(self) -> None:
 		"""Clicks the Search Component's Load More button."""
 		DR.flashy_find_element('#btn-id', self.element).click()
 		DR.wait_until_gone('.filteredSearch .preload-image-wrapper img')
 
-	def random_search(self):
+	def random_search(self) -> None:
 		"""Picks random values in each of the search category droplists,
 		then clicks the Refresh Results button. Repeats this until results are found."""
 		while True:
@@ -240,6 +261,74 @@ class FilteredSearch(WrappedElement):
 		# The largest number has to be the total results, with the other two being 'this many shown'.
 		return (1 + counter[1] - counter[0], counter[2])
 
-	def get_random_result(self) -> WrappedElement:
+	def get_random_result(self) -> FilteredSearch.SearchResult:
 		"""Picks a random one from the search results."""
-		result = SearchResult()
+		result = self.SearchResult(random.choice(DR.quietly_find_elements('.mosaic-item')))
+		return DR.blip_element(result)
+
+class PDFPage(WrappedElement):
+	"""Represents a PDF file viewed within the browser.
+	As a PDF embed is not a web page, this class doesn't do much."""
+	def __init__(self) -> None:
+		self.element = DR.quietly_find_element('embed[type="application/pdf"],.pdfViewer')
+
+class HeaderMapIcon(WrappedElement):
+	"""Represents the Icon in the Header linking to the Interactive Map."""
+	def __init__(self) -> None:
+		self.element = DR.flashy_find_element('.link-map a')
+
+class InteractiveMap(WrappedElement):
+	"""Represents the Interactive Map.
+	Note that instantiating this class will also switch WebDriver focus into the map's iframe."""
+	def __init__(self) -> None:
+		DR.switch_to_frame('#interactiveMapId')
+
+	class Controls(WrappedElement):
+		"""Represents the menu to the left of the map area."""
+		def __init__(self) -> None:
+			self.element = DR.flashy_find_element('.controls-wrapper')
+
+		def open_menu(self, selector: str) -> None:
+			"""Opens a menu, and waits until it is open, too."""
+			self.element.click()
+			DR.flashy_find_element(selector)
+			DR.wait_until(lambda: self.element.attr('class') == 'active')
+
+		def pick_random(self) -> None:
+			"""Picks a random entry from the menu."""
+			city = random.choice(DR.quietly_find_element('li a', self.element))
+			DR.blip_element(city).click()
+
+		class Cities(WrappedElement):
+			"""Represents the Cities Menu."""
+			def __init__(self) -> None:
+				self.element = DR.flashy_find_element('#cities')
+			open_menu = InteractiveMap.Controls.open_menu
+			pick_random = InteractiveMap.Controls.pick_random
+
+		class IconicDestinations(WrappedElement):
+			"""Represents the Iconic Destinations Menu."""
+			def __init__(self) -> None:
+				self.element = DR.flashy_find_element('#icons')
+			open_menu = InteractiveMap.Controls.open_menu
+			pick_random = InteractiveMap.Controls.pick_random
+
+		class Itineraries(WrappedElement):
+			"""Represents the Itineraries Menu."""
+			def __init__(self) -> None:
+				self.element = DR.flashy_find_element('#itinerarytypes')
+			open_menu = InteractiveMap.Controls.open_menu
+			pick_random = InteractiveMap.Controls.pick_random
+
+		class FlyingTimes(WrappedElement):
+			"""Represents the Flying Times Menu."""
+			def __init__(self) -> None:
+				self.element = DR.flashy_find_element('#flights')
+			open_menu = InteractiveMap.Controls.open_menu
+
+	class MapArea(WrappedElement):
+		"""Just a precaution, preventing searches from overlapping too much?"""
+		def __init__(self) -> None:
+			self.element = DR.flashy_find_element('#map_canvas')
+
+		def 

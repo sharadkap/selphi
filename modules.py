@@ -5,6 +5,7 @@ import argparse
 from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webdriver import WebDriverException
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -41,7 +42,7 @@ RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 RESET_MODULE = 'cpCmndGotoSlide=0'
 
-def new_drag_drop(source: str, target: str):
+def new_drag_drop(source: str, target: str) -> None:
 	"""Like the ActionChains drag and drop,
 	but updates the mouse position just after mousedown."""
 	# Command.MOVE_TO, desite taking a css id string, does not actually perform a DOM lookup.
@@ -61,7 +62,7 @@ def new_drag_drop(source: str, target: str):
 	DRIVER.execute(Command.MOUSE_UP, {})
 	time.sleep(MINIWAIT)
 
-def domo(locator):
+def domo(locator: str or tuple or list) -> None:
 	"""If locator is a string, clicks on the element with that as an id
 	if locator is a tuple, drags the first element to the second one.
 	if a list, looks for each of the elements listed, clicks the first one that exists."""
@@ -75,7 +76,7 @@ def domo(locator):
 	else:
 		raise TypeError('You broke it. String, List, or Tuple only.')
 
-def click_surely(ele):
+def click_surely(ele: WebElement) -> None:
 	"""Click on an element. If that doesn't work, click it again.
 	But off to the side a bit, in case there was a slight overlap."""
 	try:
@@ -86,14 +87,14 @@ def click_surely(ele):
 			'xoffset': ele.size['width']/4, 'yoffset': ele.size['height']/4})
 		DRIVER.execute(Command.CLICK)
 
-def pick_from_possibilities(locator):
+def pick_from_possibilities(locator: str) -> WebElement:
 	"""Deal with alternate ids. Use a css selector to get any proposed elements."""
 	eles = DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))
 	if len(eles) == 0:
 		raise WebDriverException("Didn't find {0}".format(locator))
 	return eles[0]
 
-def full_languages_modules_run(langfilter=None, modfilter=None):
+def full_languages_modules_run(langfilter: list(str)=None, modfilter: list(str)=None) -> None:
 	"""Run the selected set of modules and locales, logging results,
 	and saving a screenshot in case of failure.	By default, will run all of them."""
 	if ARGS.direct:
@@ -126,7 +127,7 @@ def full_languages_modules_run(langfilter=None, modfilter=None):
 				draw_failure(lang, mod)
 	write_footer_entry()
 
-def log_in_first(lang):
+def log_in_first(lang: str) -> None:
 	"""If testing with login, first, have to go and log in and everything.
 	As it happens, restarting the module will also fix the Loading Forever bug."""
 	if not ARGS.direct:
@@ -152,37 +153,39 @@ def log_in_first(lang):
 	# Or a module being previously completed.
 	DRIVER.execute_script(RESET_MODULE)
 
-def get_time():
+def get_time() -> str:
 	"""Get the time, and formatted as well."""
 	return time.strftime(TIME_FORMAT)
 
-def write_header_row(mods):
+def write_header_row(mods: list(str)) -> None:
 	"""Adds the header row to the output file. Columns are for mods."""
 	with open(RESULTS_FILE, mode='a') as log:
-		log.write('"START: {0}",'.format(get_time()))	# Header corner.
+		log.write('\n"START: {0}",'.format(get_time()))	# Header corner.
 		log.write(','.join(mods).upper())
 
-def write_new_row(lang):
+def write_new_row(lang: str) -> None:
 	"""Adds a new line to the csv output file. Lines are for langs."""
 	with open(RESULTS_FILE, mode='a') as log:
 		log.write('\n' + lang.upper())
 
-def write_success():
+def write_success() -> None:
 	"""Writes a successful outcome to the results."""
 	with open(RESULTS_FILE, mode='a') as log:
 		log.write(',"{0}: PASS"'.format(get_time()))
 
-def write_failure(ex):
+def write_failure(ex: Exception) -> None:
 	"""Writes a failed outcome to the results."""
 	with open(RESULTS_FILE, mode='a') as log:
 		log.write(',"{0}: FAIL: {1}"'.format(get_time(), ex.msg.replace('"', '""')))
 
-def write_footer_entry():
+def write_footer_entry(crash: bool=False) -> None:
 	"""Adds a bunch of newlines to the end of the file. Easier to read multiple runs."""
 	with open(RESULTS_FILE, mode='a') as log:
+		if crash:
+			log.write('\n"Well, something went wrong. A manual exit, hopefully."')
 		log.write('\n"FINISH: {0}"\n\n'.format(get_time()))
 
-def draw_failure(lang, mod):
+def draw_failure(lang: str, mod: str) -> None:
 	"""Take a screenshot, save it to the screenshot folder."""
 	dirname = os.path.join(SCREENSHOT_DIR, mod)
 	filename = dirname + r"\{}.png".format(lang.split('/')[0])
@@ -192,7 +195,10 @@ def draw_failure(lang, mod):
 		fil.write(imgdata)
 
 if __name__ == '__main__':
-	full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
+	try:
+		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
+	except:
+		write_footer_entry(crash=True)
 	# Do remember to do this.
 	DRIVER.quit()
 	raise EOFError("This is the end of the file.")

@@ -326,9 +326,59 @@ class InteractiveMap(WrappedElement):
 				self.element = DR.flashy_find_element('#flights')
 			open_menu = InteractiveMap.Controls.open_menu
 
+			def choose_from(self) -> str:
+				"""Randomly chooses a city from the From field."""
+				select = DR.flashy_find_element('#flightFrom', self.element)
+				opt = select.find_elements_by_css_selector('option[id]')
+				opt.click()
+				return opt.text()
+
+			def choose_to(self) -> str:
+				"""Randomly sets a city to the To field."""
+				select = DR.flashy_find_element('#flightTo', self.element)
+				opt = select.find_elements_by_css_selector('option[id]')
+				opt.click()
+				return opt.text()
+
+			def flight_time(self) -> WrappedElement:
+				"""Gets a representation of the Flight Time display."""
+				return MinorElement('.flight-time', self.element)
+
+			def flight_distance(self) -> WrappedElement:
+				"""Gets a representation of the Flight Distance display."""
+				return MinorElement('.flight-distance', self.element)
+
+		class InfoPanel(WrappedElement):
+			"""Represents the information panel about a City/Icon/Itinerary."""
+			def __init__(self) -> None:
+				self.element = DR.flashy_find_element('#info-middle')
+
+			def get_title(self) -> str:
+				"""Returns the name of the location that the panel describes"""
+
 	class MapArea(WrappedElement):
 		"""Just a precaution, preventing searches from overlapping too much?"""
 		def __init__(self) -> None:
 			self.element = DR.flashy_find_element('#map_canvas')
 
-		def 
+		class MapPins(WrappedElement):
+			"""Represents the collection of pins that appear on the map when a menu is opened."""
+			def __init__(self) -> None:
+				self.pins = DR.flashy_find_elements('.marker')
+				self.element = DR.get_parent_element(self.pins[0])
+
+			def pick_random(self) -> str:
+				"""Picks a random pin and clicks it. Returns the name of its destination.
+				Also manipulates the CSS to bring it to the front, in case it's behind another one."""
+				pin = random.choice(self.pins)
+				DR.bring_to_front(pin)
+				name = pin.text()
+				pin.click()
+				panel = DR.quietly_find_element('#info-box')
+				DR.wait_until(lambda: panel.get_attribute('style').search(r'rotateY\(0deg\)'))
+				return name
+
+			def count(self) -> int:
+				"""Returns the number of map pins visible."""
+				DR.blip_element(self.pins)
+				return len(self.pins)

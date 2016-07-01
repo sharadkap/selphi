@@ -144,3 +144,12 @@ def flashy_find_elements(selector: str, within: WebElement=DRIVER) -> list(WebEl
 	The browser-provided webdriver driver implementations seem to not return a
 	list when only one element matches, so fixing that here."""
 	return blip_element(to_list(within.find_elements_by_css_selector(selector)))
+
+def get_parent_element(element: WebElement) -> WebElement:
+	"""Gets the immediate parent of the given element."""
+	return element.find_element_by_xpath('..')
+
+def bring_to_front(element: WebElement) -> WebElement:
+	"""Uses a JS to ensure the selected element is at the front.
+	Usually in order to properly click() it."""
+	DRIVER.execute_script('arguments[0].style.zIndex = "10000");', element)

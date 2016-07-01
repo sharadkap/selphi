@@ -204,57 +204,37 @@ class REGR(unittest.TestCase):
 		CP.HeaderMapIcon().click()
 		# (Switches into the Map Iframe.)
 		imap = CP.InteractiveMap()
-		# Examine the Map Menu, Should be four sections:
-		# Cities, Iconic Destinaions, Itineraries, and Flight Times.
+		# Map Menu should have: Cities, Iconic Destinaions, Itineraries, and Flight Times.
 		controls = imap.Controls()
 		cities = controls.Cities()
 		icons = controls.IconicDestinations()
 		itineraries = controls.Itineraries()
 		flights = controls.FlyingTimes()
-		# Open the Cities menu.
+		# Open the Cities menu, the Cities list should be shown.
 		cities.open_menu()
-		# The Cities list should be shown, and the Map should be populated with Map Pins.
-		DR.flashy_find_elements('#cities #city-children li[data-type="Cities"]')
-		cipi = DR.flashy_find_elements('div.bulb.Cities')
-		# Click a listed or pinned City. First make sure it's not behind another pin.
-		cip = random.choice(cipi)
-		jeva('$(arguments[0]).style($(this).style() + " z-index: 1002;");', cip)
-		cip.click()
+		# The Map should be populated with Map Pins.
+		# Click a pinned City, remember which one it was.
+		pin = imap.MapArea.MapPins().pick_random()
 		# That City's Info Panel should be shown. Go examine it.
-		self.map_info_panel(cip.text)
+		self.map_info_panel(pin)
 		# Open the Iconic Destinations menu
-		DR.flashy_find_element('#map-menu > #icons').click()
+		icons.open_menu()
 		# The Icons list should be shown, and the Map should be populated with Destination Pins.
-		DR.flashy_find_elements('#icons #icon-children li[data-type="Icons"]')
-		icpi = DR.flashy_find_elements('div.bulb.Icons')
-		# Click a listed or pinned Destination after bringing it to the front.
-		icp = random.choice(icpi)
-		jeva('$(arguments[0]).style($(this).style() + " z-index: 1002;");', icp)
-		icp.click()
-		# That Icon's Info Panel should be shown.
-		self.map_info_panel(icp.text)
-		# Open the Flying Times section.
-		DR.flashy_find_element('#map-menu > #flights').click()
-		# The Flying Times device appears.
-		DR.quietly_find_element('.flight-children .flight-info')
+		# Click a random pinned Destination.
+		pin = imap.MapArea.MapPins().pick_random()
+		# That Icon's Info Panel should be shown, verify all that.
+		self.map_info_panel(pin)
+		# Open the Flying Times section, the Flying Times device appears.
+		flights.open_menu()
 		# Select a city in each of the From and To drop menus.
-		flf = DR.flashy_find_element('#flightFrom')
-		# Because it's a fancy custom select, can't just assign a value normally.
-		jeva('$(arguments[0]).val(arguments[1]).change();', flf,\
-			 random.choice(flf.find_elements_by_css_selector(\
-			 'option:not([disabled]):not([value="0"])')).get_attribute('value'))
-		# Have to do them separately, as the To menu is not initially populated.
-		DR.quietly_find_element('#flightTo option:not([value="0"])')
-		flt = DR.flashy_find_element('#flightTo')
-		jeva('$(arguments[0]).val(arguments[1]).change();', flt,\
-			 random.choice(flt.find_elements_by_css_selector(\
-			 'option:not([disabled]):not([value="0"])')).get_attribute('value'))
+		ffrom = flights.choose_from()
+		fto = flights.choose_to()
 		# The selected cities' Pins appear on the map,
 		#   connected by a flight path, traversed by a plane icon.
-		self.assertEqual(len(DR.flashy_find_elements('.bulb.FlyingTimes')), 2)
+		self.assertEqual(imap.MapArea.MapPins().count(), 2)
 		# The flying Times panel shows the approximate flight time and distance.
-		DR.quietly_find_element('.flight-time')
-		DR.quietly_find_element('.flight-distance')
+		flights.flight_time()
+		flights.flight_distance()
 
 		def map_info_panel(self, name: str) -> None:
 			"""Look at a Map Location Info Pane. Checks the various links and images."""

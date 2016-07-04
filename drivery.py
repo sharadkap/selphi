@@ -88,6 +88,11 @@ def wait_for_page() -> None:
 	WebDriverWait(DRIVER, LONG_WAIT).until(lambda: LAST_LINK in DRIVER.current_url)
 	WebDriverWait(DRIVER, LONG_WAIT).until(lambda: DRIVER.execute_script(script))
 
+def wait_until_present(selector: str) -> None:
+	"""Holds up execution until the selectored elment is visibly present.
+	Use this instead of quietly_find if the target is in the DOM, but hidden."""
+	WebDriverWait(DRIVER, LONG_WAIT).until(EC.visibility_of_element_located(selector))
+
 def wait_until_gone(selector: str) -> None:
 	"""Holds up execution until the selectored element is not visibly present.
 	EC doesn't seem to support local searches, so be sure the selector is page-unique."""

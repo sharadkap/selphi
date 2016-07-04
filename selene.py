@@ -2,7 +2,6 @@
 
 import re
 import random
-import hashlib
 import unittest
 from tap import TAPTestRunner
 import drivery as DR
@@ -56,8 +55,7 @@ class REGR(unittest.TestCase):
 		"""Checks that the contents of the Signed Out Nav Menu are correct."""
 		DR.open_home_page()
 		# Click on 'About' in the Mega Menu.
-		about = CP.About()
-		about.point()
+		about = CP.About().point()
 		# The About section should have: About, Why Register,
 		# Program FAQ, Site Usage, Contact Us
 		about.about()
@@ -67,8 +65,7 @@ class REGR(unittest.TestCase):
 		about.contact_us()
 
 		# Click on 'Sales Resources' in the Mega Menu.
-		sales = CP.SalesResources()
-		sales.point()
+		sales = CP.SalesResources().point()
 		# The Sales section should have: Sales Resources (Landing), Interactive Map,
 		# Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
 		# Itinerary Search, Australian Events, Destination FAQ
@@ -82,20 +79,17 @@ class REGR(unittest.TestCase):
 		sales.image_and_video_galleries()
 
 		# Click on 'Training' in the Mega Menu.
-		train = CP.Training()
-		train.point()
+		train = CP.Training().point()
 		# The Training section should have: *Training (Landing page only)
 		train.training()
 
 		# Click on 'News & Products' in the Mega Menu.
-		news = CP.NewsAndProducts()
-		news.point()
+		news = CP.NewsAndProducts().point()
 		# The News section should have: *News and Product Updates (Landing page only)
 		news.news_and_product_updates()
 
 		# Click on 'Aussie Specialist Club' in the Mega Menu.
-		club = CP.AussieSpecialistClub()
-		club.point()
+		club = CP.AussieSpecialistClub().point()
 		# The Club section should have: *Aussie Specialist Club (Landing page only)
 		club.aussie_specialist_club()
 
@@ -146,9 +140,7 @@ class REGR(unittest.TestCase):
 		"""Checks the Itineraries Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Itinerary Suggestions.
-		sales = SalesResources()
-		sales.point()
-		sales.itineraries_search_and_feature().click()
+		SalesResources().point().itineraries_search_and_feature().click()
 		# Do a random search and validate the results.
 		search = CP.FilteredSearch()
 		search.random_search()
@@ -158,9 +150,7 @@ class REGR(unittest.TestCase):
 		"""Tests the Fact Sheet Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Fact Sheets.
-		sales = CP.SalesResources()
-		sales.point()
-		sales.fact_sheets_overview().click()
+		CP.SalesResources().point().fact_sheets_overview().click()
 		# Do a random search. (In Fact Sheet +PDFs Mode) Then validate the results.
 		search = CP.FilteredSearch(fact_sheet_mode=True)
 		search.random_search()
@@ -231,7 +221,11 @@ class REGR(unittest.TestCase):
 		fto = flights.choose_to()
 		# The selected cities' Pins appear on the map,
 		#   connected by a flight path, traversed by a plane icon.
-		self.assertEqual(imap.MapArea.MapPins().count(), 2)
+		pins = imap.MapArea.MapPins()
+		self.assertEqual(pins.count(), 2)
+		names = pins.get_names()
+		self.assertIn(ffrom, names)
+		self.assertIn(fto, names)
 		# The flying Times panel shows the approximate flight time and distance.
 		flights.flight_time()
 		flights.flight_distance()
@@ -239,125 +233,106 @@ class REGR(unittest.TestCase):
 		def map_info_panel(self, name: str) -> None:
 			"""Look at a Map Location Info Pane. Checks the various links and images."""
 			# The right Info panel should be open.
-			self.assertEqual(name, DR.flashy_find_element('#info-title').text)
+			panel = CP.InteractiveMap.Controls.InfoPanel()
+			self.assertEqual(name, panel.get_title())
 			# The Find Out More and View Highlights buttons should link
 			#   to a relevant Fact Sheet/Itinerary Plan.
-			ili = DR.flashy_find_element('#info-moreUrl').get_attribute('href')
-			self.assertIn(self.locale, ili)
-			self.assertEqual(ili, DR.flashy_find_element('#info-optionalLink').get_attribute('href'))
+			fomlink = panel.find_out_more()
+			self.assertIn(DR.LOCALE, fomlink)
+			self.assertEqual(fomlink, panel.view_highlights())
 			# Click the Photos
-			DR.flashy_find_element('#info-carousel img').click()
+			imgnum = panel.count_photos()
+			photos = panel.open_photos()
 			# The Photo Viewer should appear, can be scrolled through, displays different images.
-			ims = DR.flashy_find_element('#carousel-lightbox img').get_attribute('src')
-			DR.flashy_find_element('#next.lightbox-link').click()
-			imsI = DR.flashy_find_element('#carousel-lightbox img').get_attribute('src')
-			self.assertNotEqual(ims, imsI)
-			DR.flashy_find_element('#next.lightbox-link').click()
-			ims = DR.flashy_find_element('#carousel-lightbox img').get_attribute('src')
-			self.assertNotEqual(ims, imsI)
+			# But if there was only one image available, skip this scrolling bit.
+			if not imgnum == 1:
+				imgone = photos.current_image_source()
+				photos.next()
+				imgtwo = photos.current_image_source()
+				self.assertNotEqual(imgone, imgtwo)
+				photos.next()
+				imgone = photos.current_image_source()
+				self.assertNotEqual(imgtwo, imgone)
 			# Close the Photo Viewer
-			DR.flashy_find_element('#close-lightbox').click()
-			# Hold up a bit.
-			time.sleep(blinkTime)
-			# Now, it should be closed.
-			self.assertFalse(DR.check_visible_quick('#carousel-lightbox'))
+			photos.close()
 			# Click on one of the Itinerary Suggestion links
-			iti = random.choice(DR.flashy_find_elements('#suggested-itineraries a[data-type="Itinerary"]'))
-			itin = iti.text
-			iti.click()
-			# The selected Itinerary should open.
-			DR.flashy_find_element('.bulb.ItinerarySteps')
-			self.assertEqual(itin, DR.flashy_find_element('#info-title').text)
-			# The Find Out More link should link to the relevant Itinerary Page.
-			iliII = DR.flashy_find_element('#info-moreUrl').get_attribute('href')
-			self.assertIn(self.locale, iliII)
-			# Its route shoud appear and gain focus on the map.
-			rop = random.choice(DR.flashy_find_elements('.itinerary-step a'))
-			# Zoom out a bit first, the pins will sometimes pop up behind the menu panel.
-			DR.flashy_find_element('#zoomout').click()
-			# Click on one of the Route Pins
-			rop.click()
-			# An info box should appear at the pin.
-			DR.flashy_find_element('.infoWindow.itinerarysteps')
-			# Click the Back To Menu Button
-			DR.flashy_find_element('#back-to-filter').click()
-			# The panel should spin back to the Main Map Menu
-			self.assertTrue(DR.flashy_find_element('#map-menu').is_displayed())
+			itiname = panel.random_itinerary()
+			# If there were no Itinerary links, skip this bit.
+			if not itiname == '':
+				# New panel, renew the selector.
+				panel = CP.InteractiveMap.Controls.InfoPanel()
+				# The selected Itinerary should open.
+				self.assertEqual(itiname, panel.get_title())
+				# Its route should appear and gain focus on the map.
+				pins = CP.InteractiveMap.MapArea.MapPins()
+				# The Find Out More link should link to the relevant Itinerary Page.
+				self.assertIn(DR.LOCALE, panel.find_out_more())
+				# Click on one of the Route Pins, but zoom out a bit first,
+				# the pins will sometimes pop up behind the menu panel.
+				CP.InteractiveMap.ZoomTools().zoom_out()
+				pins.pick_random()
+				# An info box should appear at the pin.
+				CP.InteractiveMap.MapArea.InfoPopup()
+			# Click the Back To Menu Button, the panel should spin back to the Main Map Menu
+			panel.back_to_menu()
 
 	def test_Contact_Us(self) -> None:
 		"""Checks the Contact Us page."""
 		DR.open_home_page()
 		# Navigate to About > Contact Us.
-		point(DR.flashy_find_element('#nav-main-panel-1'))
-		DR.flashy_find_element('a[href*="contact-us.html"]').click()
-		# Click the Contact Us link, Default email client should open, with the To field populated
-		#   with the relevant contact. But can't actually test that. The mailto: should suffice.
-		DR.quietly_find_element('a[href^="mailto:"]')
+		CP.About().point().contact_us().click()
+		# "Click the Contact Us link, Default email client should open, with the To field populated
+		#   with the relevant contact." Can't actually test that, so a 'mailto:' will have to do.
+		CP.ContactUs()
 
 	def test_Registration(self) -> None:
 		"""Checks the Registration process. Slight use of witchcraft."""
 		DR.open_home_page()
 		# Navigate to the Registration Page
-		DR.flashy_find_element('#loginCompButton a[href*="registration-form.html"]').click()
+		CP.BodyRegisterButton().click()
 		# Random letters to make a unique username.
-		raid = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
+		randid = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
 		# The Country Code
-		lcod = self.locale.split('-')[1]
-		# Username stuff, add the Environment prefix to identify and relocate the user.
-		env = self.base_url.split('/')[2].split('.')[0][0:3]
+		langcode, localecode = DR.LOCALE.split('-')
+		# Username stuff, add the Environment prefix to identify the user.
+		environ = DR.BASE_URL.split('/')[2].split('.')[0][0:3]
 		# Different zip codes in different countries.
-		zipc = dict([('gb', 'A12BC'), ('us', '12345'), ('ca', '12345'), ('my', '12345'), \
-					 ('id', '12345'), ('it', '12345'), ('fr', '12345')]).get(lcod, '123456')
+		zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345', \
+			'it': '12345', 'fr': '12345', 'de': '12345'}.get(localecode, '123456')
 		# Fill out the Registration Form with dummy information.
 		# Ensure the Name fields are/contain TEST.
-		DR.flashy_find_element('[name="lname"]').send_keys('TEST')
-		DR.flashy_find_element('[name="fname"]').send_keys('TEST ' + lcod + env)
-		DR.flashy_find_element('#birthday-day').send_keys('12')
-		DR.flashy_find_element('#birthday-month').send_keys('12')
-		DR.flashy_find_element('#birthday-year').send_keys('1212')
-		DR.flashy_find_element('[name="companyname"]').send_keys('TEST')
-		DR.flashy_find_element('[name="jobtitle"]').send_keys('TEST')
-		Select(DR.flashy_find_element('[name="busprofile"]')).select_by_value('1')
-		DR.flashy_find_element('[name="address1"]').send_keys('TEST')
-		DR.flashy_find_element('[name="town"]').send_keys('TEST')
-		DR.flashy_find_element('[name="zip"]').send_keys(zipc)
-		Select(DR.flashy_find_element('#country_id')).select_by_value(lcod.upper())
-		# Wait for the Country selection to load the State/Lang info.
-		lan = DR.flashy_find_element('[name="language"] :not([value=""])')
-		Select(DR.flashy_find_element('#language_id')).select_by_value(lan.get_attribute('value'))
-		Select(DR.flashy_find_element('#state_list')).select_by_value(\
-			DR.flashy_find_element('#state_list :not([value=""])').get_attribute('value'))
-		DR.flashy_find_element("[name='web']").send_keys("www.TEST.com")
-		DR.flashy_find_element('[name="mobile"]').send_keys('TEST')
+		form = CP.RegistrationForm()
+		form.first_name('TEST')
+		form.last_name('TEST ' + localecode + environ)
+		form.date_of_birth('12/12/1212')
+		form.company_name('TEST')
+		form.job_title('TEST')
+		form.pick_business_profile()
+		form.address_one('TEST')
+		form.town_city('TEST')
+		form.zip_postcode(zipcode)
+		form.pick_country(localecode.upper())
+		form.pick_state()
+		form.pick_language(langcode)
+		form.mobile_number('TEST')
 		# Use an overloaded email.
-		DR.flashy_find_element('#email').send_keys(self.email.replace('@', '+' + raid + '@'))
-		DR.flashy_find_element('#verifyemail').send_keys(self.email.replace('@', '+' + raid + '@'))
-		DR.flashy_find_element('#howmany').send_keys("1")
-		DR.flashy_find_element('#how-many-times').send_keys("1")
-		DR.flashy_find_element('#number-of-bookings').send_keys("1")
-		for tra in DR.flashy_find_elements("[name='travelstandard']"): tra.click()
-		for cus in DR.flashy_find_elements("[name='custexp']"): cus.click()
-		DR.flashy_find_element("[name='username']").send_keys(lcod + env + raid)
-		DR.flashy_find_element('#pwd').send_keys(self.passw)
-		DR.flashy_find_element("[name='pwd1']").send_keys(self.passw)
-		DR.flashy_find_element('#agreement').click()
-		# Here, try something quite possibly illegal.
-		def h() -> int: return(round(time.time() * 1000)) // (60 * 1000)
-		def ha(bits: bytes) -> str: return hashlib.md5(bits + str(h()).encode()).hexdigest()[1:6]
-		# It's time sensitive, so refresh the captcha immediately beforehand.
-		DR.flashy_find_element('fieldset:nth-child(7) > div:nth-child(2) a').click()
-		# It does have an #ID, but it's wierd and breaks the selector function. So use this.
-		DR.flashy_find_element('[name="captcha"]').send_keys(\
-			ha(DR.flashy_find_element('#cq_captchakey').get_attribute('value').encode()))
-		# Click the Create Account button.
-		DR.flashy_find_element("#register-submit").click()
-		# Popup should appear confirming account creation.
-		DR.quietly_find_element('#fancybox-thanks')
+		form.email_address(DR.EMAIL.replace('@', '+' + randid + '@'))
+		form.how_many_years()
+		form.how_many_times()
+		form.how_many_bookings()
+		form.standard_categories()
+		form.experiences()
+		form.username(localecode + environ + randid)
+		form.password(DR.PASSWORD)
+		form.terms_and_conditions()
+		form.decaptcha()
+		# Click the Create Account button, popup should appear confirming account creation.
+		form.submit()
 		# Email should be sent confirming this.
 		# In the Registration Confirmation email, click the Activate Account link.
 		# Should open the Registration Acknowledgement page, confirming the account is set up.
 
-	def login_no(self):
+	def login_renamed_to_remind_me_to_change_it(self):
 		DR.open_home_page()
 		# In the header, click the Sign In link.
 		DR.flashy_find_element('.link-signin-text').click()

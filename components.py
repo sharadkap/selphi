@@ -1,7 +1,9 @@
 """Implements classes wrapping the behaviour for finding and manipulating web elements."""
 
 import re
+import time
 import random
+import hashlib
 from selenium.webdriver.remote.webelement import WebElement
 import drivery as DR
 
@@ -10,14 +12,16 @@ class WrappedElement:
 	# This is a placeholder, don't actually try this.
 	element = WebElement(parent=None, id_=None)
 
-	def click(self) -> None:
+	def click(self) -> type(self):
 		"""Clicks on the element."""
 		DR.LAST_LINK = self.element.get_attribute('href')
 		self.element.click()
+		return self
 
-	def point(self) -> None:
+	def point(self) -> type(self):
 		"""Moves the mouse cursor over the element."""
 		DR.execute_mouse_over(self.element)
+		return self
 
 class MinorElement(WrappedElement):
 	"""Superclass for all the internally used minor elements; with no unique
@@ -355,6 +359,41 @@ class InteractiveMap(WrappedElement):
 
 			def get_title(self) -> str:
 				"""Returns the name of the location that the panel describes"""
+				return DR.flashy_find_element('#info-title', self.element)
+
+			def back_to_menu(self) -> None:
+				"""Clicks the BACK TO MENU button at the top there, then waits until it finishes spinning"""
+				DR.flashy_find_element('#back-to-filter', self.element).click()
+				DR.wait_until_present('#map-menu')
+
+			def find_out_more(self) -> str:
+				"""Returns the url of the Find Out More link."""
+				return DR.flashy_find_element('#info-mainLink', self.element).get_attribute('href')
+
+			def view_highlights(self) -> str:
+				"""Returns the url of the VIEW HIGHLIGHTS button."""
+				return DR.flashy_find_element('#info-optionalLink', self.element).get_attribute('href')
+
+			def count_photos(self) -> int:
+				"""Counts the number of photographs shown for this location."""
+				return len(DR.quietly_find_elements('#info-carousel img', self.element))
+
+			def open_photos(self) -> InteractiveMap.ImageCarousel:
+				"""Clicks on one of the photos, opening the image carousel."""
+				DR.flashy_find_element('#info-carousel img', self.element).click()
+				DR.wait_until_present("#carousel-lightbox")
+				return InteractiveMap.ImageCarousel()
+
+			def random_itinerary(self) -> str:
+				"""Clicks on one of the Itinerary Suggestions links, and returns its title."""
+				suges = DR.quietly_find_elements('#suggested-itineraries a', self.element)
+				try:
+					suge = random.choice(suges)
+					sug = suge.text()
+					suge.click()
+					return sug
+				except IndexError:	# There can apparently be no suggested itineraries.
+					return ''
 
 	class MapArea(WrappedElement):
 		"""Just a precaution, preventing searches from overlapping too much?"""
@@ -372,6 +411,7 @@ class InteractiveMap(WrappedElement):
 				Also manipulates the CSS to bring it to the front, in case it's behind another one."""
 				pin = random.choice(self.pins)
 				DR.bring_to_front(pin)
+				DR.blip_element(pin)
 				name = pin.text()
 				pin.click()
 				panel = DR.quietly_find_element('#info-box')
@@ -382,3 +422,179 @@ class InteractiveMap(WrappedElement):
 				"""Returns the number of map pins visible."""
 				DR.blip_element(self.pins)
 				return len(self.pins)
+
+			def get_names(self) -> list(str):
+				"""Returns a list of the labels on all of the pins"""
+				DR.blip_element(self.pins)
+				return [x.text() for x in self.pins]
+
+		class InfoPopup(WrappedElement):
+			"""Represents the popup window thing that appears from an Itinerary Step Pin."""
+			def __init__(self) -> None:
+				self.element = DR.flashy_find_element('.gm-style-iw')
+
+	class ImageCarousel(WrappedElement):
+		"""Represents the Photo Carousel that pops out from a Location Information panel"""
+		def __init__(self) -> None:
+			self.element = DR.flashy_find_element('#lightbox-inner')
+
+		def current_image_source(self) -> str:
+			"""Returns the image source of the image currently shown."""
+			return DR.flashy_find_element('#lightbox-inner-image', self.element).get_attribute('src')
+
+		def next(self) -> None:
+			"""Clicks the > next button to show the next photo."""
+			DR.flashy_find_element('#next', self.element).click()
+
+		def close(self) -> None:
+			"""Clicks the X close button to hide the carousel"""
+			DR.flashy_find_element('#close-lightbox', self.element).click()
+			DR.wait_until_gone(self.element)
+
+	class ZoomTools(WrappedElement):
+		"""Represents the Zoom In/Zoom Out button set."""
+		def __init__(self) -> None:
+			self.element = DR.flashy_find_element('.zoom-wrapper')
+
+		def zoom_in(self) -> None:
+			"""Clicks the Zoom In button."""
+			DR.flashy_find_element('#zoomin', self.element).click()
+
+		def zoom_out(self) -> None:
+			"""Clicks the Zoom Out button."""
+			DR.flashy_find_element('#zoomout', self.element).click()
+
+class ContactUs(WrappedElement):
+	"""Represents the Contact Us page, which isn't a lot."""
+	def __init__(self) -> None:
+		self.element = DR.flashy_find_element('a[href*="mailto:"]')
+
+class RegistrationForm(WrappedElement):
+	"""Represents the Registration Form in all its million <input>s glory."""
+	def __init__(self) -> None:
+		self.element = DR.flashy_find_element('#registration-form')
+
+	def first_name(self, value: str='') -> None:
+		"""Overwrites the First Name field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="fname"]', self.element).send_keys(value)
+
+	def last_name(self, value: str='') -> None:
+		"""Overwrites the Last Name field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="lname"]', self.element).send_keys(value)
+
+	def date_of_birth(self, value: str='//') -> None:
+		"""Overwrites the Date Of Birth Name field to have the given D/M/Y value. Blank default."""
+		value = value.split('/')
+		DR.flashy_find_element('[name="birthdayday"]', self.element).send_keys(value[0])
+		DR.flashy_find_element('[name="birthdaymonth"]', self.element).send_keys(value[1])
+		DR.flashy_find_element('[name="birthdayyear"]', self.element).send_keys(value[2])
+
+	def company_name(self, value: str='') -> None:
+		"""Overwrites the Company Name field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="companyname"]', self.element).send_keys(value)
+
+	def job_title(self, value: str='') -> None:
+		"""Overwrites the Job Title field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="jobtitle"]', self.element).send_keys(value)
+
+	def pick_business_profile(self) -> None:
+		"""Picks a random option in the Business Profile list."""
+		sel = DR.flashy_find_element('[name="busprofile"]', self.element)
+		random.choice(DR.quietly_find_elements('option:not([value=""])', sel)).click()
+
+	def address_one(self, value: str='') -> None:
+		"""Overwrites the Address Line One field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="address1"]', self.element).send_keys(value)
+
+	def town_city(self, value: str='') -> None:
+		"""Overwrites the Town/City field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="town"]', self.element).send_keys(value)
+
+	def zip_postcode(self, value: str='') -> None:
+		"""Overwrites the Zip/Postcode field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="zip"]', self.element).send_keys(value)
+
+	def pick_country(self, value: str='') -> None:
+		"""Picks the country with the given abbreviation from the Country list."""
+		sel = DR.flashy_find_element('#country_id', self.element)
+		DR.quietly_find_element('option[value="{0}"]'.format(value), sel).click()
+		# Wait for the Country selection to load the State/Lang info.
+		DR.wait_until_present('[name="language"] :not([value=""])')
+
+	def pick_state(self) -> None:
+		"""Picks a random option from the State/Province/County field."""
+		sel = DR.flashy_find_element('#state_list', self.element)
+		random.choice(DR.quietly_find_elements('option:not([value=""])', sel)).click()
+
+	def pick_language(self, lang: str='') -> None:
+		"""Picks a language from the Language field. If in Hong Kong, choose carefully."""
+		sel = DR.flashy_find_element('#language_id', self.element)
+		if lang == 'zh':
+			DR.quietly_find_element('option[value="8"])', sel).click()
+		else:
+			DR.quietly_find_element('option:not([value=""])', sel).click()
+
+	def mobile_number(self, value: str='') -> None:
+		"""Overwrites the Mobile/Cell Number field to have the given value. Blank default."""
+		DR.flashy_find_element('[name="mobile"]', self.element).send_keys(value)
+
+	def email_address(self, value: str='') -> None:
+		"""Overwrites the Email Address and Verify Email fields to have the given value. Blank default."""
+		DR.flashy_find_element('#email', self.element).send_keys(value)
+		DR.flashy_find_element('#verifyemail', self.element).send_keys(value)
+
+	def how_many_years(self) -> None:
+		"""Sets the value of the How Many Years Selling field."""
+		sel = DR.flashy_find_element('#howmany', self.element)
+		DR.quietly_find_element('option:not([value=""])', sel).click()
+
+	def how_many_times(self) -> None:
+		"""Sets the value of the How Many Times Been field."""
+		sel = DR.flashy_find_element('#how-many-times', self.element)
+		DR.quietly_find_element('option:not([value=""])', sel).click()
+
+	def how_many_bookings(self) -> None:
+		"""Sets the value of the How Many Bookings Personally Made field."""
+		sel = DR.flashy_find_element('#number-of-bookings', self.element)
+		DR.quietly_find_element('option:not([value=""])', sel).click()
+
+	def standard_categories(self) -> None:
+		"""Picks a random selection of Categories Of Standard Of Travel"""
+		sel = DR.quietly_find_elements('[name=travelstandard]', self.element)
+		for box in random.sample(sel, len(sel) // 2): DR.blip_element(box).click()
+
+	def experiences(self) -> None:
+		"""Picks a random selection of Experiences Asked For"""
+		sel = DR.quietly_find_elements('[name=custexp]', self.element)
+		for box in random.sample(sel, len(sel) // 2): DR.blip_element(box).click()
+
+	def username(self, value: str='') -> None:
+		"""Sets the value of the Username field. Blank default."""
+		DR.flashy_find_element('[name="username"]', self.element).send_keys(value)
+
+	def password(self, value: str='') -> None:
+		"""Sets the value of the Create A Password and Re-Enter Password fields. Blank default."""
+		DR.flashy_find_element('#pwd', self.element).send_keys(value)
+		DR.flashy_find_element('[name="pwd1"]', self.element).send_keys(value)
+
+	def terms_and_conditions(self) -> None:
+		"""Agrees to the Terms And Conditions, without reading them."""
+		DR.flashy_find_element('#agreement', self.element).click()
+
+	def decaptcha(self) -> None:
+		"""Calculates the value of the 'captcha' code."""
+		def get_time() -> int:
+			"""Calculates the current time."""
+			return (round(time.time() * 1000)) // (60 * 1000)
+		def do_it(bits: bytes) -> str:
+			"""Calculates the MD5 hex of something, in addition to the current time."""
+			return hashlib.md5(bits + str(get_time()).encode()).hexdigest()[1:6]
+		# It's time sensitive, so refresh the captcha immediately beforehand.
+		DR.flashy_find_element('a[onclick="captchaRefresh()"]', self.element).click()
+		DR.flashy_find_element('[name="captcha"]').send_keys(\
+			do_it(DR.flashy_find_element('#cq_captchakey').get_attribute('value').encode()))
+
+	def submit(self) -> None:
+		"""Clicks the Create My Account Button, and awaits confirmation."""
+		DR.flashy_find_element("#register-submit", self.element).click()
+		DR.wait_until_present('#fancybox-thanks')

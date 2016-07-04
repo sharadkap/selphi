@@ -302,6 +302,7 @@ class REGR(unittest.TestCase):
 		# Fill out the Registration Form with dummy information.
 		# Ensure the Name fields are/contain TEST.
 		form = CP.RegistrationForm()
+		form.plain_text_fields('TEST')
 		form.first_name('TEST')
 		form.last_name('TEST ' + localecode + environ)
 		form.date_of_birth('12/12/1212')

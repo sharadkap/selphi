@@ -474,6 +474,11 @@ class RegistrationForm(WrappedElement):
 	def __init__(self) -> None:
 		self.element = DR.flashy_find_element('#registration-form')
 
+	def plain_text_fields(self, value: str=''):
+		"""Sets the value of all of the text fields that are mandatory,
+		but which don't need any particular value or format."""
+		DR.quietly_find_elements('[type="text"]', self.element)
+
 	def first_name(self, value: str='') -> None:
 		"""Overwrites the First Name field to have the given value. Blank default."""
 		DR.flashy_find_element('[name="fname"]', self.element).send_keys(value)
@@ -561,12 +566,14 @@ class RegistrationForm(WrappedElement):
 	def standard_categories(self) -> None:
 		"""Picks a random selection of Categories Of Standard Of Travel"""
 		sel = DR.quietly_find_elements('[name=travelstandard]', self.element)
-		for box in random.sample(sel, len(sel) // 2): DR.blip_element(box).click()
+		for box in random.sample(sel, len(sel) // 2):
+			DR.blip_element(box).click()
 
 	def experiences(self) -> None:
 		"""Picks a random selection of Experiences Asked For"""
 		sel = DR.quietly_find_elements('[name=custexp]', self.element)
-		for box in random.sample(sel, len(sel) // 2): DR.blip_element(box).click()
+		for box in random.sample(sel, len(sel) // 2):
+			DR.blip_element(box).click()
 
 	def username(self, value: str='') -> None:
 		"""Sets the value of the Username field. Blank default."""

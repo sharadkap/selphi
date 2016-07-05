@@ -152,6 +152,8 @@ class NavMenu(WrappedElement):
 	aussie_specialist_club = AussieSpecialistClub
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-bar-top .nav-bar-left')
+		attach_link(self, 'profile')
+		attach_link(self, 'logout')
 
 	def get_all_links(self) -> Set[str]:
 		"""Gets a set containing the href of each link in the nav menu.
@@ -605,6 +607,7 @@ class SignIn(WrappedElement):
 		DR.flashy_find_element('#j_username', self.element).send_keys(user)
 		DR.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
 		DR.flashy_find_element('#usersignin', self.element).click()
+		DR.LAST_LINK = '/secure'
 		DR.wait_for_page()
 
 class ForgottenForm(WrappedElement):
@@ -620,3 +623,30 @@ class ForgottenForm(WrappedElement):
 		"""Clicks the Submit button and waits for the confirmation message."""
 		DR.flashy_find_element('#forgotUser-submit', self.element).click()
 		DR.wait_until_present('.fancybox-skin')
+
+class ChangePassword(WrappedElement):
+	"""Represents the Change Password form."""
+	def __init__(self):
+		self.element = DR.flashy_find_element('#changepwdform')
+
+	def current_password(self, password: str) -> None:
+		"""Inputs the given password to the Current Password field."""
+		DR.flashy_find_element('[name="current"]', self.element).send_keys(password)
+
+	def new_password(self, password: str) -> None:
+		"""Inputs the given password to the New and Repeat Password fields."""
+		DR.flashy_find_element('#newpwd', self.element).send_keys(password)
+		DR.flashy_find_element('[name="confirmnew"]', self.element).send_keys(password)
+
+	def submit(self) -> None:
+		"""Clicks the Update Password button, and then waits for the redirect."""
+		DR.flashy_find_element('#changepwd-submit').click()
+		DR.wait_until_present('.fancybox-wrap')
+		DR.LAST_LINK = 'profile.html'
+		DR.wait_for_page()
+
+class Profile(WrappedElement):
+	"""Represents the Profile page form."""
+	def __init__(self):
+		self.element = DR.flashy_find_element('#profile-form')
+		attach_link(self, 'change')

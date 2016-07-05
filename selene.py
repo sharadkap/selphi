@@ -373,34 +373,32 @@ class REGR(unittest.TestCase):
 		# Click the Submit button, a panel should appear confirming submission.
 		forgpa.submit()
 		# An email should be received at the given address containing the Username and new Password
-		# Read that email and sign in with the new password.
+		# TODO Read that email and sign in with the new password.
 
 	def test_Change_Password(self):
 		def double():
 			CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 			# In the Nav Menu, click the My Profile link.
-			DR.flashy_find_element('#link-profile').click()
+			CP.NavMenu().profile().click()
 			# Click the Change Password button, below the Profile Data fields.
-			DR.flashy_find_element('a[href*="change.html"]').click()
-			# Fill out the Change Password Form with the Current Password, and a New Password.
-			DR.flashy_find_element('input[name="current"]').send_keys(self.passw)
-			DR.flashy_find_element('input[name="newpwd"]').send_keys(self.passw[::-1])
-			DR.flashy_find_element('input[name="confirmnew"]').send_keys(self.passw[::-1])
-			# Click the Submit button.
-			DR.flashy_find_element('#changepwd-submit').click()
-			# A panel should appear confirming the password change.
-			DR.quietly_find_element('.fancybox-skin')
+			CP.Profile().change().click()
+			# Fill out the Change Password Form with the Current Password and a New Password.
+			change = CP.ChangePassword()
+			change.current_password(DR.PASSWORD)
+			change.new_password(DR.PASSWORD[::-1])	# This is the password reversed
+			# Click the Submit button, a panel should appear confirming the password change, and
 			# The page should redirect back to the Profile page.
-			DR.quietly_find_element('#profile-form')
+			change.submit()
 			# Click the Sign Out link in the header.
-			DR.flashy_find_element('#link-logout').click()
+			CP.NavMenu().logout().click()
 
+		# Sign in and change the password.
 		double()
 		# Sign back in with the New Password. The system should accept the new password.
-		self.passw = self.passw[::-1]
+		DR.PASSWORD = DR.PASSWORD[::-1]
 		double()
-		# Then change it back for the rest of the tests.
-		self.passw = self.passw[::-1]
+		# Then change it back, don't want to break anything for the rest of the tests.
+		DR.PASSWORD = DR.PASSWORD[::-1]
 
 	def test_Favourites(self):
 		mtl = set()

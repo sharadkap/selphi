@@ -2,6 +2,7 @@
 
 import time
 from types import FunctionType
+from typing import List, Union
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -17,7 +18,7 @@ LONG_WAIT = 30
 SHORT_WAIT = 2
 
 # """The root website domain to access."""
-BASE_URL = "https://www.aussiespecialist.cn"
+BASE_URL = "https://www.aussiespecialist.com"
 # """The Language-Country Code of the locale to test.
 LOCALE = '/en-gb'
 # """To aid in checking for Page Loaded Status, note the last link clicked.
@@ -32,7 +33,7 @@ PASSWORD = 'Welcome1'
 EMAIL = 'testeratta@gmail.com'
 
 # """The main WebDriver runner reference."""
-DRIVER = webdriver.Firefox()
+DRIVER = webdriver.Chrome()
 
 # """A Set of the full list of options that should be in the splash page language selector."""
 LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
@@ -41,11 +42,15 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 	"/pt-br.html", "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html", \
 	"https://www.aussiespecialist.cn/zh-cn"}
 # """A JS script that applies the 'element-highlighted' animation."""
-BLIP_SCRIPT = '$("head").append(<style>@keyframes selhian{0%{outline: 0px outset transparent;}\
-    50%{outline: 10px outset yellow;}100%{outline: 0px outset transparent;}}</style>);\
-	for(a of arguments[0]){window.scrollTo(0,a.getBoundingClientRect()\
+BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;}\
+    50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}}\
+	</style>");for(a of arguments[0]){window.scrollTo(0,a.getBoundingClientRect()\
 	.top+window.pageYOffset-window.innerHeight/2),a.style.animationDuration="0.5s",\
 	a.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, a)}'
+
+# """Type annotation, referring to either a WebElement, or a list of them."""
+ELEMENT_OR_LIST = Union[WebElement, List[WebElement]]
+ELEMENT_LIST = List[WebElement]
 
 def to_list(item) -> list:
 	"""Wraps the input into a list if it wasn't already one."""
@@ -85,8 +90,8 @@ def wait_for_page() -> None:
 	"""Holds up execution until the current page's url contains the Last Link value
 	and its	document.readyState is 'complete'. A decent approximation?"""
 	script = 'return document.readyState === "complete";'
-	WebDriverWait(DRIVER, LONG_WAIT).until(lambda: LAST_LINK in DRIVER.current_url)
-	WebDriverWait(DRIVER, LONG_WAIT).until(lambda: DRIVER.execute_script(script))
+	WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: LAST_LINK in d.current_url)
+	WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: d.execute_script(script))
 
 def wait_until_present(selector: str) -> None:
 	"""Holds up execution until the selectored elment is visibly present.
@@ -112,7 +117,7 @@ def switch_to_frame(selector: str) -> None:
 
 ###Some methods to shorten Element Manipulation/Verification.###
 
-def blip_element(elle: WebElement or list(WebElement)) -> WebElement or list(WebElement):
+def blip_element(elle: ELEMENT_OR_LIST) -> ELEMENT_OR_LIST:
 	"""Scrolls (an) element(s) into view, and highlights (i)t(hem).
 	Returns the found element(s) as well, just for chaining purposes."""
 	# Kick off the highlight animation, list-wrapped for the sake of only writing one handler.
@@ -135,7 +140,7 @@ def quietly_find_element(selector: str, within: WebElement=DRIVER) -> WebElement
 	"""Finds a single element matching a CSS selector, optionally within a given element."""
 	return within.find_element_by_css_selector(selector)
 
-def quietly_find_elements(selector: str, within: WebElement=DRIVER) -> list(WebElement):
+def quietly_find_elements(selector: str, within: WebElement=DRIVER) -> ELEMENT_LIST:
 	"""Finds multiple elements that match a CSS selector, optionally within a given element."""
 	return to_list(within.find_elements_by_css_selector(selector))
 
@@ -143,7 +148,7 @@ def flashy_find_element(selector: str, within: WebElement=DRIVER) -> WebElement:
 	"""Finds a single element matching a CSS selector, highlights it as well."""
 	return blip_element(within.find_element_by_css_selector(selector))
 
-def flashy_find_elements(selector: str, within: WebElement=DRIVER) -> list(WebElement):
+def flashy_find_elements(selector: str, within: WebElement=DRIVER) -> ELEMENT_LIST:
 	"""Finds multiple elements that match a CSS selector, highlights them as well.
 
 	The browser-provided webdriver driver implementations seem to not return a

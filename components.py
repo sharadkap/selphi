@@ -4,6 +4,7 @@ import re
 import time
 import random
 import hashlib
+from typing import Set, List
 from selenium.webdriver.remote.webelement import WebElement
 import drivery as DR
 
@@ -12,13 +13,13 @@ class WrappedElement:
 	# This is a placeholder, don't actually try this.
 	element = WebElement(parent=None, id_=None)
 
-	def click(self) -> type(self):
+	def click(self) -> 'WrappedElement':
 		"""Clicks on the element."""
 		DR.LAST_LINK = self.element.get_attribute('href')
 		self.element.click()
 		return self
 
-	def point(self) -> type(self):
+	def point(self) -> 'WrappedElement':
 		"""Moves the mouse cursor over the element."""
 		DR.execute_mouse_over(self.element)
 		return self
@@ -31,10 +32,10 @@ class MinorElement(WrappedElement):
 
 class SplashSelect(WrappedElement):
 	"""Represents the Language Selector on the Splash Page."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('.dropdown-select-language')
 
-	def get_values(self) -> set(str):
+	def get_values(self) -> Set[str]:
 		"""Gets a set containing the URLs of all the Language Options."""
 		return {x.get_attribute('value') for x in DR.quietly_find_elements('option', self.element)}
 
@@ -46,7 +47,7 @@ class SplashSelect(WrappedElement):
 
 class WelcomeVideo(WrappedElement):
 	"""Represents the main Video on the home page."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#hero-player')
 
 	def play(self) -> None:
@@ -59,24 +60,24 @@ class WelcomeVideo(WrappedElement):
 
 class BodyLoginButton(WrappedElement):
 	"""Represents the Sign In button that appears in a page's body content when signed out."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#loginCompButton > div > a.btn-primary.fancybox')
 
 class BodyRegisterButton(WrappedElement):
 	"""Represents the Join The Program button that appears in a page's body content when signed out."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#loginCompButton > div > a:nth-child(2)')
 
 class WhatYouCanSeeMosaic(WrappedElement):
 	"""Represents the What You Can See Mosaic, however many tiles may appear."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('div.whatYouCanSee div.mosaic')
 
 	def tile_count(self) -> int:
 		"""Returns the number of tiles in the mosaic."""
 		return len(DR.quietly_find_elements('div.mosaic-item', self.element))
 
-def attach_link(section: WrappedElement, name: str, selector: str='[href*={}.html]') -> None:
+def attach_link(section: WrappedElement, name: str, selector: str='[href*="{}.html"]') -> None:
 	"""A function that attaches an attribute that can be called to create a simple link.
 	The 'name' argument should be the bit that .formats into the selector"""
 	def link_maker():
@@ -88,7 +89,7 @@ def attach_link(section: WrappedElement, name: str, selector: str='[href*={}.htm
 
 class About(WrappedElement):
 	"""Represents the About menu in the main nav menu."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-1')
 		attach_link(self, 'about')
 		attach_link(self, 'benefits')
@@ -98,7 +99,7 @@ class About(WrappedElement):
 
 class SalesResources(WrappedElement):
 	"""Represents the Sales Resources menu in the main nav menu."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-2')
 		attach_link(self, 'sales-resources')
 		attach_link(self, 'my-sales-tools')
@@ -112,7 +113,7 @@ class SalesResources(WrappedElement):
 
 class Training(WrappedElement):
 	"""Represents the Training menu in the main nav menu."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-3')
 		attach_link(self, 'training')
 		attach_link(self, 'training-summary')
@@ -120,7 +121,7 @@ class Training(WrappedElement):
 
 class NewsAndProducts(WrappedElement):
 	"""Represents the News And Products menu in the main nav menu."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-4')
 		attach_link(self, 'news-and-product-updates')
 		attach_link(self, 'latest-news')
@@ -128,13 +129,19 @@ class NewsAndProducts(WrappedElement):
 
 class AussieSpecialistClub(WrappedElement):
 	"""Represents the Aussie Specialist Club menu in the main nav menu."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-5')
 		attach_link(self, 'aussie-specialist-club')
 		attach_link(self, 'travel-club')
 		attach_link(self, 'aussie-specialist-photos')
 		attach_link(self, 'asp-logo')
 		attach_link(self, 'aussie-store')
+
+	@staticmethod
+	def not_present() -> bool:
+		"""Checks that the Aussie Specialist Club menu is not present.
+		As such, does not attempt to locate it, and is a static method."""
+		return not DR.check_visible_quick('#nav-main-panel-5')
 
 class NavMenu(WrappedElement):
 	"""In case you need to refer to all of the nav menu elements collectively."""
@@ -143,10 +150,10 @@ class NavMenu(WrappedElement):
 	training = Training
 	news_and_products = NewsAndProducts
 	aussie_specialist_club = AussieSpecialistClub
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-bar-top .nav-bar-left')
 
-	def get_all_links(self) -> set(str):
+	def get_all_links(self) -> Set[str]:
 		"""Gets a set containing the href of each link in the nav menu.
 		The Five/Four section panels, that is, not the Icons, or the Sign In thing."""
 		return {x.get_attribute('href') for x in DR.flashy_find_elements(\
@@ -154,8 +161,8 @@ class NavMenu(WrappedElement):
 
 class Footer(WrappedElement):
 	"""Represents the global Footer."""
-	def __init__(self) -> None:
-		self.element = DR.flashy_find_element('footer.main-footer')
+	def __init__(self):
+		self.element = DR.flashy_find_element('#main-footer')
 		attach_link(self, 'splash')
 		attach_link(self, 'facebook', selector='[href*="www.{}.com"]')
 		attach_link(self, 'plus.google', selector='[href*="www.{}.com"]')
@@ -173,13 +180,13 @@ class Footer(WrappedElement):
 
 class Sitemap(WrappedElement):
 	"""Represents the Sitemap link cloud."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('.sitemap')
 		attach_link(self, 'change')
 		attach_link(self, 'newsletter-unsubscribe')
 		attach_link(self, 'coming-soon')
 
-	def get_all_links(self) -> set(str):
+	def get_all_links(self) -> Set[str]:
 		"""Gets a set containing the href of each link in the Sitemap link section."""
 		return {x.get_attribute('href') for x in DR.flashy_find_elements('a', self.element)}
 
@@ -221,7 +228,7 @@ class FilteredSearch(WrappedElement):
 
 		class SearchResultPage(WrappedElement):
 			"""Represents the full More Info page pointed to by a Filtered Search's result."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.element = DR.flashy_find_element('.home-hero-title')
 
 			def get_title(self) -> None:
@@ -265,7 +272,7 @@ class FilteredSearch(WrappedElement):
 		# The largest number has to be the total results, with the other two being 'this many shown'.
 		return (1 + counter[1] - counter[0], counter[2])
 
-	def get_random_result(self) -> FilteredSearch.SearchResult:
+	def get_random_result(self) -> WrappedElement:
 		"""Picks a random one from the search results."""
 		result = self.SearchResult(random.choice(DR.quietly_find_elements('.mosaic-item')))
 		return DR.blip_element(result)
@@ -273,23 +280,23 @@ class FilteredSearch(WrappedElement):
 class PDFPage(WrappedElement):
 	"""Represents a PDF file viewed within the browser.
 	As a PDF embed is not a web page, this class doesn't do much."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.quietly_find_element('embed[type="application/pdf"],.pdfViewer')
 
 class HeaderMapIcon(WrappedElement):
 	"""Represents the Icon in the Header linking to the Interactive Map."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('.link-map a')
 
 class InteractiveMap(WrappedElement):
 	"""Represents the Interactive Map.
 	Note that instantiating this class will also switch WebDriver focus into the map's iframe."""
-	def __init__(self) -> None:
+	def __init__(self):
 		DR.switch_to_frame('#interactiveMapId')
 
 	class Controls(WrappedElement):
 		"""Represents the menu to the left of the map area."""
-		def __init__(self) -> None:
+		def __init__(self):
 			self.element = DR.flashy_find_element('.controls-wrapper')
 
 		def open_menu(self, selector: str) -> None:
@@ -305,30 +312,30 @@ class InteractiveMap(WrappedElement):
 
 		class Cities(WrappedElement):
 			"""Represents the Cities Menu."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.element = DR.flashy_find_element('#cities')
-			open_menu = InteractiveMap.Controls.open_menu
-			pick_random = InteractiveMap.Controls.pick_random
+				self.open_menu = open_menu
+				self.pick_random = pick_random
 
 		class IconicDestinations(WrappedElement):
 			"""Represents the Iconic Destinations Menu."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.element = DR.flashy_find_element('#icons')
-			open_menu = InteractiveMap.Controls.open_menu
-			pick_random = InteractiveMap.Controls.pick_random
+				self.open_menu = InteractiveMap.Controls.open_menu
+				self.pick_random = InteractiveMap.Controls.pick_random
 
 		class Itineraries(WrappedElement):
 			"""Represents the Itineraries Menu."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.element = DR.flashy_find_element('#itinerarytypes')
-			open_menu = InteractiveMap.Controls.open_menu
-			pick_random = InteractiveMap.Controls.pick_random
+				self.open_menu = InteractiveMap.Controls.open_menu
+				self.pick_random = InteractiveMap.Controls.pick_random
 
 		class FlyingTimes(WrappedElement):
 			"""Represents the Flying Times Menu."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.element = DR.flashy_find_element('#flights')
-			open_menu = InteractiveMap.Controls.open_menu
+				self.open_menu = InteractiveMap.Controls.open_menu
 
 			def choose_from(self) -> str:
 				"""Randomly chooses a city from the From field."""
@@ -354,7 +361,7 @@ class InteractiveMap(WrappedElement):
 
 		class InfoPanel(WrappedElement):
 			"""Represents the information panel about a City/Icon/Itinerary."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.element = DR.flashy_find_element('#info-middle')
 
 			def get_title(self) -> str:
@@ -378,11 +385,11 @@ class InteractiveMap(WrappedElement):
 				"""Counts the number of photographs shown for this location."""
 				return len(DR.quietly_find_elements('#info-carousel img', self.element))
 
-			def open_photos(self) -> InteractiveMap.ImageCarousel:
+			def open_photos(self) -> WrappedElement:
 				"""Clicks on one of the photos, opening the image carousel."""
 				DR.flashy_find_element('#info-carousel img', self.element).click()
 				DR.wait_until_present("#carousel-lightbox")
-				return InteractiveMap.ImageCarousel()
+				return ImageCarousel()
 
 			def random_itinerary(self) -> str:
 				"""Clicks on one of the Itinerary Suggestions links, and returns its title."""
@@ -397,12 +404,12 @@ class InteractiveMap(WrappedElement):
 
 	class MapArea(WrappedElement):
 		"""Just a precaution, preventing searches from overlapping too much?"""
-		def __init__(self) -> None:
+		def __init__(self):
 			self.element = DR.flashy_find_element('#map_canvas')
 
 		class MapPins(WrappedElement):
 			"""Represents the collection of pins that appear on the map when a menu is opened."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.pins = DR.flashy_find_elements('.marker')
 				self.element = DR.get_parent_element(self.pins[0])
 
@@ -423,19 +430,19 @@ class InteractiveMap(WrappedElement):
 				DR.blip_element(self.pins)
 				return len(self.pins)
 
-			def get_names(self) -> list(str):
+			def get_names(self) -> List[str]:
 				"""Returns a list of the labels on all of the pins"""
 				DR.blip_element(self.pins)
 				return [x.text() for x in self.pins]
 
 		class InfoPopup(WrappedElement):
 			"""Represents the popup window thing that appears from an Itinerary Step Pin."""
-			def __init__(self) -> None:
+			def __init__(self):
 				self.element = DR.flashy_find_element('.gm-style-iw')
 
 	class ImageCarousel(WrappedElement):
 		"""Represents the Photo Carousel that pops out from a Location Information panel"""
-		def __init__(self) -> None:
+		def __init__(self):
 			self.element = DR.flashy_find_element('#lightbox-inner')
 
 		def current_image_source(self) -> str:
@@ -453,7 +460,7 @@ class InteractiveMap(WrappedElement):
 
 	class ZoomTools(WrappedElement):
 		"""Represents the Zoom In/Zoom Out button set."""
-		def __init__(self) -> None:
+		def __init__(self):
 			self.element = DR.flashy_find_element('.zoom-wrapper')
 
 		def zoom_in(self) -> None:
@@ -466,22 +473,21 @@ class InteractiveMap(WrappedElement):
 
 class ContactUs(WrappedElement):
 	"""Represents the Contact Us page, which isn't a lot."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('a[href*="mailto:"]')
 
 class RegistrationForm(WrappedElement):
 	"""Represents the Registration Form in all its million <input>s glory."""
-	def __init__(self) -> None:
+	def __init__(self):
 		self.element = DR.flashy_find_element('#registration-form')
 
 	def plain_text_fields(self, value: str=''):
 		"""Sets the value of all of the text fields that are mandatory,
 		but which don't need any particular value or format."""
-		DR.quietly_find_elements('[type="text"]', self.element)
-
-	def first_name(self, value: str='') -> None:
-		"""Overwrites the First Name field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="fname"]', self.element).send_keys(value)
+		elements = DR.quietly_find_elements('[type="text"]', self.element)
+		for element in elements:
+			DR.blip_element(element)
+			element.send_keys(value)
 
 	def last_name(self, value: str='') -> None:
 		"""Overwrites the Last Name field to have the given value. Blank default."""
@@ -494,26 +500,10 @@ class RegistrationForm(WrappedElement):
 		DR.flashy_find_element('[name="birthdaymonth"]', self.element).send_keys(value[1])
 		DR.flashy_find_element('[name="birthdayyear"]', self.element).send_keys(value[2])
 
-	def company_name(self, value: str='') -> None:
-		"""Overwrites the Company Name field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="companyname"]', self.element).send_keys(value)
-
-	def job_title(self, value: str='') -> None:
-		"""Overwrites the Job Title field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="jobtitle"]', self.element).send_keys(value)
-
 	def pick_business_profile(self) -> None:
 		"""Picks a random option in the Business Profile list."""
 		sel = DR.flashy_find_element('[name="busprofile"]', self.element)
 		random.choice(DR.quietly_find_elements('option:not([value=""])', sel)).click()
-
-	def address_one(self, value: str='') -> None:
-		"""Overwrites the Address Line One field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="address1"]', self.element).send_keys(value)
-
-	def town_city(self, value: str='') -> None:
-		"""Overwrites the Town/City field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="town"]', self.element).send_keys(value)
 
 	def zip_postcode(self, value: str='') -> None:
 		"""Overwrites the Zip/Postcode field to have the given value. Blank default."""
@@ -538,10 +528,6 @@ class RegistrationForm(WrappedElement):
 			DR.quietly_find_element('option[value="8"])', sel).click()
 		else:
 			DR.quietly_find_element('option:not([value=""])', sel).click()
-
-	def mobile_number(self, value: str='') -> None:
-		"""Overwrites the Mobile/Cell Number field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="mobile"]', self.element).send_keys(value)
 
 	def email_address(self, value: str='') -> None:
 		"""Overwrites the Email Address and Verify Email fields to have the given value. Blank default."""
@@ -605,3 +591,32 @@ class RegistrationForm(WrappedElement):
 		"""Clicks the Create My Account Button, and awaits confirmation."""
 		DR.flashy_find_element("#register-submit", self.element).click()
 		DR.wait_until_present('#fancybox-thanks')
+
+class SignIn(WrappedElement):
+	"""Represents the Sign In panel. Instantiating this class will open said panel."""
+	def __init__(self):
+		DR.flashy_find_element('.link-signin-text').click()
+		self.element = DR.flashy_find_element('.fancybox-wrap')
+		attach_link(self, 'forgotten-username')
+		attach_link(self, 'forgotten-password')
+
+	def sign_in(self, user: str, passw: str) -> None:
+		"""Logs in using the given Username and Password."""
+		DR.flashy_find_element('#j_username', self.element).send_keys(user)
+		DR.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
+		DR.flashy_find_element('#usersignin', self.element).click()
+		DR.wait_for_page()
+
+class ForgottenForm(WrappedElement):
+	"""Represents the Forgotten Username/Password form. They are the same component."""
+	def __init__(self):
+		self.element = DR.flashy_find_element('#forgotform')
+
+	def email(self, email: str) -> None:
+		"""Enters the given email address into the email address field."""
+		DR.flashy_find_element('#forgotemail', self.element).send_keys(email)
+
+	def submit(self) -> None:
+		"""Clicks the Submit button and waits for the confirmation message."""
+		DR.flashy_find_element('#forgotUser-submit', self.element).click()
+		DR.wait_until_present('.fancybox-skin')

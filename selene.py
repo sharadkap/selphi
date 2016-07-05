@@ -128,8 +128,9 @@ class REGR(unittest.TestCase):
 		DR.wait_for_page()
 		self.assertIn('/sitemap.html', DR.current_url())
 		# Sitemap page should have links to each of the pages in the Nav Menu
+		sitemap = CP.Sitemap()
 		nav_links = CP.NavMenu().get_all_links()
-		sitemap_links = CP.Sitemap().get_all_links()
+		sitemap_links = sitemap.get_all_links()
 		self.assertTrue(nav_links.issubset(sitemap_links))
 		# And should also have Change Password, Unsubscribe, and Coming Soon links.
 		sitemap.change()
@@ -303,19 +304,13 @@ class REGR(unittest.TestCase):
 		# Ensure the Name fields are/contain TEST.
 		form = CP.RegistrationForm()
 		form.plain_text_fields('TEST')
-		form.first_name('TEST')
 		form.last_name('TEST ' + localecode + environ)
 		form.date_of_birth('12/12/1212')
-		form.company_name('TEST')
-		form.job_title('TEST')
 		form.pick_business_profile()
-		form.address_one('TEST')
-		form.town_city('TEST')
 		form.zip_postcode(zipcode)
 		form.pick_country(localecode.upper())
 		form.pick_state()
 		form.pick_language(langcode)
-		form.mobile_number('TEST')
 		# Use an overloaded email.
 		form.email_address(DR.EMAIL.replace('@', '+' + randid + '@'))
 		form.how_many_years()
@@ -333,74 +328,56 @@ class REGR(unittest.TestCase):
 		# In the Registration Confirmation email, click the Activate Account link.
 		# Should open the Registration Acknowledgement page, confirming the account is set up.
 
-	def login_renamed_to_remind_me_to_change_it(self):
-		DR.open_home_page()
-		# In the header, click the Sign In link.
-		DR.flashy_find_element('.link-signin-text').click()
-		# The Sign In panel should appear.
-		# DR.quietly_find_element('#fancybox-login-form')
-		# Enter the username and password of the User.
-		DR.flashy_find_element('#j_username').send_keys(self.usern)
-		DR.flashy_find_element('[name="j_password"]').send_keys(self.passw)
-		# Click the Sign In button.
-		DR.flashy_find_element('#usersignin').click()
-		self.driver.find_element_by_id('link-logout')
-
 	def test_Login(self):
 		# Log in.
-		self.login()
+		DR.open_home_page()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Should proceed to the Secure welcome page.
-		DR.quietly_find_element('.hero-user-name')
-		self.assertIn(self.base_url + self.locale + '/secure.html', DR.current_url())
+		self.assertIn(DR.LOCALE + '/secure.html', DR.current_url())
 		# Check the Nav Menu
 		# The Sales section should now have the My Sales Tools link
-		DR.flashy_find_element('#nav-main-panel-2').click()
-		DR.quietly_find_element('#nav-main-panel-2 a[href*="my-sales-tools.html"]')
-		# The Training Section should now have the Training Summary link.
-		# The Training section should now have the Webinars link.
-		DR.flashy_find_element('#nav-main-panel-3').click()
-		DR.quietly_find_element('#nav-main-panel-3 a[href*="webinars.html"]')
-		DR.quietly_find_element('#nav-main-panel-3 a[href*="training-summary.html"]')
+		CP.SalesResources().click().my_sales_tools()
+		# The Training Section should now have the Training Summary and Webinars links.
+		train = CP.Training().click()
+		train.webinars()
+		train.training_summary()
 		# The News & Updates section should have the Latest News Link
 		# The News section should now  have the Product Updates link.
-		DR.flashy_find_element('#nav-main-panel-4').click()
-		DR.quietly_find_element('#nav-main-panel-4 a[href*="latest-news.html"]')
-		DR.quietly_find_element('#nav-main-panel-4 a[href*="product-videos.html"]')
-		# The Club section should not be present.
-		self.assertFalse(DR.check_visible_quick('#nav-main-panel-5'))
+		news = CP.NewsAndProducts().click()
+		news.latest_news()
+		news.product_videos()
+		# The Club section should not be present. (Don't instantiate it, it isn't there)
+		self.assertTrue(CP.AussieSpecialistClub.not_present())
 
 	def test_Forgotten_Username(self):
 		DR.open_home_page()
 		# Click the Sign In link
-		DR.flashy_find_element('.link-signin-text').click()
 		# In the Sign In panel, click the Forgotten Username link.
-		DR.flashy_find_element('a[href*="forgotten-username.html"]').click()
+		CP.SignIn().forgotten_username().click()
 		# Enter the user's email address into the Forgot Username form.
-		DR.flashy_find_element('#forgotemail').send_keys(self.email)
-		# Click the Submit button.
-		DR.flashy_find_element('#forgotUser-submit').click()
-		# A panel should appear confirming submission.
-		DR.quietly_find_element('.fancybox-skin')
+		forgus = CP.ForgottenForm()
+		forgus.email(DR.EMAIL)
+		# Click the Submit button, a panel should appear confirming submission.
+		forgus.submit()
 		# An email should be received at the given address containing the Username.
+		# TODO ???
 
 	def test_Forgotten_Password(self):
 		DR.open_home_page()
 		# Click the Sign In link
-		DR.flashy_find_element('.link-signin-text').click()
 		# In the Sign In panel, click the Forgotten Password link.
-		DR.flashy_find_element('a[href*="forgotten-password.html"]').click()
+		CP.SignIn().forgotten_password().click()
 		# Enter the user's email address into the Forgot Password form.
-		DR.flashy_find_element('#forgotemail').send_keys(self.email)
-		# Click the Submit button.
-		DR.flashy_find_element('#forgotUser-submit').click()
-		# A panel should appear confirming submission.
-		DR.quietly_find_element('.fancybox-skin')
+		forgpa = CP.ForgottenForm()
+		forgpa.email(DR.EMAIL)
+		# Click the Submit button, a panel should appear confirming submission.
+		forgpa.submit()
 		# An email should be received at the given address containing the Username and new Password
 		# Read that email and sign in with the new password.
 
 	def test_Change_Password(self):
 		def double():
-			self.login()
+			CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 			# In the Nav Menu, click the My Profile link.
 			DR.flashy_find_element('#link-profile').click()
 			# Click the Change Password button, below the Profile Data fields.
@@ -450,7 +427,7 @@ class REGR(unittest.TestCase):
 				mtl.add(fop('.line-through-container-biline').text)
 
 		# Pre-condition: Should be signed in.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to the About page.
 		DR.flashy_find_element('#nav-main-panel-1').click()
 		DR.flashy_find_element('#nav-main-panel-1 a[href*="about.html"]').click()
@@ -497,7 +474,7 @@ class REGR(unittest.TestCase):
 
 	def test_My_Profile(self):
 		# Pre-condition: Should be signed in.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to the Profile page.
 		DR.flashy_find_element('#link-profile').click()
 		# Modify the values of several of the fields, but leave TEST in the names.
@@ -539,7 +516,7 @@ class REGR(unittest.TestCase):
 
 	def test_Training_Summary(self):
 		# Pre-condition: Should be signed in.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to Training > Training Summary.
 		DR.flashy_find_element('#nav-main-panel-3').click()
 		DR.flashy_find_element('a[href*="training-summary.html"]').click()
@@ -585,7 +562,7 @@ class REGR(unittest.TestCase):
 
 	def test_Aussie_Specialist_Club(self):
 		# Pre-condition: Logged in as a Qualified User.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Open the Aussie Specialist Club section in the Nav menu
 		club = CP.AussieSpecialistClub()
 		club.click()
@@ -600,7 +577,7 @@ class REGR(unittest.TestCase):
 
 	def test_Travel_Club(self):
 		# Pre-condition: Logged in as a Qualified User.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Travel Club
 		club = CP.AussieSpecialistClub()
 		club.click()
@@ -613,7 +590,7 @@ class REGR(unittest.TestCase):
 
 	def test_Famils(self):
 		# pre-condition: Logged in as a Qualified User.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Famils
 		DR.flashy_find_element('#nav-main-panel-5').click()
 		DR.flashy_find_element('#nav-main-panel-5 a[href*="aussie-specialist-club/famils.html"]').click()
@@ -624,7 +601,7 @@ class REGR(unittest.TestCase):
 
 	def test_Aussie_Specialist_Photos(self):
 		# pre-condition: Logged in as a Qualified User.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > AS Photos
 		DR.flashy_find_element('#nav-main-panel-5').click()
 		DR.flashy_find_element('#nav-main-panel-5 a[href*="aussie-specialist-photos.html"]').click()
@@ -642,7 +619,7 @@ class REGR(unittest.TestCase):
 
 	def test_Download_Qualification_Badge(self):
 		# Pre-condition: Logged in as a Qualified User.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Download Qualification Badge
 		DR.flashy_find_element('#nav-main-panel-5').click()
 		DR.flashy_find_element('#nav-main-panel-5 a[href*="aussie-specialist-club/asp-logo.html"]').click()
@@ -763,7 +740,7 @@ class REGR(unittest.TestCase):
 			return False
 
 		# Pre-condition: Logged in as a Qualified User.
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Preamblic mess.
 		DR.flashy_find_element('#link-profile').click()
 		def adn(s):
@@ -827,7 +804,7 @@ class REGR(unittest.TestCase):
 
 	def test_Premier_Badge(self):
 		# Pre-condition: Logged in as a Premier User
-		self.login()
+		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to the Profile Page.
 		DR.flashy_find_element('#link-profile').click()
 		# The Status Badge area shows the Premier Aussie Specialist Icon.

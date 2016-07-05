@@ -1,6 +1,7 @@
 """Automated testing of the Modules"""
 import os
 import time
+from typing import Union, List
 import argparse
 from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
 from selenium.webdriver.remote.command import Command
@@ -62,7 +63,7 @@ def new_drag_drop(source: str, target: str) -> None:
 	DRIVER.execute(Command.MOUSE_UP, {})
 	time.sleep(MINIWAIT)
 
-def domo(locator: str or tuple or list) -> None:
+def domo(locator: Union[str, tuple, list]) -> None:
 	"""If locator is a string, clicks on the element with that as an id
 	if locator is a tuple, drags the first element to the second one.
 	if a list, looks for each of the elements listed, clicks the first one that exists."""
@@ -94,7 +95,7 @@ def pick_from_possibilities(locator: str) -> WebElement:
 		raise WebDriverException("Didn't find {0}".format(locator))
 	return eles[0]
 
-def full_languages_modules_run(langfilter: list(str)=None, modfilter: list(str)=None) -> None:
+def full_languages_modules_run(langfilter: List[str]=None, modfilter: List[str]=None) -> None:
 	"""Run the selected set of modules and locales, logging results,
 	and saving a screenshot in case of failure.	By default, will run all of them."""
 	if ARGS.direct:
@@ -157,7 +158,7 @@ def get_time() -> str:
 	"""Get the time, and formatted as well."""
 	return time.strftime(TIME_FORMAT)
 
-def write_header_row(mods: list(str)) -> None:
+def write_header_row(mods: List[str]) -> None:
 	"""Adds the header row to the output file. Columns are for mods."""
 	with open(RESULTS_FILE, mode='a') as log:
 		log.write('\n"START: {0}",'.format(get_time()))	# Header corner.

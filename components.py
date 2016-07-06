@@ -24,6 +24,10 @@ class WrappedElement:
 		DR.execute_mouse_over(self.element)
 		return self
 
+	def is_displayed(self) -> bool:
+		"""Again, a bit of a formality. Checks whether the element is displayed"""
+		return self.element.is_displayed()
+
 class MinorElement(WrappedElement):
 	"""Superclass for all the internally used minor elements; with no unique
 	properties, initialised with a css selector instead of self-founding."""
@@ -72,10 +76,44 @@ class WhatYouCanSeeMosaic(WrappedElement):
 	"""Represents the What You Can See Mosaic, however many tiles may appear."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('div.whatYouCanSee div.mosaic')
+		self.tiles = DR.quietly_find_elements('.flipper')
 
 	def tile_count(self) -> int:
 		"""Returns the number of tiles in the mosaic."""
-		return len(DR.quietly_find_elements('div.mosaic-item', self.element))
+		return len(self.tiles)
+
+	class MosaicTile(WrappedElement):
+		"""Represents a single Mosaic Tile, including its internal elements.
+		Don't instantiate this from the test script directly, it needs a WebElement"""
+		def __init__(self, element: WebElement):
+			self.element = DR.blip_element(element)
+
+		def open(self) -> None:
+			"""Clicks on the mosaic tile, opening it.
+			Panel contents is a bit of a mess though, have to account for responsive design."""
+			self.element.click()
+			self.contentpane = [x for x in DR.flashy_find_elements(\
+				'.mosaic-item-detail-container.active') if x.is_displayed()][0]
+
+		def get_title(self) -> str:
+			"""Returns the title text of a tile's content pane. Has to be open first."""
+			return DR.flashy_find_element('.line-through-container-biline', self.contentpane).text()
+
+		def get_description(self) -> MinorElement:
+			"""Returns the description text in a tile's pane. Has to be open."""
+			return MinorElement('.l-padding-tb-30-lr-15 p', self.contentpane)
+
+		def get_link(self) -> MinorElement:
+			"""Returns the More Info link from a tiles pane. Has to be open."""
+			return MinorElement('a:not(.btn-bubble):not([href="#"])', self.contentpane)
+
+		def add_to_favourites(self) -> None:
+			"""Clicks the Heart button in the tiles content. Has to be open first."""
+			DR.flashy_find_element('.btn-bubble', self.contentpane).click()
+
+	def random_selection(self, num: int) -> List[WrappedElement]:
+		"""Given a number, gets that many randomly selected tiles from the mosaic."""
+		return [self.MosaicTile(tile) for tile in random.sample(self.tiles, num)]
 
 def attach_link(section: WrappedElement, name: str, selector: str='[href*="{}.html"]') -> None:
 	"""A function that attaches an attribute that can be called to create a simple link.
@@ -160,6 +198,11 @@ class NavMenu(WrappedElement):
 		The Five/Four section panels, that is, not the Icons, or the Sign In thing."""
 		return {x.get_attribute('href') for x in DR.flashy_find_elements(\
 			'#nav-bar-top .nav-bar-left a:not([href^="#"])', self.element)}
+
+	def user_names(self) -> str:
+		"""Gets the text displayed in the corner that shows the user names.
+		Totally unformatted, so just use the in() function rather than parsing."""
+		return DR.flashy_find_element('.link-signin-text', self.element).text()
 
 class Footer(WrappedElement):
 	"""Represents the global Footer."""
@@ -274,10 +317,14 @@ class FilteredSearch(WrappedElement):
 		# The largest number has to be the total results, with the other two being 'this many shown'.
 		return (1 + counter[1] - counter[0], counter[2])
 
+	def get_all_results(self) -> List[WrappedElement]:
+		"""Gets all of the search results."""
+		return [self.SearchResult(e) for e in DR.flashy_find_elements('.mosaic-item')]
+
 	def get_random_result(self) -> WrappedElement:
 		"""Picks a random one from the search results."""
 		result = self.SearchResult(random.choice(DR.quietly_find_elements('.mosaic-item')))
-		return DR.blip_element(result)
+		return DR.blip_element(result.element)
 
 class PDFPage(WrappedElement):
 	"""Represents a PDF file viewed within the browser.
@@ -289,6 +336,18 @@ class HeaderMapIcon(WrappedElement):
 	"""Represents the Icon in the Header linking to the Interactive Map."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('.link-map a')
+
+class HeaderHeartIcon(WrappedElement):
+	"""Represents the Heart Icon in the Header. Complete with favourites count."""
+	def __init__(self):
+		self.element = DR.flashy_find_element('.icon-heart')
+
+	def favourites_count(self) -> int:
+		"""Returns the number of favourites as indicated by the icon subtitle."""
+		try:
+			return int(DR.flashy_find_element('.my-trip-count', self.element).text())
+		except ValueError:
+			return 0
 
 class InteractiveMap(WrappedElement):
 	"""Represents the Interactive Map.
@@ -640,13 +699,86 @@ class ChangePassword(WrappedElement):
 
 	def submit(self) -> None:
 		"""Clicks the Update Password button, and then waits for the redirect."""
-		DR.flashy_find_element('#changepwd-submit').click()
+		DR.flashy_find_element('#changepwd-submit', self.element).click()
 		DR.wait_until_present('.fancybox-wrap')
 		DR.LAST_LINK = 'profile.html'
 		DR.wait_for_page()
+
+class MySalesTools(WrappedElement):
+	"""Represents the My Sales Tools page."""
+	def __init__(self):
+		self.element = DR.flashy_find_element('.dreamTrip')
+
+	class SalesTool(WrappedElement):
+		"""Represents a single favourite entry."""
+		def __init__(self, element):
+			self.element = element
+
+		def get_link(self) -> WrappedElement:
+			"""Returns the entry's More Info link."""
+			return MinorElement('p > a', self.element)
+
+		def get_title(self) -> str:
+			"""Returns the title of the entry."""
+			return DR.flashy_find_element('.search-results-title', self.element).text()
+
+		def get_description(self) -> str:
+			"""Returns the Page Summary of the entry."""
+			return DR.flashy_find_element('.mloverflow-text', self.element).text()
+
+		def close(self) -> None:
+			"""Clicks the X button, closing the entry."""
+			DR.flashy_find_element('.icon-close', self.element).click()
+
+	def get_favourites(self) -> List[WrappedElement]:
+		"""Gets all of the saved sales tools entries."""
+		return [self.SalesTool(x) for x in \
+			DR.flashy_find_elements('.search-result-row-spacing', self.element)]
 
 class Profile(WrappedElement):
 	"""Represents the Profile page form."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('#profile-form')
 		attach_link(self, 'change')
+
+	def get_state(self) -> str:
+		"""Gets the current value of the State field."""
+		return DR.flashy_find_element('[name="state"]', self.element).get_attribute('value')
+
+	def set_state(self) -> None:
+		"""Randomly sets the value of the State field. Returns the chosen value."""
+		opt = random.choice(DR.flashy_find_element('[name="state"]', self.element)\
+			.find_elements_by_css_selector('option:not([value=""])'))
+		opt.click()
+		return opt.get_attribute('value')
+
+	def get_bio(self) -> str:
+		"""Gets the current value of the Biography field."""
+		return DR.flashy_find_element('[name="bio"]', self.element).text()
+
+	def set_bio(self, value) -> None:
+		"""Sets the value of the Biography field to the given string."""
+		bio = DR.flashy_find_element('[name="bio"]', self.element)
+		bio.clear()
+		bio.send_keys(value)
+
+	def get_last_name(self) -> str:
+		"""Gets the current value of the Last Name field."""
+		return DR.flashy_find_element('[name="lname"]', self.element).text()
+
+	def set_last_name(self, value) -> None:
+		"""Sets the value of the Last Name field to the given string."""
+		nom = DR.flashy_find_element('[name="lname"]', self.element)
+		nom.clear()
+		nom.send_keys(value)
+
+	def save_changes(self) -> None:
+		"""Clicks the Save Changes button."""
+		DR.flashy_find_element('#updateProfileSubmit', self.element).click()
+		DR.wait_until_present('.fancybox-skin')
+
+class TrainingSummary(WrappedElement):
+	"""Represents the Training Summary modules list things."""
+	def __init__(self):
+		self.core = DR.flashy_find_element('.trainingModuleStatus:first')
+		self.optional = DR.flashy_find_element('.trainingModuleStatus:last')

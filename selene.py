@@ -376,133 +376,115 @@ class REGR(unittest.TestCase):
 		# TODO Read that email and sign in with the new password.
 
 	def test_Change_Password(self):
+		temp_pass = DR.PASSWORD
 		def double():
-			CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+			CP.SignIn().sign_in(DR.USERNAME, temp_pass)
 			# In the Nav Menu, click the My Profile link.
 			CP.NavMenu().profile().click()
 			# Click the Change Password button, below the Profile Data fields.
 			CP.Profile().change().click()
 			# Fill out the Change Password Form with the Current Password and a New Password.
 			change = CP.ChangePassword()
-			change.current_password(DR.PASSWORD)
-			change.new_password(DR.PASSWORD[::-1])	# This is the password reversed
+			change.current_password(temp_pass)
+			change.new_password(temp_pass[::-1])	# This is the password reversed
 			# Click the Submit button, a panel should appear confirming the password change, and
 			# The page should redirect back to the Profile page.
 			change.submit()
 			# Click the Sign Out link in the header.
 			CP.NavMenu().logout().click()
-
+		DR.open_home_page()
 		# Sign in and change the password.
 		double()
 		# Sign back in with the New Password. The system should accept the new password.
-		DR.PASSWORD = DR.PASSWORD[::-1]
-		double()
-		# Then change it back, don't want to break anything for the rest of the tests.
-		DR.PASSWORD = DR.PASSWORD[::-1]
+		temp_pass = temp_pass[::-1]
+		double()	# Also change it back to the original
 
 	def test_Favourites(self):
-		mtl = set()
+		favtitles = set()
 		def mosaicad(num):
-			nonlocal mtc, mtl
+			nonlocal favcount, favtitles
 			# Click on some of the Mosaic panels.
-			inp = DR.flashy_find_elements('.flipper')
-			random.shuffle(inp)
-			for fli in inp[0:num]:
-				scrl(fli)
-				fli.click()
+			for tile in CP.WhatYouCanSeeMosaic().random_selection(num):
+				tile.open()
 				# The Panels should unfold, showing a description, More Info link, and heart button.
 				# They aren't too well labelled though, so be sure to actually watch the playback.
-				opa = [x for x in DR.flashy_find_elements('.mosaic-item-detail-container.active')\
-					   if x.is_displayed()][0]
-				fop = blipper(opa.find_element_by_css_selector)
-				self.assertTrue(fop('.l-padding-tb-30-lr-15 p').is_displayed())
-				self.assertTrue(fop('a:not(.btn-bubble):not([href="#"])').is_displayed())
+				self.assertTrue(tile.get_description().is_displayed())
+				self.assertTrue(tile.get_more_info_link().is_displayed())
 				# Click on the Heart buttons of those mosaics.
-				fop('.btn-bubble').click()
+				tile.add_to_favourites()
 				# The Heart Icon in the header should pulse and have a number incremented.
-				self.assertEqual(mtc + 1, int(DR.flashy_find_element('.my-trip-count').text))
-				mtc += 1
-				mtl.add(fop('.line-through-container-biline').text)
+				favcount += 1
+				self.assertEqual(favcount, CP.HeaderHeartIcon().favourites_count())
+				favtitles.add(tile.get_title().text())
 
 		# Pre-condition: Should be signed in.
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		favcount = CP.HeaderHeartIcon().favourites_count()
+		# If there are already favourites, that's a problem, remove them. Messes with the count.
+		if favcount > 0:
+			CP.SalesResources().click().my_sales_tools().click()
+			for x in CP.MySalesTools().get_favourites():
+				x.close()
 		# Navigate to the About page.
-		DR.flashy_find_element('#nav-main-panel-1').click()
-		DR.flashy_find_element('#nav-main-panel-1 a[href*="about.html"]').click()
-		mtc = int(DR.flashy_find_element('.my-trip-count').text) or 0
+		CP.About().click().about().click()
 		# Add some of the mosaics to Sales Tools
 		mosaicad(3)
 		# Navigate to Sales Resources > Australian Events.
-		DR.flashy_find_element('#nav-main-panel-2').click()
-		DR.flashy_find_element('#nav-main-panel-2 a[href*="events.html"]').click()
+		CP.SalesResources().click().events().click()
 		# Click the Add To Sales Tools buttons of some of the Event Mosaics.
 		mosaicad(6)
 		# Navigate to Sales Resources > Fact Sheets.
-		DR.flashy_find_element('#nav-main-panel-2').click()
-		DR.flashy_find_element('#nav-main-panel-2 a[href*="fact-sheets-overview.html"]').click()
+		CP.SalesResources().click().fact_sheets_overview().click()
 		# Click the Add To Sales Tools buttons on a few of the results.
-		for b in DR.flashy_find_elements('a.btn-bubble'):
-			scrl(b)
-			b.click()
-			self.assertEqual(mtc + 1, int(DR.flashy_find_element('.my-trip-count').text))
-			mtc += 1
-			# element.parent does not, in fact, return the parent element.
-			mtl.add(blipper(b.find_element_by_xpath('../..').find_element_by_css_selector)\
-					('.line-through-container').text)
-		# Click the Heart Icon in the header.
-		DR.flashy_find_element('.favourite-summary').click()
-		# The My Sales Tools page should be displayed.
-		DR.quietly_find_element('.dreamTrip')
+		search = CP.FilteredSearch(fact_sheet_mode=True)
+		for result in search.get_all_results():
+			result.add_to_favourites()
+			favcount += 1
+			self.assertEqual(favcount, CP.HeaderHeartIcon().favourites_count())
+			favtitles.add(result.get_title())
+		# Click the Heart Icon in the header, the My Sales Tools page should be displayed.
+		CP.HeaderHeartIcon().click()
 		# The My Sales Tools page should have an entry for each of the pages added previously.
-		mts = [x.text for x in DR.flashy_find_elements('.search-results-title')]
-		for l in mtl:
-			self.assertIn(l, mts)
+		faves = CP.MySalesTools().get_favourites()
+		favpagetitles = {x.get_title() for x in faves}
+		self.assertTrue(favtitles.issubset(favpagetitles))
 		# Entries should have an X button, a Title, a Description, and a More Info link.
-		for ls in DR.flashy_find_elements('.search-result-row-spacing'):
-			fls = blipper(ls.find_element_by_css_selector)
-			self.assertTrue(fls('.icon-close').is_displayed())
-			self.assertTrue(fls('.search-results-title').is_displayed())
-			self.assertTrue(fls('.mloverflow-text').is_displayed())
-			self.assertTrue(fls('p > a').is_displayed())
-		# Click several of the listed items' X buttons.
-		for ls in DR.flashy_find_elements('.search-result-row-spacing'):
-			blipper(ls.find_element_by_css_selector)('.icon-close').click()
+		for fave in faves:
+			fave.get_title()
+			fave.get_description()
+			fave.get_link()
+			# Click several of the listed items' X buttons.
+			fave.close()
 		# The entries should be removed from the list.
-		self.assertFalse(DR.check_visible_quick('.search-result-row-spacing'))
+		self.assertEqual(0, len(CP.MySalesTools().get_favourites()))
 
 	def test_My_Profile(self):
 		# Pre-condition: Should be signed in.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to the Profile page.
-		DR.flashy_find_element('#link-profile').click()
+		CP.NavMenu().profile().click()
+		profile = CP.Profile()
 		# Modify the values of several of the fields, but leave TEST in the names.
-		wor = DR.flashy_find_element('html').get_attribute('class').split()
-		def wos():
-			return [random.choice(wor) for x in range(5)]
-		bio = ' '.join(wos())
-		lno = ' TEST '.join(wos())
-		spc = random.choice(DR.flashy_find_elements('[name="state"] \
-			option:not([value=""])')).get_attribute('value')
-		obi = DR.flashy_find_element('[name="bio"]')
-		obi.clear()
-		obi.send_keys(bio)
-		oln = DR.flashy_find_element('[name="lname"]')
-		oln.clear()
-		oln.send_keys(lno)
-		# Again with this.
-		csp = DR.flashy_find_element('[name="state"]')
-		jeva('$(arguments[0]).val(arguments[1]).change();', csp, spc)
-		# Click the Save Changes button.
-		DR.flashy_find_element('#updateProfileSubmit').click()
-		# A panel confirming changes saved should appear.
-		DR.quietly_find_element('.fancybox-skin')
+		words = "A Series Of Random Words To Use For Sampling Or Some Such Thing"
+		def pick_words(num: int):
+			"""Gets random words."""
+			return [random.choice(words) for x in range(num)]
+		bio = ' '.join(pick_words(10))
+		lastname = ' TEST '.join(pick_words(2))
+		state = profile.set_state()
+		profile.set_bio(bio)
+		profile.set_last_name(lastname)
+		# Click the Save Changes button, a panel confirming changes saved should appear.
+		profile.save_changes()
 		# Refresh the page.
-		self.driver.refresh()
+		DR.refresh()
 		# The changed field values should remain.
-		self.assertEqual(DR.flashy_find_element('[name="bio"]').text, bio)
-		self.assertEqual(DR.flashy_find_element('[name="state"]').get_attribute('value'), spc)
-		self.assertEqual(DR.flashy_find_element('[name="lname"]').get_attribute('value'), lno)
-		self.assertIn(lno, DR.flashy_find_element('.link-signin-text').text)
+		profile = CP.Profile()
+		self.assertEqual(profile.get_bio(), bio)
+		self.assertEqual(profile.get_state(), state)
+		self.assertEqual(profile.get_last_name(), lastname)
+		self.assertIn(lastname, CP.NavMenu().user_names())
 
 		#### TODO ####
 		# Navigate to Training > Training Summary.
@@ -510,14 +492,13 @@ class REGR(unittest.TestCase):
 		# Complete the Module.
 		# Go back to the Profile page.
 		# The Module's Completion Badge should be at the top of the Recent Achievements list.
-		raise NotImplementedError("But that's fine, this bit isn't finished.")
 
 	def test_Training_Summary(self):
 		# Pre-condition: Should be signed in.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to Training > Training Summary.
-		DR.flashy_find_element('#nav-main-panel-3').click()
-		DR.flashy_find_element('a[href*="training-summary.html"]').click()
+		CP.Training().click().training_summary().click()
 		# Change the value of the Optional Modules Filter Form.
 		olm = '__'.join([x.text for x in DR.flashy_find_elements('.line-through-container-biline')])
 		# A Special Select.

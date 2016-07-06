@@ -86,6 +86,10 @@ def back() -> None:
 	"""The rule is, only the drivery module is allowed to invoke DRIVER."""
 	DRIVER.back()
 
+def refresh() -> None:
+	"""It's The Rules"""
+	DRIVER.refresh()
+
 def wait_for_page() -> None:
 	"""Holds up execution until the current page's url contains the Last Link value
 	and its	document.readyState is 'complete'. A decent approximation?"""

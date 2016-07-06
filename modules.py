@@ -90,7 +90,8 @@ def click_surely(ele: WebElement) -> None:
 
 def pick_from_possibilities(locator: str) -> WebElement:
 	"""Deal with alternate ids. Use a css selector to get any proposed elements."""
-	eles = DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))
+	eles = [e for e in DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))\
+	 	if e.is_displayed()]
 	if len(eles) == 0:
 		raise WebDriverException("Didn't find {0}".format(locator))
 	return eles[0]

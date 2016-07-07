@@ -2,7 +2,7 @@
 
 import time
 from types import FunctionType
-from typing import List, Union
+from typing import List, Union, Any
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -167,3 +167,7 @@ def bring_to_front(element: WebElement) -> WebElement:
 	"""Uses a JS to ensure the selected element is at the front.
 	Usually in order to properly click() it."""
 	DRIVER.execute_script('arguments[0].style.zIndex = "10000");', element)
+
+def execute_script(script: str, *args) -> Any:
+	"""Executes a javascript snippet, returning what the script returns."""
+	return DRIVER.execute_script(script, args)

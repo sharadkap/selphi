@@ -28,6 +28,10 @@ class WrappedElement:
 		"""Again, a bit of a formality. Checks whether the element is displayed"""
 		return self.element.is_displayed()
 
+	def __getattr__(self, name):
+		"""Basically just to stop pylint from complaining about dynamic attributes."""
+		raise AttributeError('No, the {0} attribute does not exist.'.format(name))
+
 class MinorElement(WrappedElement):
 	"""Superclass for all the internally used minor elements; with no unique
 	properties, initialised with a css selector instead of self-founding."""
@@ -111,7 +115,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
 			"""Clicks the Heart button in the tiles content. Has to be open first."""
 			DR.flashy_find_element('.btn-bubble', self.contentpane).click()
 
-	def random_selection(self, num: int) -> List[WrappedElement]:
+	def random_selection(self, num: int) -> List[WrappedElement]: # pylint: disable-msg=E1126
 		"""Given a number, gets that many randomly selected tiles from the mosaic."""
 		return [self.MosaicTile(tile) for tile in random.sample(self.tiles, num)]
 
@@ -317,7 +321,7 @@ class FilteredSearch(WrappedElement):
 		# The largest number has to be the total results, with the other two being 'this many shown'.
 		return (1 + counter[1] - counter[0], counter[2])
 
-	def get_all_results(self) -> List[WrappedElement]:
+	def get_all_results(self) -> List[WrappedElement]: # pylint: disable-msg=E1126
 		"""Gets all of the search results."""
 		return [self.SearchResult(e) for e in DR.flashy_find_elements('.mosaic-item')]
 
@@ -491,7 +495,7 @@ class InteractiveMap(WrappedElement):
 				DR.blip_element(self.pins)
 				return len(self.pins)
 
-			def get_names(self) -> List[str]:
+			def get_names(self) -> List[str]: # pylint: disable-msg=E1126
 				"""Returns a list of the labels on all of the pins"""
 				DR.blip_element(self.pins)
 				return [x.text() for x in self.pins]
@@ -730,7 +734,7 @@ class MySalesTools(WrappedElement):
 			"""Clicks the X button, closing the entry."""
 			DR.flashy_find_element('.icon-close', self.element).click()
 
-	def get_favourites(self) -> List[WrappedElement]:
+	def get_favourites(self) -> List[WrappedElement]: # pylint: disable-msg=E1126
 		"""Gets all of the saved sales tools entries."""
 		return [self.SalesTool(x) for x in \
 			DR.flashy_find_elements('.search-result-row-spacing', self.element)]
@@ -778,7 +782,79 @@ class Profile(WrappedElement):
 		DR.wait_until_present('.fancybox-skin')
 
 class TrainingSummary(WrappedElement):
-	"""Represents the Training Summary modules list things."""
+	"""Represents the two Training Summary modules list things."""
 	def __init__(self):
 		self.core = DR.flashy_find_element('.trainingModuleStatus:first')
 		self.optional = DR.flashy_find_element('.trainingModuleStatus:last')
+
+	def filter_optional(self) -> None:
+		"""Changes the filter on the Optional Modules, then clicks Refresh Results."""
+		sel = DR.flashy_find_element('[name="Optional"]', self.optional)
+		DR.quietly_find_element('[value="TrainingModule:Optional/StateandTerritories"]', sel).click()
+		DR.execute_script('for(a of arguments[0])a.remove();', \
+			DR.quietly_find_elements('.mosaic-item', self.optional))
+		DR.flashy_find_element('#btn-id', self.optional).click()
+
+	def count_modules(self) -> int:
+		"""Returns the number of Optional Modules displayed."""
+		return len(DR.flashy_find_elements('mosaic-item', self.optional))
+
+	def get_optional_titles(self) -> List[str]: # pylint: disable-msg=E1126
+		"""Returns a list of the titles of the currently displayed Optional Modules"""
+		return [t.text() for t in DR.flashy_find_elements('.line-through-container', self.optional)]
+
+	def load_more(self) -> None:
+		"""Clicks the View More Modules button."""
+		count = self.count_modules()
+		DR.flashy_find_element('.load-more', self.optional).click()
+		DR.wait_until(lambda: self.count_modules() != count or \
+			DR.quietly_find_element('load-more', self.optional).get_attribute('disabled') == 'disabled')
+
+	def completion_types(self) -> None:
+		"""Gets all of the Module entries, then checks how complete they are,
+		then matches that with a Progress Icon type. Kind of a mess."""
+		mods = DR.flashy_find_elements('.mosaic-item', self.core) + \
+			DR.flashy_find_elements('.mosaic-item', self.optional)
+		for mod in mods:
+			button = DR.flashy_find_element('.training-continue')
+			if re.search(button.get_attribute('data-ta-data-layer'), 'Resume-ASP|Start-ASP'):
+				DR.flashy_find_element('img[src*="icon-incomplete.png"]', mod)
+			else:
+				DR.flashy_find_element('img[src*="icon-complete.png"]', mod)
+
+class Famils(WrappedElement):
+	"""Represents the content of the Famils page."""
+	def __init__(self):
+		self.element = DR.flashy_find_elements('.type-body')[0]
+
+class AussieSpecialistPhotos(WrappedElement):
+	"""Represents the image mosaics on the Aussie Specialist Photos page."""
+	def __init__(self):
+		self.photos = DR.flashy_find_elements('.mosaic-item')
+
+	def random_images(self, num: int) -> List[WrappedElement]: # pylint: disable-msg=E1126
+		"""Randomly selects num photos."""
+		return [Photo(x) for x in random.sample(self.photos, num)]
+
+	class Photo(WrappedElement):
+		"""Represents an individual Aussie Specialist Photo.
+		Don't instantiate this from the test script directly, it needs a WebElement"""
+		def __init__(self, element: WebElement):
+			self.element = DR.blip_element(element)
+
+		def open(self) -> None:
+			"""Clicks on the mosaic tile, opening it."""
+			DR.flashy_find_element('.flipper img[src*="image.adapt"]', self.element).click()
+			self.contentpane = DR.flashy_find_element('.active', self.element)
+
+		def get_description(self) -> MinorElement:
+			"""Returns the description text in a tile's pane. Has to be open."""
+			return MinorElement('p', self.contentpane)
+
+		def get_link(self) -> MinorElement:
+			"""Returns the Instagram link from a tiles pane. Has to be open."""
+			return MinorElement('a[href*="instagram.com/australia"]', self.contentpane)
+
+		def close(self) -> None:
+			"""Clicks the X button in the tiles content. Has to be open first."""
+			DR.flashy_find_element('.icon-close', self.contentpane).click()

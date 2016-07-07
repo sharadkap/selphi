@@ -499,48 +499,35 @@ class REGR(unittest.TestCase):
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to Training > Training Summary.
 		CP.Training().click().training_summary().click()
+		modules = CP.TrainingSummary()
 		# Change the value of the Optional Modules Filter Form.
-		olm = '__'.join([x.text for x in DR.flashy_find_elements('.line-through-container-biline')])
-		# A Special Select.
-		jeva('$(arguments[0]).val(arguments[1]).change();',\
-			 DR.flashy_find_element('[name="Optional"]'), 'TrainingModule:Optional/Niche')
-		# Click Refresh Results.
-		DR.flashy_find_element('#btn-id').click()
-		time.sleep(showa)
+		oldlist = modules.get_optional_titles()
+		modules.filter_optional()
 		# The Optional Modules should be filtered.
-		nlm = '__'.join([x.text for x in DR.flashy_find_elements('.line-through-container-biline')])
-		self.assertNotEqual(olm, nlm)
+		newlist = modules.get_optional_titles()
+		self.assertNotEqual(oldlist, newlist)
 		# Click the View More Modules button.
-		omc = len(DR.flashy_find_elements('.line-through-container-biline'))
-		DR.flashy_find_element('.load-more').click()
-		time.sleep(showa)
+		oldcount = modules.count_modules()
+		modules.load_more()
 		# Three more modules should be displayed, up to the total amount available.
-		nmc = len(DR.flashy_find_elements('.line-through-container-biline'))
-		self.assertEqual(omc + 3, nmc)
-		omc = nmc
-		DR.flashy_find_element('.load-more').click()
-		time.sleep(showa)
-		nmc = len(DR.flashy_find_elements('.line-through-container-biline'))
-		self.assertEqual(omc + 1, nmc)
-		omc = nmc
-		DR.flashy_find_element('.load-more').click()
-		time.sleep(showa)
-		nmc = len(DR.flashy_find_elements('.line-through-container-biline'))
-		self.assertEqual(omc, nmc)
+		newcount = modules.count_modules()
+		self.assertEqual(oldcount + 3, newcount)
+		oldcount = newcount
+		modules.load_more()
+		newcount = modules.count_modules()
+		self.assertEqual(oldcount + 1, newcount)
+		oldcount = newcount
+		modules.load_more()
+		newcount = modules.count_modules()
+		self.assertEqual(oldcount, newcount)
 		# Unstarted Modules should have a Let's Start button, and an (X) Incomplete label.
-		blipper(DR.flashy_find_element('a[data-ta-data-layer*="trainingModuleFilterRefreshStart-ASP"]')\
-			.find_element_by_xpath('../..').find_element_by_css_selector)\
-			('.search-favourite img[src*="icon-incomplete.png"]')
 		# Started-Not-Finished Modules should have an In Progress button and the Incomplete label.
-		blipper(DR.flashy_find_element('a[data-ta-data-layer*="trainingModuleFilterRefreshResume-ASP"]')\
-			.find_element_by_xpath('../..').find_element_by_css_selector)\
-			('.search-favourite img[src*="icon-incomplete.png"]')
 		# Completed Modules should have a Complete button and a (v/) Complete label.
-		blipper(DR.flashy_find_element('a[data-ta-data-layer=""]').find_element_by_xpath('../..')\
-			.find_element_by_css_selector)('.search-favourite img[src*="icon-complete.png"]')
+		modules.completion_types()
 
 	def test_Aussie_Specialist_Club(self):
 		# Pre-condition: Logged in as a Qualified User.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Open the Aussie Specialist Club section in the Nav menu
 		club = CP.AussieSpecialistClub()
@@ -556,11 +543,10 @@ class REGR(unittest.TestCase):
 
 	def test_Travel_Club(self):
 		# Pre-condition: Logged in as a Qualified User.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Travel Club
-		club = CP.AussieSpecialistClub()
-		club.click()
-		club.travel_club().click()
+		CP.AussieSpecialistClub().click().travel_club().click()
 		# Search for results, changing the terms if none.
 		travelsearch = CP.FilteredSearch()
 		travelsearch.random_search()
@@ -569,32 +555,26 @@ class REGR(unittest.TestCase):
 
 	def test_Famils(self):
 		# pre-condition: Logged in as a Qualified User.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Famils
-		DR.flashy_find_element('#nav-main-panel-5').click()
-		DR.flashy_find_element('#nav-main-panel-5 a[href*="aussie-specialist-club/famils.html"]').click()
+		CP.AussieSpecialistClub().click().aussie_specialist_club().click()
 		# Maybe not available in all locales?
 		# Should Display Famils page content.
-		for fam in DR.flashy_find_elements('.type-body'):
-			self.assertTrue(fam.is_displayed())
+		CP.Famils()
 
 	def test_Aussie_Specialist_Photos(self):
 		# pre-condition: Logged in as a Qualified User.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > AS Photos
-		DR.flashy_find_element('#nav-main-panel-5').click()
-		DR.flashy_find_element('#nav-main-panel-5 a[href*="aussie-specialist-photos.html"]').click()
+		CP.AussieSpecialistClub().click().aussie_specialist_photos().click()
 		# Should display Instagram Image Tiles, with links and descriptions
-		for pic in random.sample(DR.flashy_find_elements('.mosaic-item .flipper'), 10):
-			def picl(el, sel):
-				# In case the virtual mouse flips into the image
-				self.assertTrue(el.find_element_by_css_selector(sel).is_enabled())
-			picl(pic, 'img[src*="image.adapt"]')
-			pic.click()
-			pio = [x for x in DR.flashy_find_elements('.mosaic-item-detail-container.active') if x.is_displayed()][0]
-			picl(pio, 'p')
-			picl(pio, 'a[href="http://www.instagram.com/australia"]')
-			pic.click()
+		for pic in CP.AussieSpecialistPhotos().random_images(10):
+			pic.open()
+			pic.get_description()
+			pic.get_link()
+			pic.close()
 
 	def test_Download_Qualification_Badge(self):
 		# Pre-condition: Logged in as a Qualified User.

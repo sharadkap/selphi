@@ -578,15 +578,13 @@ class REGR(unittest.TestCase):
 
 	def test_Download_Qualification_Badge(self):
 		# Pre-condition: Logged in as a Qualified User.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Download Qualification Badge
-		DR.flashy_find_element('#nav-main-panel-5').click()
-		DR.flashy_find_element('#nav-main-panel-5 a[href*="aussie-specialist-club/asp-logo.html"]').click()
+		CP.AussieSpecialistClub().click().asp_logo().click()
 		# Click the Download Qualification Badge link.
-		DR.flashy_find_element('a[href*="asp-badge.png"]').click()
 		# Badge image should be downloaded/opened in a new tab.
-		DR.switch_to_window(DR.window_handles[1])
-		DR.quietly_find_element('img[src*="asp-badge.png"]')
+		DR.flashy_find_element().click()
 
 #### TODO: Get the website thing to check the email thing? ####
 	def test_Campaign(self):

@@ -1,6 +1,9 @@
 """This is where all the specific Webdriver implementation details go."""
 
 import time
+import email
+import quopri
+import imaplib
 from types import FunctionType
 from typing import List, Union, Any
 from selenium import webdriver
@@ -31,6 +34,7 @@ USERNAME = 'gbpwwwvjvz'
 PASSWORD = 'Welcome1'
 # """The email address associated with the given user."""
 EMAIL = 'testeratta@gmail.com'
+EMAIL_PASSWORD = 'WelcomeTest'
 
 # """The main WebDriver runner reference."""
 DRIVER = webdriver.Chrome()
@@ -49,8 +53,8 @@ BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outse
 	a.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, a)}'
 
 # """Type annotation, referring to either a WebElement, or a list of them."""
-ELEMENT_OR_LIST = Union[WebElement, List[WebElement]]
-ELEMENT_LIST = List[WebElement]
+ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
+ELEMENT_LIST = List[WebElement] # pylint: disable-msg=E1126
 
 def to_list(item) -> list:
 	"""Wraps the input into a list if it wasn't already one."""
@@ -171,3 +175,25 @@ def bring_to_front(element: WebElement) -> WebElement:
 def execute_script(script: str, *args) -> Any:
 	"""Executes a javascript snippet, returning what the script returns."""
 	return DRIVER.execute_script(script, args)
+
+### Guess who learned how to read emails! ###
+def check_email(my_email: str, plain: bool=True) -> List[str]: # pylint: disable-msg=E1126
+	"""Given a recipient email address to check, get all of the emails it has recently received."""
+	results = []
+	with imaplib.IMAP4_SSL('imap.gmail.com') as imap:
+		imap.login('testeratta@gmail.com', 'WelcomeTest')
+		imap.select()
+		wait_until(lambda: email_loop(imap, my_email, ''))
+		_, nums = imap.search(None, \
+			'FROM', EMAIL, 'TO', my_email)
+		_, ems = imap.fetch(nums, 'BODY[1]' if plain else 'BODY[2]')
+		for em in ems[::2]:	# Yeah, the results come back wierd.
+			if plain:
+				results.append(em[1].decode())
+			else:
+				results.append(email.message_from_bytes(quopri.decodestring(em[1])).as_string())
+
+def email_loop(imap: imaplib.IMAP4_SSL, my_email: str, target: str) -> bool:
+	"""SEARCHes and FETCHes emails, looking for a certain string to be present.
+	Basically, put this in a wait-until loop."""
+	imap.search(None, 'FROM', EMAIL, 'TO', my_email)

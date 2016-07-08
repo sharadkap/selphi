@@ -91,6 +91,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
 		Don't instantiate this from the test script directly, it needs a WebElement"""
 		def __init__(self, element: WebElement):
 			self.element = DR.blip_element(element)
+			self.contentpane = None
 
 		def open(self) -> None:
 			"""Clicks on the mosaic tile, opening it.
@@ -834,13 +835,14 @@ class AussieSpecialistPhotos(WrappedElement):
 
 	def random_images(self, num: int) -> List[WrappedElement]: # pylint: disable-msg=E1126
 		"""Randomly selects num photos."""
-		return [Photo(x) for x in random.sample(self.photos, num)]
+		return [self.Photo(x) for x in random.sample(self.photos, num)]
 
 	class Photo(WrappedElement):
 		"""Represents an individual Aussie Specialist Photo.
 		Don't instantiate this from the test script directly, it needs a WebElement"""
 		def __init__(self, element: WebElement):
 			self.element = DR.blip_element(element)
+			self.contentpane = None
 
 		def open(self) -> None:
 			"""Clicks on the mosaic tile, opening it."""
@@ -858,3 +860,14 @@ class AussieSpecialistPhotos(WrappedElement):
 		def close(self) -> None:
 			"""Clicks the X button in the tiles content. Has to be open first."""
 			DR.flashy_find_element('.icon-close', self.contentpane).click()
+
+class SpecialistBadge(WrappedElement):
+	"""Represents the Aussie Specialist Badge Download page and image."""
+	def __init__(self):
+		DR.flashy_find_element('a[href*="asp-badge.png"]').click()
+		DR.switch_to_window(1)
+		DR.flashy_find_element('img[src*="asp-badge.png"]')
+
+class Email:
+	"""Superclass for the email checks."""
+	

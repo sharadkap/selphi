@@ -102,7 +102,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
 
 		def get_title(self) -> str:
 			"""Returns the title text of a tile's content pane. Has to be open first."""
-			return DR.flashy_find_element('.line-through-container-biline', self.contentpane).text()
+			return DR.flashy_find_element('.line-through-container-biline', self.contentpane).text
 
 		def get_description(self) -> MinorElement:
 			"""Returns the description text in a tile's pane. Has to be open."""
@@ -207,7 +207,7 @@ class NavMenu(WrappedElement):
 	def user_names(self) -> str:
 		"""Gets the text displayed in the corner that shows the user names.
 		Totally unformatted, so just use the in() function rather than parsing."""
-		return DR.flashy_find_element('.link-signin-text', self.element).text()
+		return DR.flashy_find_element('.link-signin-text', self.element).text
 
 class Footer(WrappedElement):
 	"""Represents the global Footer."""
@@ -256,7 +256,7 @@ class FilteredSearch(WrappedElement):
 
 		def get_title(self) -> str:
 			"""Gets the page Title/Name of the result."""
-			return DR.flashy_find_element('.line-through-container', self.element).text()
+			return DR.flashy_find_element('.line-through-container', self.element).text
 
 		def view_more_information(self) -> None:
 			"""Navigates to the result's main page, clicks the View More Info link."""
@@ -283,7 +283,7 @@ class FilteredSearch(WrappedElement):
 
 			def get_title(self) -> None:
 				"""Returns the title of the page the result was pointing to."""
-				return self.element.text()
+				return self.element.text
 
 	def load_more(self) -> None:
 		"""Clicks the Search Component's Load More button."""
@@ -313,7 +313,7 @@ class FilteredSearch(WrappedElement):
 	def read_results_counter(self) -> (int, int) or None:
 		"""Returns the number of results the 'Showing X-Y of Z results' thing says there are:
 		A tuple as (shown, total), or a None if it's not shown, such as with Travel Club"""
-		counter = DR.flashy_find_element('.search-result-count-copy', self.element).text()
+		counter = DR.flashy_find_element('.search-result-count-copy', self.element).text
 		counter = [int(x) for x in re.findall(r'\d+', counter)]
 		if counter == []:
 			 return None
@@ -350,7 +350,7 @@ class HeaderHeartIcon(WrappedElement):
 	def favourites_count(self) -> int:
 		"""Returns the number of favourites as indicated by the icon subtitle."""
 		try:
-			return int(DR.flashy_find_element('.my-trip-count', self.element).text())
+			return int(DR.flashy_find_element('.my-trip-count', self.element).text)
 		except ValueError:
 			return 0
 
@@ -408,14 +408,14 @@ class InteractiveMap(WrappedElement):
 				select = DR.flashy_find_element('#flightFrom', self.element)
 				opt = select.find_elements_by_css_selector('option[id]')
 				opt.click()
-				return opt.text()
+				return opt.text
 
 			def choose_to(self) -> str:
 				"""Randomly sets a city to the To field."""
 				select = DR.flashy_find_element('#flightTo', self.element)
 				opt = select.find_elements_by_css_selector('option[id]')
 				opt.click()
-				return opt.text()
+				return opt.text
 
 			def flight_time(self) -> WrappedElement:
 				"""Gets a representation of the Flight Time display."""
@@ -462,7 +462,7 @@ class InteractiveMap(WrappedElement):
 				suges = DR.quietly_find_elements('#suggested-itineraries a', self.element)
 				try:
 					suge = random.choice(suges)
-					sug = suge.text()
+					sug = suge.text
 					suge.click()
 					return sug
 				except IndexError:	# There can apparently be no suggested itineraries.
@@ -485,7 +485,7 @@ class InteractiveMap(WrappedElement):
 				pin = random.choice(self.pins)
 				DR.bring_to_front(pin)
 				DR.blip_element(pin)
-				name = pin.text()
+				name = pin.text
 				pin.click()
 				panel = DR.quietly_find_element('#info-box')
 				DR.wait_until(lambda: panel.get_attribute('style').search(r'rotateY\(0deg\)'))
@@ -499,7 +499,7 @@ class InteractiveMap(WrappedElement):
 			def get_names(self) -> List[str]: # pylint: disable-msg=E1126
 				"""Returns a list of the labels on all of the pins"""
 				DR.blip_element(self.pins)
-				return [x.text() for x in self.pins]
+				return [x.text for x in self.pins]
 
 		class InfoPopup(WrappedElement):
 			"""Represents the popup window thing that appears from an Itinerary Step Pin."""
@@ -725,11 +725,11 @@ class MySalesTools(WrappedElement):
 
 		def get_title(self) -> str:
 			"""Returns the title of the entry."""
-			return DR.flashy_find_element('.search-results-title', self.element).text()
+			return DR.flashy_find_element('.search-results-title', self.element).text
 
 		def get_description(self) -> str:
 			"""Returns the Page Summary of the entry."""
-			return DR.flashy_find_element('.mloverflow-text', self.element).text()
+			return DR.flashy_find_element('.mloverflow-text', self.element).text
 
 		def close(self) -> None:
 			"""Clicks the X button, closing the entry."""
@@ -746,9 +746,21 @@ class Profile(WrappedElement):
 		self.element = DR.flashy_find_element('#profile-form')
 		attach_link(self, 'change')
 
+	def __getattr__(self, name):
+		"""If an unknown GET message is received, see if there's a field with that name."""
+		return DR.flashy_find_element('[name*="{}"]'.format(\
+			name.replace('_', '-')), self.element).get_attribute('value')
+
+	def __setattr__(self, name, value):
+		"""If an unknown SET message is received, see if there's a field with that name."""
+		elem = DR.flashy_find_element('[name*="{}"]'.format(name.replace('_', '-')), self.element)
+		elem.clear()
+		elem.send_keys(value)
+
 	def get_state(self) -> str:
-		"""Gets the current value of the State field."""
-		return DR.flashy_find_element('[name="state"]', self.element).get_attribute('value')
+		"""Gets the text of the selected state option."""
+		sel = DR.flashy_find_element('[name="state"]', self.element)
+		return DR.quietly_find_element(':selected', sel).text
 
 	def set_state(self) -> None:
 		"""Randomly sets the value of the State field. Returns the chosen value."""
@@ -757,30 +769,21 @@ class Profile(WrappedElement):
 		opt.click()
 		return opt.get_attribute('value')
 
-	def get_bio(self) -> str:
-		"""Gets the current value of the Biography field."""
-		return DR.flashy_find_element('[name="bio"]', self.element).text()
-
-	def set_bio(self, value) -> None:
-		"""Sets the value of the Biography field to the given string."""
-		bio = DR.flashy_find_element('[name="bio"]', self.element)
-		bio.clear()
-		bio.send_keys(value)
-
-	def get_last_name(self) -> str:
-		"""Gets the current value of the Last Name field."""
-		return DR.flashy_find_element('[name="lname"]', self.element).text()
-
-	def set_last_name(self, value) -> None:
-		"""Sets the value of the Last Name field to the given string."""
-		nom = DR.flashy_find_element('[name="lname"]', self.element)
-		nom.clear()
-		nom.send_keys(value)
-
 	def save_changes(self) -> None:
 		"""Clicks the Save Changes button."""
 		DR.flashy_find_element('#updateProfileSubmit', self.element).click()
 		DR.wait_until_present('.fancybox-skin')
+
+	# Enum Hack:
+	TRAINEE = 'trainee';QUALIFIED = 'qualified';PREMIER = 'premier'
+	def user_level(self) -> str:
+		"""Checks the Status Badge area, returns a string of the User Level."""
+		if DR.check_visible_quick('.profile-status img', self.element):
+			 img = DR.flashy_find_element('.profile-status img', self.element)
+			 return {'2.png': QUALIFIED, '3.png': PREMIER}\
+			 	.get(img.get_attribute('src')[-5:-1], TRAINEE)
+		else:
+			return TRAINEE
 
 class TrainingSummary(WrappedElement):
 	"""Represents the two Training Summary modules list things."""
@@ -802,7 +805,7 @@ class TrainingSummary(WrappedElement):
 
 	def get_optional_titles(self) -> List[str]: # pylint: disable-msg=E1126
 		"""Returns a list of the titles of the currently displayed Optional Modules"""
-		return [t.text() for t in DR.flashy_find_elements('.line-through-container', self.optional)]
+		return [t.text for t in DR.flashy_find_elements('.line-through-container', self.optional)]
 
 	def load_more(self) -> None:
 		"""Clicks the View More Modules button."""
@@ -862,7 +865,7 @@ class AussieSpecialistPhotos(WrappedElement):
 			DR.flashy_find_element('.icon-close', self.contentpane).click()
 
 class SpecialistBadge(WrappedElement):
-	"""Represents the Aussie Specialist Badge Download page and image."""
+	"""Represents the Aussie Specialist Badge Download page and image. Kinda minimal."""
 	def __init__(self):
 		DR.flashy_find_element('a[href*="asp-badge.png"]').click()
 		DR.switch_to_window(1)
@@ -870,4 +873,137 @@ class SpecialistBadge(WrappedElement):
 
 class Email:
 	"""Superclass for the email checks."""
-	
+
+class AussieStore(WrappedElement):
+	"""Contains representations the various pages of the Aussie Store area.
+	Don't bother instantiating this one every time, it doesn't do a lot."""
+	def __init__(self):
+		self.element = DR.quietly_find_element('.contentwrapper')
+
+	def my_cart(self) -> None:
+		"""Clicks on the My Cart icon."""
+		DR.flashy_find_element('#myCartIcon', self.element)
+
+	def empty_cart_notice(self) -> None:
+		"""Closes the Your Cart Is Empty message. If it's open."""
+		DR.flashy_find_element('.fancybox-skin', self.element)
+		DR.flashy_find_element('.fancybox-close').click()
+
+	class CategoriesMenu(WrappedElement):
+		"""Represents the list of store Categories to the left."""
+		def __init__(self):
+			cats = DR.flashy_find_elements('.store-categories>div')
+			self.element = cats[0] if cats[0].is_displayed() else cats[1]
+			self.categories = DR.quietly_find_elements('li a', self.element)
+
+		def all_products(self) -> None:
+			"""Clicks on the All Products link."""
+			DR.flashy_find_element('li:first', self.element).click()
+
+		def count(self) -> int:
+			"""Gets the number of categories."""
+			return len(self.categories)
+
+		def goto_iteree(self, num: int) -> None:
+			"""Given an number, clicks on the that-number-th link."""
+			DR.blip_element(self.categories[num]).click()
+
+	class ProductGrid(WrappedElement):
+		"""Represents the grid of Products that appears on any Category Page."""
+		def __init__(self):
+			self.element = DR.quietly_find_element('.store-products')
+			self.products = DR.flashy_find_elements('.store-products-item')
+
+		def count(self) -> int:
+			"""Gets the number of products in this category."""
+			return len(self.products)
+
+		def goto_iteree(self, num: int) -> str:
+			"""Given a number, clicks on the that-number-th link."""
+			prod = DR.blip_element(self.products[num])
+			name = prod.text.casefold()
+			prod.click()
+			return name
+
+		def random_product(self) -> str:
+			"""Clicks on a random Product link and returns the product's name."""
+			return self.goto_iteree(random.randint(0, len(self.products() - 1)))
+
+	class ProductPage(WrappedElement):
+		"""Represents a Product's Page."""
+		def __init__(self):
+			self.element = DR.quietly_find_element('.product')
+			DR.flashy_find_element('.col-sm-9.col-xs-12')
+
+		def name(self) -> str:
+			"""Gets the Product name displayed in the product info."""
+			return DR.flashy_find_element('.product-title', self.element).text.casefold()
+
+		def unique_code(self) -> str:
+			"""Gets the Product's Unique Code, as displayed in the product info."""
+			return DR.flashy_find_element('.product-code', self.element).text
+
+		def select_max_quantity(self) -> None:
+			"""Selects the largest available amount in the quantity selector."""
+			sel = DR.flashy_find_element('[name="product-quantity"]', self.element)
+			DR.quietly_find_element('option:last', sel).click()
+
+		def add_to_cart(self) -> bool:
+			"""Clicks the Add To Cart button.
+			Retuns true if successfully added, false if cart was full."""
+			DR.flashy_find_element('#cart', self.element).click()
+			if DR.check_visible_quick('.fancybox-skin'):
+				DR.flashy_find_element('.fancybox-close').click()
+				return False
+			DR.LAST_LINK = 'cart.html'
+			DR.wait_for_page()
+			return True
+
+	class CartPage(WrappedElement):
+		"""Represents the My Cart Page."""
+		def __init__(self):
+			self.element = DR.flashy_find_element('.shoppingcart')
+
+		def place_order(self, cartempty: bool=False) -> None:
+			"""Clicks the Place Order button, and waits until it's finished loading/messaging."""
+			DR.flashy_find_element('.submit', self.element)
+			if not cartempty:
+				DR.LAST_LINK = 'confirmation.html'
+				DR.wait_for_page()
+			else:
+				DR.flashy_find_element('.fancybox-skin')
+				DR.flashy_find_element('.fancybox-close').click()
+				DR.wait_until_gone('.fancybox-skin')
+
+		def contact_details(self) -> str:
+			"""Gets the contact details shown at the bottom of the Cart page. Tidy up a bit, too."""
+			text = DR.flashy_find_element('.store-order-box-left p:nth-child(2)', self.element).text
+			text = '\n'.join([x.strip() for x in text.replace('  ', ' ').split('\n')])
+
+		def get_product_names(self) -> List[str]: # pylint: disable-msg=E1126
+			"""Gets a list of the names of all of the Products in the Cart."""
+			return [x.text for x in DR.flashy_find_elements('.cell-title', self.element)]
+
+		def count(self) -> int:
+			"""Counts the number of Products in the Cart."""
+			return len(DR.quietly_find_elements('.shoppingcart tr'))
+
+		def remove_random(self) -> str:
+			"""Clicks the Remove Product button on a random Product. Returns the ex-product's name."""
+			count = self.count() - 1
+			rei = random.randint(0, self.count() - 1)
+			rem = DR.blip_element(DR.quietly_find_elements('.cell-title', self.element)[rei])
+			ren = rem.text.casefold()
+			DR.blip_element(DR.quietly_find_elements('.product-remove')[rei]).click()
+			DR.wait_until(lambda: count == self.count())
+			self.element = DR.quietly_find_element('.shoppingcart')
+			return ren
+
+		def remove_all(self) -> None:
+			"""Removes all of the Products from the Cart. This may take a minute if there are a lot."""
+			count = self.count()
+			while count > 0:
+				DR.flashy_find_element('.product-remove').click()
+				count -= 1
+				DR.wait_until(lambda: count() == count)
+				self.element = DR.quietly_find_element('.shoppingcart')

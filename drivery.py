@@ -33,8 +33,11 @@ USERNAME = 'gbpwwwvjvz'
 # """The password used with the given user."""
 PASSWORD = 'Welcome1'
 # """The email address associated with the given user."""
-EMAIL = 'testeratta@gmail.com'
-EMAIL_PASSWORD = 'WelcomeTest'
+EMAIL = 'testeratta+{}@gmail.com'
+TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
+TEST_EMAIL_PASSWORD = 'WelcomeTest'
+ASP_EMAIL = 'tourism-au@updates.tourism.australia.com'
+EMAIL_ENCODING = 'windows-1252'
 
 # """The main WebDriver runner reference."""
 DRIVER = webdriver.Chrome()
@@ -62,7 +65,8 @@ def to_list(item) -> list:
 
 def begin() -> None:
 	"""The test part calls this at the beginning of each test. Sets up DRIVER."""
-	global DRIVER	#It's fine, the AUS.com tests use Global State. Static instance reference anyway.
+	global DRIVER	# pylint: disable-msg=W0603
+	# It's fine, the AUS.com tests use Global State. Static instance reference anyway.
 	DRIVER = webdriver.Firefox()
 	DRIVER.implicitly_wait(LONG_WAIT)
 
@@ -177,23 +181,19 @@ def execute_script(script: str, *args) -> Any:
 	return DRIVER.execute_script(script, args)
 
 ### Guess who learned how to read emails! ###
-def check_email(my_email: str, plain: bool=True) -> List[str]: # pylint: disable-msg=E1126
+def check_email(my_email: bool=True) -> List[str]: # pylint: disable-msg=E1126
 	"""Given a recipient email address to check, get all of the emails it has recently received."""
-	results = []
 	with imaplib.IMAP4_SSL('imap.gmail.com') as imap:
-		imap.login('testeratta@gmail.com', 'WelcomeTest')
+		imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
 		imap.select()
-		wait_until(lambda: email_loop(imap, my_email, ''))
-		_, nums = imap.search(None, \
-			'FROM', EMAIL, 'TO', my_email)
-		_, ems = imap.fetch(nums, 'BODY[1]' if plain else 'BODY[2]')
-		for em in ems[::2]:	# Yeah, the results come back wierd.
-			if plain:
-				results.append(em[1].decode())
-			else:
-				results.append(email.message_from_bytes(quopri.decodestring(em[1])).as_string())
+		wait_until(lambda: email_loop(imap, my_email))
 
-def email_loop(imap: imaplib.IMAP4_SSL, my_email: str, target: str) -> bool:
-	"""SEARCHes and FETCHes emails, looking for a certain string to be present.
+def email_loop(imap: imaplib.IMAP4_SSL, my_email: str) -> bool:
+	"""SEARCHes and FETCHes emails, checking for new email.
 	Basically, put this in a wait-until loop."""
-	imap.search(None, 'FROM', EMAIL, 'TO', my_email)
+	results = []
+	_, nums = imap.search(None, 'FROM', ASP_EMAIL, 'TO', my_email, 'NEW')
+	_, ems = imap.fetch(nums, 'BODY.PEEK[1]')
+	for ema in ems[::2]:	# Yeah, the results come back wierd.
+		results.append(email.message_from_bytes(quopri.decodestring(ema[1])).as_string())
+		return results

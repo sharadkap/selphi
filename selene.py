@@ -1,6 +1,5 @@
 """Test execution goes in here, but no browser interaction implementation details."""
 
-import re
 import random
 import unittest
 from tap import TAPTestRunner
@@ -9,6 +8,10 @@ import components as CP
 
 class REGR(unittest.TestCase):
 	"""The main test suite, a regression run of ASP Global"""
+	# No, the names are necessary.
+	# pylint: disable-msg=C0103
+	# They can't be functions, that would defeat the entire purpose of the test suite.
+	# pylint: disable-msg=R0201
 	def setUp(self) -> None:
 		"""Called just before each test is run, sets up the browser and test records."""
 		# Initialise the browser connection.
@@ -141,7 +144,7 @@ class REGR(unittest.TestCase):
 		"""Checks the Itineraries Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Itinerary Suggestions.
-		SalesResources().point().itineraries_search_and_feature().click()
+		CP.SalesResources().point().itineraries_search_and_feature().click()
 		# Do a random search and validate the results.
 		search = CP.FilteredSearch()
 		search.random_search()
@@ -199,7 +202,7 @@ class REGR(unittest.TestCase):
 		controls = imap.Controls()
 		cities = controls.Cities()
 		icons = controls.IconicDestinations()
-		itineraries = controls.Itineraries()
+		controls.Itineraries()
 		flights = controls.FlyingTimes()
 		# Open the Cities menu, the Cities list should be shown.
 		cities.open_menu()
@@ -231,51 +234,51 @@ class REGR(unittest.TestCase):
 		flights.flight_time()
 		flights.flight_distance()
 
-		def map_info_panel(self, name: str) -> None:
-			"""Look at a Map Location Info Pane. Checks the various links and images."""
-			# The right Info panel should be open.
+	def map_info_panel(self, name: str) -> None:
+		"""Look at a Map Location Info Pane. Checks the various links and images."""
+		# The right Info panel should be open.
+		panel = CP.InteractiveMap.Controls.InfoPanel()
+		self.assertEqual(name, panel.get_title())
+		# The Find Out More and View Highlights buttons should link
+		#   to a relevant Fact Sheet/Itinerary Plan.
+		fomlink = panel.find_out_more()
+		self.assertIn(DR.LOCALE, fomlink)
+		self.assertEqual(fomlink, panel.view_highlights())
+		# Click the Photos
+		imgnum = panel.count_photos()
+		photos = panel.open_photos()
+		# The Photo Viewer should appear, can be scrolled through, displays different images.
+		# But if there was only one image available, skip this scrolling bit.
+		if not imgnum == 1:
+			imgone = photos.current_image_source()
+			photos.next()
+			imgtwo = photos.current_image_source()
+			self.assertNotEqual(imgone, imgtwo)
+			photos.next()
+			imgone = photos.current_image_source()
+			self.assertNotEqual(imgtwo, imgone)
+		# Close the Photo Viewer
+		photos.close()
+		# Click on one of the Itinerary Suggestion links
+		itiname = panel.random_itinerary()
+		# If there were no Itinerary links, skip this bit.
+		if not itiname == '':
+			# New panel, renew the selector.
 			panel = CP.InteractiveMap.Controls.InfoPanel()
-			self.assertEqual(name, panel.get_title())
-			# The Find Out More and View Highlights buttons should link
-			#   to a relevant Fact Sheet/Itinerary Plan.
-			fomlink = panel.find_out_more()
-			self.assertIn(DR.LOCALE, fomlink)
-			self.assertEqual(fomlink, panel.view_highlights())
-			# Click the Photos
-			imgnum = panel.count_photos()
-			photos = panel.open_photos()
-			# The Photo Viewer should appear, can be scrolled through, displays different images.
-			# But if there was only one image available, skip this scrolling bit.
-			if not imgnum == 1:
-				imgone = photos.current_image_source()
-				photos.next()
-				imgtwo = photos.current_image_source()
-				self.assertNotEqual(imgone, imgtwo)
-				photos.next()
-				imgone = photos.current_image_source()
-				self.assertNotEqual(imgtwo, imgone)
-			# Close the Photo Viewer
-			photos.close()
-			# Click on one of the Itinerary Suggestion links
-			itiname = panel.random_itinerary()
-			# If there were no Itinerary links, skip this bit.
-			if not itiname == '':
-				# New panel, renew the selector.
-				panel = CP.InteractiveMap.Controls.InfoPanel()
-				# The selected Itinerary should open.
-				self.assertEqual(itiname, panel.get_title())
-				# Its route should appear and gain focus on the map.
-				pins = CP.InteractiveMap.MapArea.MapPins()
-				# The Find Out More link should link to the relevant Itinerary Page.
-				self.assertIn(DR.LOCALE, panel.find_out_more())
-				# Click on one of the Route Pins, but zoom out a bit first,
-				# the pins will sometimes pop up behind the menu panel.
-				CP.InteractiveMap.ZoomTools().zoom_out()
-				pins.pick_random()
-				# An info box should appear at the pin.
-				CP.InteractiveMap.MapArea.InfoPopup()
-			# Click the Back To Menu Button, the panel should spin back to the Main Map Menu
-			panel.back_to_menu()
+			# The selected Itinerary should open.
+			self.assertEqual(itiname, panel.get_title())
+			# Its route should appear and gain focus on the map.
+			pins = CP.InteractiveMap.MapArea.MapPins()
+			# The Find Out More link should link to the relevant Itinerary Page.
+			self.assertIn(DR.LOCALE, panel.find_out_more())
+			# Click on one of the Route Pins, but zoom out a bit first,
+			# the pins will sometimes pop up behind the menu panel.
+			CP.InteractiveMap.ZoomTools().zoom_out()
+			pins.pick_random()
+			# An info box should appear at the pin.
+			CP.InteractiveMap.MapArea.InfoPopup()
+		# Click the Back To Menu Button, the panel should spin back to the Main Map Menu
+		panel.back_to_menu()
 
 	def test_Contact_Us(self) -> None:
 		"""Checks the Contact Us page."""
@@ -329,6 +332,7 @@ class REGR(unittest.TestCase):
 		# Should open the Registration Acknowledgement page, confirming the account is set up.
 
 	def test_Login(self):
+		"""Tests the Logi-related functionality."""
 		# Log in.
 		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
@@ -350,6 +354,7 @@ class REGR(unittest.TestCase):
 		self.assertTrue(CP.AussieSpecialistClub.not_present())
 
 	def test_Forgotten_Username(self):
+		"""Tests the Forgotten Username feature."""
 		DR.open_home_page()
 		# Click the Sign In link
 		# In the Sign In panel, click the Forgotten Username link.
@@ -363,6 +368,7 @@ class REGR(unittest.TestCase):
 		# TODO ???
 
 	def test_Forgotten_Password(self):
+		"""Tests the Forgotten Password feature."""
 		DR.open_home_page()
 		# Click the Sign In link
 		# In the Sign In panel, click the Forgotten Password link.
@@ -376,6 +382,7 @@ class REGR(unittest.TestCase):
 		# TODO Read that email and sign in with the new password.
 
 	def test_Change_Password(self):
+		"""Tests the Change Password feature."""
 		temp_pass = DR.PASSWORD
 		def double():
 			CP.SignIn().sign_in(DR.USERNAME, temp_pass)
@@ -473,17 +480,17 @@ class REGR(unittest.TestCase):
 		bio = ' '.join(pick_words(10))
 		lastname = ' TEST '.join(pick_words(2))
 		state = profile.set_state()
-		profile.set_bio(bio)
-		profile.set_last_name(lastname)
+		profile.bio = bio
+		profile.lname = lastname
 		# Click the Save Changes button, a panel confirming changes saved should appear.
 		profile.save_changes()
 		# Refresh the page.
 		DR.refresh()
 		# The changed field values should remain.
 		profile = CP.Profile()
-		self.assertEqual(profile.get_bio(), bio)
-		self.assertEqual(profile.get_state(), state)
-		self.assertEqual(profile.get_last_name(), lastname)
+		self.assertEqual(profile.bio, bio)
+		self.assertEqual(profile.state, state)
+		self.assertEqual(profile.lname, lastname)
 		self.assertIn(lastname, CP.NavMenu().user_names())
 
 		#### TODO ####
@@ -584,7 +591,7 @@ class REGR(unittest.TestCase):
 		CP.AussieSpecialistClub().click().asp_logo().click()
 		# Click the Download Qualification Badge link.
 		# Badge image should be downloaded/opened in a new tab.
-		DR.flashy_find_element().click()
+		CP.SpecialistBadge()
 
 #### TODO: Get the website thing to check the email thing? ####
 	def test_Campaign(self):
@@ -600,7 +607,7 @@ class REGR(unittest.TestCase):
 		# TODO: Implement result: "Email and subject line is fully translated, if applicable."
 		raise NotImplementedError("For now, go check it yourself?")
 
-	def verlere(self):
+	def submit_store_order(self):
 		# Go to the Cart Page.
 		DR.flashy_find_element('.fancybox-close').click()
 		DR.flashy_find_element('#myCartIcon').click()
@@ -627,133 +634,107 @@ class REGR(unittest.TestCase):
 
 	def test_Aussie_Store(self):
 		# Just gotta put this here.
-		def examine_products(cat):
-			nonlocal pco, prl
-			cal = '.nav-store-categories-menu li a[href="' + cat + '"]'
+		def examine_products(category):
+			nonlocal productcount, productnames
 			# Click on the Category link.
-			DR.flashy_find_element(cal).click()
+			CP.AussieStore.CategoriesMenu().goto_iteree(category)
 			# Choose a few of the Products present, and for each of them {
-			prs = [x.get_attribute('href').replace(self.base_url, '')\
-				   for x in DR.flashy_find_elements('.store-products-item')]
-			kay = min([len(prs), max([len(prs)//3, 5])])
-			for pr in random.sample(prs, kay):
+			grid = CP.AussieStore.ProductGrid()
+			gridcount = grid.count()
+			howmany = min([gridcount, max([gridcount//3, 5])])
+			for prodnum in random.sample(range(gridcount), howmany):
 				# Click on the Product Image
-				pri = DR.flashy_find_element('a[href="' + pr + '"]')
-				prn = pri.find_element_by_css_selector('.store-products-item-title').text.casefold()
-				pri.click()
+				prodname = grid.goto_iteree(prodnum)
 				# Should link to the Product's Page
-				self.assertEqual(prn, DR.flashy_find_element('.home-hero-title').text.casefold())
+				product = CP.AussieStore.ProductPage()
+				self.assertEqual(prodname, product.name())
 				# Product Page should have a unique Code, which also should not be N/A or null.
-				self.assertNotIn('N/A', DR.flashy_find_element('.product-code').text)
-				self.assertNotIn('null', DR.flashy_find_element('.product-code').text)
+				code = product.unique_code()
+				self.assertNotIn('N/A', code)
+				self.assertNotIn('null', code)
 				# Select a Quantity.
-				qua = DR.flashy_find_element('[name="product-quantity"]')
-				qua.send_keys(qua.find_elements_by_tag_name('option')[-1].get_attribute('value'))
+				product.select_max_quantity()
 				# Click the Add To Cart button.
-				DR.flashy_find_element('#cart').click()
 				# However, If The Cart Is Full: (Once 10-12 or so Products have been added)
-				time.sleep(showa)
-				if DR.check_visible_quick('#fancybox-cookieoverflow'):
-					# Leave this bit out for now.
-					return True
-					# Other Things.
-					#self.verlere()
-					pco = 0
-					prl.clear()
+				if not product.add_to_cart():
+					# Currently, do not attempt to actually submit an order,
+					# this magnitude of unattended orders would upset someone at the STOs.
+					# do not self.submit_store_order(), just dump them.
+					CP.AussieStore().my_cart()
+					CP.AussieStore.CartPage().remove_all()
+					productcount = 0
+					productnames.clear()
 					continue
-				# Otherwise or afterwards, continue as normal.
-				pco += 1
-				prl.add(prn)
+				# Otherwise, continue as normal.
+				productcount += 1
+				productnames.add(prodname)
 				# Should redirect to the Cart page.
-				DR.quietly_find_element('.store-my-cart')
-				self.assertIn('cart.html', DR.current_url())
+				cart = CP.AussieStore.CartPage()
 				# Cart page should show a list of all of the products added thus far.
-				self.assertEqual(prl, {x.text.casefold() for x in DR.flashy_find_elements('.cell-title')})
+				self.assertEqual(productnames, set(cart.get_product_names()))
 				# (do not do for all) Click the X beside one of the products.
 				if random.random() < 0.2:
-					rei = random.randint(0, len(prl)-1)
-					rem = DR.flashy_find_elements('.cell-title')[rei].text.casefold()
-					reb = DR.flashy_find_elements('.product-remove')[rei]
-					scrl(reb)
-					reb.click()
-					prl.remove(rem)
-					pco -= 1
+					productnames.remove(cart.remove_random())
+					productcount -= 1
 					# That product should be removed from the Cart.
-					self.assertEqual(prl, {x.text.casefold() for x in DR.flashy_find_elements('.cell-title')})
-				else: # If this one was removed, it's not going to be overbooked.
+					self.assertEqual(productnames, cart.get_product_names())
+				else: # If one was removed, it's not going to be overbooked.
 					# Go back to the Product Page,
-					self.driver.back()
-					time.sleep(showa)
+					DR.back()
 					# and attempt to add more of it to the Cart, beyond the Quantity permitted.
-					qua = DR.flashy_find_element('[name="product-quantity"]')
-					qua.send_keys(qua.find_elements_by_tag_name('option')[-1]\
-								  .get_attribute('value'))
-					DR.flashy_find_element('#cart').click()
+					product = CP.AussieStore.ProductPage()
+					product.select_max_quantity()
 					# A panel should pop up, notifying that Maximum Quantity was exceeded.
-					DR.quietly_find_element('#fancybox-maxerror')
-					DR.flashy_find_element('.fancybox-close').click()
+					self.assertFalse(product.add_to_cart())
 				# Back to Category Page, try the next one.
-				DR.flashy_find_element(cal).click()
-			return False
+				CP.AussieStore.CategoriesMenu().goto_iteree(category)
 
 		# Pre-condition: Logged in as a Qualified User.
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Preamblic mess.
-		DR.flashy_find_element('#link-profile').click()
-		def adn(s):
-			return s + ', ' if s else ''
-		# Some sort of conditional prepension.
-		phone = DR.flashy_find_element('[name="countrycode"]').get_attribute('value') +\
-				DR.flashy_find_element('[name="phone"]').get_attribute('value')
-		phone = phone + '\n' if phone else phone
-		contactBlob = (DR.flashy_find_element('[name="fname"]').get_attribute('value') + ' ' +\
-					   DR.flashy_find_element('[name="lname"]').get_attribute('value') + '\n' +\
-					   adn(DR.flashy_find_element('[name="address1"]').get_attribute('value')) +\
-					   adn(DR.flashy_find_element('[name="address2"]').get_attribute('value')) +\
-					   # Trim one extra space from here, apparently.
-					   adn(DR.flashy_find_element('[name="address3"]').get_attribute('value'))[0:-1] + '\n' +\
-					   DR.flashy_find_element('[name="town"]').get_attribute('value') + '\n' +\
-					   DR.flashy_find_element('[name="state"] option[value="' +\
-					   # And add one extra one here.
-					   DR.flashy_find_element('[name="state"]').get_attribute('value') + '"]').text + ',  ' +\
-			DR.flashy_find_element('[name="zip"]').get_attribute('value') + '\n' +\
-			DR.flashy_find_element('[name="country"]').get_attribute('value') + phone)
+		CP.NavMenu().profile().click()
+		def xandxplusy(x: str, y: str=', '):
+			"""Basically, if X is not blank, append Y to it."""
+			return x and x + y
+		# First, create a set of profile data that matches the formatting given in the Store.
+		profile = CP.Profile()
+		# No space between the comma and newline on the address there.
+		contactBlob = profile.fname + ' ' + profile.lname + '\n' + \
+			(xandxplusy(profile.address1) + xandxplusy(profile.address2) + \
+				xandxplusy(profile.address3)).strip() + '\n' + \
+			profile.town + '\n' + \
+			profile.get_state() + ', ' + profile.zip + '\n' + \
+			profile.country + '\n' + \
+			profile.countrycode + profile.phone
 		# Navigate to ASC > Aussie Store
-		DR.flashy_find_element('#nav-main-panel-5').click()
-		DR.flashy_find_element('#nav-main-panel-5 a[href*="aussie-specialist-club/aussie-store.html"]').click()
+		CP.AussieSpecialistClub().click().aussie_store().click()
 		# Click the Cart button
-		DR.flashy_find_element('#myCartIcon').click()
+		store = CP.AussieStore().my_cart()
 		# Should get a popup message about the Cart being Empty.
-		DR.quietly_find_element('.fancybox-skin')
-		DR.flashy_find_element('.fancybox-close').click()
+		store.empty_cart_notice()
 		# Click on one of the Product Images
-		pri = random.choice(DR.flashy_find_elements('.store-products-item'))
-		prn = pri.find_element_by_xpath('..')\
-			  .find_element_by_css_selector('.store-products-item-title').text.casefold()
-		pri.click()
+		productname = CP.AussieStore.ProductGrid().random_product()
 		# Should redirect to that Product's page
-		self.assertEqual(prn, DR.flashy_find_element('.home-hero-title').text.casefold())
-		# Click the Add To Cart button
-		DR.flashy_find_element('#cart').click()
-		# Should go to the Cart Page
-		DR.quietly_find_element('.store-my-cart')
+		product = CP.AussieStore.ProductPage()
+		self.assertEqual(product.name(), productname)
+		# Click the Add To Cart button, should go to the Cart Page
+		product.add_to_cart()
+		cart = CP.AussieStore.CartPage()
 		# The User's Name and Contact Details should be displayed with the same values
 		# as displayed in the Profile. Any Blank Profile fields should not show up as 'null'.
-		blobContact = DR.flashy_find_element('.store-order-box-left > p:nth-child(2)').text
-		self.assertTrue(re.match(blobContact.replace(' ', r'\s+').replace('\n', '\\s+'),\
-								 contactBlob))
-		self.assertNotIn('null', blobContact)
-		# Tidy up first
-		DR.flashy_find_element('.product-remove').click()
-		time.sleep(showa)
+		cartcontact = cart.contact_details()
+		self.assertEqual(cartcontact, contactBlob)
+		self.assertNotIn('null', cartcontact)
+		# Tidy up the cart before going into the large test.
+		cart.remove_all()
 		# For each of the categories, (except All Products), go through it,
-		pco = 0
-		prl = set()
-		cats = [x.get_attribute('href').replace(self.base_url, '') for x in \
-				DR.flashy_find_elements('.nav-store-categories-menu li a:not([href*="all-products"])')]
-		for cat in cats:
+		productcount = 0
+		productnames = set()
+		catnum = CP.AussieStore.CategoriesMenu().count()
+		for cat in range(catnum)[1:-1]:
 			# And do the stuff. And stop doing the stuff if the cart tops out.
-			if examine_products(cat): break
+			examine_products(cat)
 
 		# The Downloads section isn't actually there, so never mind this bit?
 		# TODO: Click on the Downloads Category link.
@@ -761,13 +742,16 @@ class REGR(unittest.TestCase):
 
 	def test_Premier_Badge(self):
 		# Pre-condition: Logged in as a Premier User
+		DR.open_home_page()
 		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
 		# Navigate to the Profile Page.
-		DR.flashy_find_element('#link-profile').click()
+		CP.NavMenu().profile().click()
 		# The Status Badge area shows the Premier Aussie Specialist Icon.
-		DR.quietly_find_element('#profile-form > div:nth-child(2) a > img[src*="achievements/3.png"]')
+		profile = CP.Profile()
+		self.assertEqual(profile.user_level(), CP.Profile.PREMIER)
 
 if __name__ == '__main__':
+	# Not really constants, no. 	pylint: disable-msg=C0103
 	tests = unittest.TestSuite()
 	tests.addTests(unittest.makeSuite(REGR))
 

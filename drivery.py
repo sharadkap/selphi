@@ -1,12 +1,9 @@
 """This is where all the specific Webdriver implementation details go."""
 
-import time
-import email
-import quopri
-import imaplib
 from types import FunctionType
 from typing import List, Union, Any
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -28,19 +25,20 @@ LOCALE = '/en-gb'
 	# TODO: Add a property to this?"""
 LAST_LINK = ''
 
-# """The Username with which to perform the test."""
-USERNAME = 'gbpwwwvjvz'
-# """The password used with the given user."""
+# """The generic standard Test Account Password."""
 PASSWORD = 'Welcome1'
-# """The email address associated with the given user."""
+# """The email address to be associated with the given user."""
 EMAIL = 'testeratta+{}@gmail.com'
+# Login details for the gmail IMAP server, if that ever becomes a thing.
+TEST_EMAIL_IMAP_SERVER = 'imap.gmail.com'
 TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
 TEST_EMAIL_PASSWORD = 'WelcomeTest'
 ASP_EMAIL = 'tourism-au@updates.tourism.australia.com'
-EMAIL_ENCODING = 'windows-1252'
+LATIN_EMAIL_ENCODING = 'windows-1252'
+EXTENDED_EMAIL_ENCODING = 'utf-8'
 
 # """The main WebDriver runner reference."""
-DRIVER = webdriver.Chrome()
+DRIVER = webdriver.Chrome		# Global variable placeholder
 
 # """A Set of the full list of options that should be in the splash page language selector."""
 LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
@@ -67,13 +65,13 @@ def begin() -> None:
 	"""The test part calls this at the beginning of each test. Sets up DRIVER."""
 	global DRIVER	# pylint: disable-msg=W0603
 	# It's fine, the AUS.com tests use Global State. Static instance reference anyway.
-	DRIVER = webdriver.Firefox()
+	DRIVER = webdriver.Chrome()
 	DRIVER.implicitly_wait(LONG_WAIT)
+	DRIVER.maximize_window()
 
 def close() -> None:
 	"""The testing bit calls this at the end of each test. Clears the session."""
 	DRIVER.quit()
-	time.sleep(SHORT_WAIT)
 
 ###Navigation Methods.###
 
@@ -105,23 +103,25 @@ def wait_for_page() -> None:
 	WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: LAST_LINK in d.current_url)
 	WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: d.execute_script(script))
 
-def wait_until_present(selector: str) -> None:
+def wait_until_present(selector: str) -> WebElement:
 	"""Holds up execution until the selectored elment is visibly present.
 	Use this instead of quietly_find if the target is in the DOM, but hidden."""
-	WebDriverWait(DRIVER, LONG_WAIT).until(EC.visibility_of_element_located(selector))
+	return WebDriverWait(DRIVER, LONG_WAIT).until(\
+		EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
 
-def wait_until_gone(selector: str) -> None:
+def wait_until_gone(selector: str) -> WebElement:
 	"""Holds up execution until the selectored element is not visibly present.
 	EC doesn't seem to support local searches, so be sure the selector is page-unique."""
-	WebDriverWait(DRIVER, LONG_WAIT).until(EC.invisibility_of_element_located(selector))
+	return WebDriverWait(DRIVER, LONG_WAIT).until(\
+		EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
 
-def wait_until(condition: FunctionType) -> None:
-	"""Holds up execution, repeatedly calling the given function until it returns true."""
-	WebDriverWait(DRIVER, LONG_WAIT).until(condition())
+def wait_until(condition: FunctionType) -> Any:
+	"""Holds up execution, repeatedly calling the given function until it returns truthy."""
+	return WebDriverWait(DRIVER, LONG_WAIT).until(condition)
 
 def switch_to_window(window: int) -> None:
 	"""Switch WebDriver's focus to the second open tab or window."""
-	DRIVER.switch_to.window(DRIVER.window_handles()[window])
+	DRIVER.switch_to.window(DRIVER.window_handles[window])
 
 def switch_to_frame(selector: str) -> None:
 	"""Switches WebDriver's focus into the given iframe."""
@@ -136,9 +136,10 @@ def blip_element(elle: ELEMENT_OR_LIST) -> ELEMENT_OR_LIST:
 	DRIVER.execute_script(BLIP_SCRIPT, to_list(elle))
 	return elle
 
-def check_visible_quick(selector: str, within: WebElement=DRIVER) -> bool:
+def check_visible_quick(selector: str, within: WebElement=None) -> bool:
 	"""Check for an element without potentially spending a lot of time polling the DOM.
 	Ususally used when asserting an element's absence, saves waiting the full timeout."""
+	within = within or DRIVER
 	DRIVER.implicitly_wait(SHORT_WAIT)
 	elements = within.find_elements_by_css_selector(selector)
 	DRIVER.implicitly_wait(LONG_WAIT)
@@ -148,23 +149,27 @@ def execute_mouse_over(element: WebElement) -> None:
 	"""Simulates the mouse moving into an element."""
 	ActionChains(DRIVER).move_to_element(element).perform()
 
-def quietly_find_element(selector: str, within: WebElement=DRIVER) -> WebElement:
+def quietly_find_element(selector: str, within: WebElement=None) -> WebElement:
 	"""Finds a single element matching a CSS selector, optionally within a given element."""
+	within = within or DRIVER
 	return within.find_element_by_css_selector(selector)
 
-def quietly_find_elements(selector: str, within: WebElement=DRIVER) -> ELEMENT_LIST:
+def quietly_find_elements(selector: str, within: WebElement=None) -> ELEMENT_LIST:
 	"""Finds multiple elements that match a CSS selector, optionally within a given element."""
+	within = within or DRIVER
 	return to_list(within.find_elements_by_css_selector(selector))
 
-def flashy_find_element(selector: str, within: WebElement=DRIVER) -> WebElement:
+def flashy_find_element(selector: str, within: WebElement=None) -> WebElement:
 	"""Finds a single element matching a CSS selector, highlights it as well."""
+	within = within or DRIVER
 	return blip_element(within.find_element_by_css_selector(selector))
 
-def flashy_find_elements(selector: str, within: WebElement=DRIVER) -> ELEMENT_LIST:
+def flashy_find_elements(selector: str, within: WebElement=None) -> ELEMENT_LIST:
 	"""Finds multiple elements that match a CSS selector, highlights them as well.
 
 	The browser-provided webdriver driver implementations seem to not return a
 	list when only one element matches, so fixing that here."""
+	within = within or DRIVER
 	return blip_element(to_list(within.find_elements_by_css_selector(selector)))
 
 def get_parent_element(element: WebElement) -> WebElement:
@@ -174,26 +179,8 @@ def get_parent_element(element: WebElement) -> WebElement:
 def bring_to_front(element: WebElement) -> WebElement:
 	"""Uses a JS to ensure the selected element is at the front.
 	Usually in order to properly click() it."""
-	DRIVER.execute_script('arguments[0].style.zIndex = "10000");', element)
+	DRIVER.execute_script('arguments[0].style.zIndex = "10000";', element)
 
 def execute_script(script: str, *args) -> Any:
 	"""Executes a javascript snippet, returning what the script returns."""
 	return DRIVER.execute_script(script, args)
-
-### Guess who learned how to read emails! ###
-def check_email(my_email: bool=True) -> List[str]: # pylint: disable-msg=E1126
-	"""Given a recipient email address to check, get all of the emails it has recently received."""
-	with imaplib.IMAP4_SSL('imap.gmail.com') as imap:
-		imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
-		imap.select()
-		wait_until(lambda: email_loop(imap, my_email))
-
-def email_loop(imap: imaplib.IMAP4_SSL, my_email: str) -> bool:
-	"""SEARCHes and FETCHes emails, checking for new email.
-	Basically, put this in a wait-until loop."""
-	results = []
-	_, nums = imap.search(None, 'FROM', ASP_EMAIL, 'TO', my_email, 'NEW')
-	_, ems = imap.fetch(nums, 'BODY.PEEK[1]')
-	for ema in ems[::2]:	# Yeah, the results come back wierd.
-		results.append(email.message_from_bytes(quopri.decodestring(ema[1])).as_string())
-		return results

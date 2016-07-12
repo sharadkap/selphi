@@ -1,14 +1,15 @@
 """Test execution goes in here, but no browser interaction implementation details."""
 
+import os
 import random
 import unittest
 from tap import TAPTestRunner
 import drivery as DR
 import components as CP
 
-class REGR(unittest.TestCase):
+class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 	"""The main test suite, a regression run of ASP Global"""
-	# No, the names are necessary.
+	# No, the naming scheme is necessary.
 	# pylint: disable-msg=C0103
 	# They can't be functions, that would defeat the entire purpose of the test suite.
 	# pylint: disable-msg=R0201
@@ -24,6 +25,7 @@ class REGR(unittest.TestCase):
 		DR.close()
 		self.assertEqual([], self.verificationErrors)
 
+	# Tests start here.
 	def test_Splash_Page(self) -> None:
 		"""Tests the Splash Page."""
 		# Open the splash page.
@@ -120,7 +122,7 @@ class REGR(unittest.TestCase):
 		footer.splash().click()
 		# Should link back to the Splash page.
 		DR.wait_for_page()
-		self.assertIn('/splash.html', DR.current_url)
+		self.assertIn('/splash.html', DR.current_url())
 
 	def test_Sitemap(self) -> None:
 		"""Checks the Sitemap page links."""
@@ -262,18 +264,18 @@ class REGR(unittest.TestCase):
 		# Click on one of the Itinerary Suggestion links
 		itiname = panel.random_itinerary()
 		# If there were no Itinerary links, skip this bit.
-		if not itiname == '':
+		if itiname != '':
 			# New panel, renew the selector.
 			panel = CP.InteractiveMap.Controls.InfoPanel()
 			# The selected Itinerary should open.
 			self.assertEqual(itiname, panel.get_title())
-			# Its route should appear and gain focus on the map.
+			# Its route should appear and gain focus on the map, but zoom out a bit first,
+			# the pins will sometimes pop up behind the menu panel.
+			CP.InteractiveMap.ZoomTools().zoom_out()
 			pins = CP.InteractiveMap.MapArea.MapPins()
 			# The Find Out More link should link to the relevant Itinerary Page.
 			self.assertIn(DR.LOCALE, panel.find_out_more())
-			# Click on one of the Route Pins, but zoom out a bit first,
-			# the pins will sometimes pop up behind the menu panel.
-			CP.InteractiveMap.ZoomTools().zoom_out()
+			# Click on one of the Route Pins
 			pins.pick_random()
 			# An info box should appear at the pin.
 			CP.InteractiveMap.MapArea.InfoPopup()
@@ -290,12 +292,12 @@ class REGR(unittest.TestCase):
 		CP.ContactUs()
 
 	def test_Registration(self) -> None:
-		"""Checks the Registration process. Slight use of witchcraft."""
+		"""Checks the Registration process."""
 		DR.open_home_page()
 		# Navigate to the Registration Page
 		CP.BodyRegisterButton().click()
 		# Random letters to make a unique username.
-		randid = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
+		self.USERID = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
 		# The Country Code
 		langcode, localecode = DR.LOCALE.split('-')
 		# Username stuff, add the Environment prefix to identify the user.
@@ -307,35 +309,40 @@ class REGR(unittest.TestCase):
 		# Ensure the Name fields are/contain TEST.
 		form = CP.RegistrationForm()
 		form.plain_text_fields('TEST')
-		form.last_name('TEST ' + localecode + environ)
+		form.web = 'www.TEST.com'
+		form.lname = 'TEST ' + localecode + environ
 		form.date_of_birth('12/12/1212')
 		form.pick_business_profile()
-		form.zip_postcode(zipcode)
+		form.zip = zipcode
 		form.pick_country(localecode.upper())
 		form.pick_state()
 		form.pick_language(langcode)
 		# Use an overloaded email.
-		form.email_address(DR.EMAIL.replace('@', '+' + randid + '@'))
+		form.email_address(DR.EMAIL.format(self.USERID))
 		form.how_many_years()
 		form.how_many_times()
 		form.how_many_bookings()
 		form.standard_categories()
 		form.experiences()
-		form.username(localecode + environ + randid)
+		# Better hope this test comes before the other ones!
+		self.USERNAME = localecode + environ + self.USERID
+		form.username(self.USERNAME)
 		form.password(DR.PASSWORD)
 		form.terms_and_conditions()
 		form.decaptcha()
 		# Click the Create Account button, popup should appear confirming account creation.
 		form.submit()
 		# Email should be sent confirming this.
+		regemail = CP.Email(self.USERID).get_new_messages()
 		# In the Registration Confirmation email, click the Activate Account link.
+
 		# Should open the Registration Acknowledgement page, confirming the account is set up.
 
 	def test_Login(self):
-		"""Tests the Logi-related functionality."""
+		"""Tests the Login-related functionality."""
 		# Log in.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Should proceed to the Secure welcome page.
 		self.assertIn(DR.LOCALE + '/secure.html', DR.current_url())
 		# Check the Nav Menu
@@ -361,7 +368,7 @@ class REGR(unittest.TestCase):
 		CP.SignIn().forgotten_username().click()
 		# Enter the user's email address into the Forgot Username form.
 		forgus = CP.ForgottenForm()
-		forgus.email(DR.EMAIL)
+		forgus.email(DR.EMAIL.format(self.USERID))
 		# Click the Submit button, a panel should appear confirming submission.
 		forgus.submit()
 		# An email should be received at the given address containing the Username.
@@ -375,7 +382,7 @@ class REGR(unittest.TestCase):
 		CP.SignIn().forgotten_password().click()
 		# Enter the user's email address into the Forgot Password form.
 		forgpa = CP.ForgottenForm()
-		forgpa.email(DR.EMAIL)
+		forgpa.email(DR.EMAIL.format(self.USERID))
 		# Click the Submit button, a panel should appear confirming submission.
 		forgpa.submit()
 		# An email should be received at the given address containing the Username and new Password
@@ -385,7 +392,8 @@ class REGR(unittest.TestCase):
 		"""Tests the Change Password feature."""
 		temp_pass = DR.PASSWORD
 		def double():
-			CP.SignIn().sign_in(DR.USERNAME, temp_pass)
+			"""Log in, change the password, and log out."""
+			CP.SignIn().sign_in(self.USERNAME, temp_pass)
 			# In the Nav Menu, click the My Profile link.
 			CP.NavMenu().profile().click()
 			# Click the Change Password button, below the Profile Data fields.
@@ -407,8 +415,10 @@ class REGR(unittest.TestCase):
 		double()	# Also change it back to the original
 
 	def test_Favourites(self):
+		"""Tests the Sales Tools functionality."""
 		favtitles = set()
 		def mosaicad(num):
+			"""Opens a mosaic, checks it, and adds it to sales tools"""
 			nonlocal favcount, favtitles
 			# Click on some of the Mosaic panels.
 			for tile in CP.WhatYouCanSeeMosaic().random_selection(num):
@@ -425,7 +435,7 @@ class REGR(unittest.TestCase):
 				favtitles.add(tile.get_title().text())
 
 		# Pre-condition: Should be signed in.
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		favcount = CP.HeaderHeartIcon().favourites_count()
 		# If there are already favourites, that's a problem, remove them. Messes with the count.
 		if favcount > 0:
@@ -466,9 +476,10 @@ class REGR(unittest.TestCase):
 		self.assertEqual(0, len(CP.MySalesTools().get_favourites()))
 
 	def test_My_Profile(self):
+		"""Tests the Profile page."""
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Navigate to the Profile page.
 		CP.NavMenu().profile().click()
 		profile = CP.Profile()
@@ -501,9 +512,10 @@ class REGR(unittest.TestCase):
 		# The Module's Completion Badge should be at the top of the Recent Achievements list.
 
 	def test_Training_Summary(self):
+		"""Checks the Training Summary page."""
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Navigate to Training > Training Summary.
 		CP.Training().click().training_summary().click()
 		modules = CP.TrainingSummary()
@@ -533,9 +545,10 @@ class REGR(unittest.TestCase):
 		modules.completion_types()
 
 	def test_Aussie_Specialist_Club(self):
+		"""Checks the Aussie Specialist Club nav menu links."""
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Open the Aussie Specialist Club section in the Nav menu
 		club = CP.AussieSpecialistClub()
 		club.click()
@@ -549,9 +562,10 @@ class REGR(unittest.TestCase):
 		club.aussie_store()
 
 	def test_Travel_Club(self):
+		"""Tests the Travel Club search."""
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Travel Club
 		CP.AussieSpecialistClub().click().travel_club().click()
 		# Search for results, changing the terms if none.
@@ -561,9 +575,10 @@ class REGR(unittest.TestCase):
 		self.look_at_search_results(travelsearch)
 
 	def test_Famils(self):
+		"""Checks the Famils page."""
 		# pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Famils
 		CP.AussieSpecialistClub().click().aussie_specialist_club().click()
 		# Maybe not available in all locales?
@@ -571,9 +586,10 @@ class REGR(unittest.TestCase):
 		CP.Famils()
 
 	def test_Aussie_Specialist_Photos(self):
+		"""Checks the Aussie Specialist Photos page."""
 		# pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > AS Photos
 		CP.AussieSpecialistClub().click().aussie_specialist_photos().click()
 		# Should display Instagram Image Tiles, with links and descriptions
@@ -586,7 +602,7 @@ class REGR(unittest.TestCase):
 	def test_Download_Qualification_Badge(self):
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Download Qualification Badge
 		CP.AussieSpecialistClub().click().asp_logo().click()
 		# Click the Download Qualification Badge link.
@@ -691,7 +707,7 @@ class REGR(unittest.TestCase):
 
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Preamblic mess.
 		CP.NavMenu().profile().click()
 		def xandxplusy(x: str, y: str=', '):
@@ -743,7 +759,7 @@ class REGR(unittest.TestCase):
 	def test_Premier_Badge(self):
 		# Pre-condition: Logged in as a Premier User
 		DR.open_home_page()
-		CP.SignIn().sign_in(DR.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
 		# Navigate to the Profile Page.
 		CP.NavMenu().profile().click()
 		# The Status Badge area shows the Premier Aussie Specialist Icon.
@@ -753,9 +769,15 @@ class REGR(unittest.TestCase):
 if __name__ == '__main__':
 	# Not really constants, no. 	pylint: disable-msg=C0103
 	tests = unittest.TestSuite()
-	tests.addTests(unittest.makeSuite(REGR))
+	loader = unittest.TestLoader()
+	# INTROSPECTIVE ANALYSIS!
+	# Sort the tests by declaration order, not alphabetical order.
+	ln = lambda f: getattr(REGR, f).__code__.co_firstlineno
+	lncmp = lambda a, b: ln(a) - ln(b)
+	loader.sortTestMethodsUsing = lncmp
+	tests.addTests(loader.loadTestsFromTestCase(REGR))
 
 	runner = TAPTestRunner()
-	runner.set_outdir('./')
+	runner.set_outdir(os.path.join(os.path.split(__file__)[0]))
 	runner.set_format('Result of: {method_name} - {short_description}')
 	runner.run(tests)

@@ -4,6 +4,10 @@ import re
 import time
 import random
 import hashlib
+import email
+import quopri
+import imaplib
+from types import MethodType
 from typing import Set, List
 from selenium.webdriver.remote.webelement import WebElement
 import drivery as DR
@@ -41,11 +45,11 @@ class MinorElement(WrappedElement):
 class SplashSelect(WrappedElement):
 	"""Represents the Language Selector on the Splash Page."""
 	def __init__(self):
-		self.element = DR.flashy_find_element('.dropdown-select-language')
+		self.element = DR.flashy_find_element('.dropdown-select-language1')
 
 	def get_values(self) -> Set[str]:
 		"""Gets a set containing the URLs of all the Language Options."""
-		return {x.get_attribute('value') for x in DR.quietly_find_elements('option', self.element)}
+		return {x.get_attribute('value') for x in DR.quietly_find_elements('option:not([value="#"])', self.element)}
 
 	def choose_locale(self) -> None:
 		"""Selects the Language Option representing the current locale."""
@@ -56,7 +60,7 @@ class SplashSelect(WrappedElement):
 class WelcomeVideo(WrappedElement):
 	"""Represents the main Video on the home page."""
 	def __init__(self):
-		self.element = DR.flashy_find_element('#hero-player')
+		self.element = DR.flashy_find_element('.hero')
 
 	def play(self) -> None:
 		"""Clicks the video's Play button."""
@@ -195,8 +199,8 @@ class NavMenu(WrappedElement):
 	aussie_specialist_club = AussieSpecialistClub
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-bar-top .nav-bar-left')
-		attach_link(self, 'profile')
-		attach_link(self, 'logout')
+		attach_link(self, 'profile', selector='#link-{}')
+		attach_link(self, 'logout', selector='#link-{}')
 
 	def get_all_links(self) -> Set[str]:
 		"""Gets a set containing the href of each link in the nav menu.
@@ -215,7 +219,7 @@ class Footer(WrappedElement):
 		self.element = DR.flashy_find_element('#main-footer')
 		attach_link(self, 'splash')
 		attach_link(self, 'facebook', selector='[href*="www.{}.com"]')
-		attach_link(self, 'plus.google', selector='[href*="www.{}.com"]')
+		attach_link(self, 'plus.google', selector='[href*="{}.com"]')
 		attach_link(self, 'youtube', selector='[href*="www.{}.com"]')
 		attach_link(self, 'twitter', selector='[href*="{}.com"]')
 		attach_link(self, 'instagram', selector='[href*="{}.com"]')
@@ -247,7 +251,7 @@ class FilteredSearch(WrappedElement):
 		self.fact_sheet_mode = fact_sheet_mode
 		# Hold up, have to wait for the initial results to come in first,
 		# they'll interrupt if they appear halfway through something else.
-		DR.quietly_find_element('.mosic-item')
+		DR.quietly_find_element('.mosaic-item')
 
 	class SearchResult(WrappedElement):
 		"""Represents a Result of a Filtered Search."""
@@ -272,9 +276,7 @@ class FilteredSearch(WrappedElement):
 		def download_pdf(self) -> None:
 			"""Clicks the Download PDF link."""
 			link = DR.flashy_find_element('a.download-pdf', self.element)
-			DR.LAST_LINK = link.get_attribute('href')
 			link.click()
-			DR.wait_for_page()
 
 		class SearchResultPage(WrappedElement):
 			"""Represents the full More Info page pointed to by a Filtered Search's result."""
@@ -283,11 +285,11 @@ class FilteredSearch(WrappedElement):
 
 			def get_title(self) -> None:
 				"""Returns the title of the page the result was pointing to."""
-				return self.element.text
+				return self.element.text.replace('\n', ' ')
 
 	def load_more(self) -> None:
 		"""Clicks the Search Component's Load More button."""
-		DR.flashy_find_element('#btn-id', self.element).click()
+		DR.flashy_find_element('.load-more', self.element).click()
 		DR.wait_until_gone('.filteredSearch .preload-image-wrapper img')
 
 	def random_search(self) -> None:
@@ -297,7 +299,7 @@ class FilteredSearch(WrappedElement):
 			for select in DR.quietly_find_elements('select', self.element):
 				DR.blip_element(select)
 				random.choice(DR.quietly_find_elements('option', select)).click()
-			DR.flashy_find_elements('#btn-id', self.element).click()
+			DR.flashy_find_element('#btn-id', self.element).click()
 			DR.wait_until_gone('.filteredSearch .preload-image-wrapper img')
 			# Check if any results are returned, and, if in Fact Sheet Mode, if any PDF links are present.
 			if DR.check_visible_quick('.mosaic-item', self.element):
@@ -328,8 +330,8 @@ class FilteredSearch(WrappedElement):
 
 	def get_random_result(self) -> WrappedElement:
 		"""Picks a random one from the search results."""
-		result = self.SearchResult(random.choice(DR.quietly_find_elements('.mosaic-item')))
-		return DR.blip_element(result.element)
+		result = self.SearchResult(DR.blip_element(random.choice(DR.quietly_find_elements('.mosaic-item'))))
+		return result
 
 class PDFPage(WrappedElement):
 	"""Represents a PDF file viewed within the browser.
@@ -345,7 +347,7 @@ class HeaderMapIcon(WrappedElement):
 class HeaderHeartIcon(WrappedElement):
 	"""Represents the Heart Icon in the Header. Complete with favourites count."""
 	def __init__(self):
-		self.element = DR.flashy_find_element('.icon-heart')
+		self.element = DR.flashy_find_element('.icon-heart-animate-container')
 
 	def favourites_count(self) -> int:
 		"""Returns the number of favourites as indicated by the icon subtitle."""
@@ -365,11 +367,10 @@ class InteractiveMap(WrappedElement):
 		def __init__(self):
 			self.element = DR.flashy_find_element('.controls-wrapper')
 
-		def open_menu(self, selector: str) -> None:
+		def open_menu(self) -> None:
 			"""Opens a menu, and waits until it is open, too."""
-			self.element.click()
-			DR.flashy_find_element(selector)
-			DR.wait_until(lambda: self.element.attr('class') == 'active')
+			DR.blip_element(self.element).click()
+			DR.wait_until(lambda _: self.element.get_attribute('class') == 'active')
 
 		def pick_random(self) -> None:
 			"""Picks a random entry from the menu."""
@@ -380,40 +381,40 @@ class InteractiveMap(WrappedElement):
 			"""Represents the Cities Menu."""
 			def __init__(self):
 				self.element = DR.flashy_find_element('#cities')
-				self.open_menu = open_menu
-				self.pick_random = pick_random
+				self.open_menu = MethodType(InteractiveMap.Controls.open_menu, self)
+				self.pick_random = MethodType(InteractiveMap.Controls.pick_random, self)
 
 		class IconicDestinations(WrappedElement):
 			"""Represents the Iconic Destinations Menu."""
 			def __init__(self):
 				self.element = DR.flashy_find_element('#icons')
-				self.open_menu = InteractiveMap.Controls.open_menu
-				self.pick_random = InteractiveMap.Controls.pick_random
+				self.open_menu = MethodType(InteractiveMap.Controls.open_menu, self)
+				self.pick_random = MethodType(InteractiveMap.Controls.pick_random, self)
 
 		class Itineraries(WrappedElement):
 			"""Represents the Itineraries Menu."""
 			def __init__(self):
 				self.element = DR.flashy_find_element('#itinerarytypes')
-				self.open_menu = InteractiveMap.Controls.open_menu
-				self.pick_random = InteractiveMap.Controls.pick_random
+				self.open_menu = MethodType(InteractiveMap.Controls.open_menu, self)
+				self.pick_random = MethodType(InteractiveMap.Controls.pick_random, self)
 
 		class FlyingTimes(WrappedElement):
 			"""Represents the Flying Times Menu."""
 			def __init__(self):
 				self.element = DR.flashy_find_element('#flights')
-				self.open_menu = InteractiveMap.Controls.open_menu
+				self.open_menu = MethodType(InteractiveMap.Controls.open_menu, self)
 
 			def choose_from(self) -> str:
 				"""Randomly chooses a city from the From field."""
 				select = DR.flashy_find_element('#flightFrom', self.element)
-				opt = select.find_elements_by_css_selector('option[id]')
+				opt = random.choice(DR.quietly_find_elements('option[id]', select))
 				opt.click()
 				return opt.text
 
 			def choose_to(self) -> str:
 				"""Randomly sets a city to the To field."""
 				select = DR.flashy_find_element('#flightTo', self.element)
-				opt = select.find_elements_by_css_selector('option[id]')
+				opt = random.choice(DR.quietly_find_elements('option[id]', select))
 				opt.click()
 				return opt.text
 
@@ -432,16 +433,19 @@ class InteractiveMap(WrappedElement):
 
 			def get_title(self) -> str:
 				"""Returns the name of the location that the panel describes"""
-				return DR.flashy_find_element('#info-title', self.element)
+				return DR.flashy_find_element('#info-title', self.element).text
 
 			def back_to_menu(self) -> None:
 				"""Clicks the BACK TO MENU button at the top there, then waits until it finishes spinning"""
 				DR.flashy_find_element('#back-to-filter', self.element).click()
-				DR.wait_until_present('#map-menu')
+				panel = DR.get_parent_element(DR.get_parent_element(DR.quietly_find_element('#map-menu')))
+				DR.wait_until(lambda _: panel.get_attribute('style').find('rotateY(0deg)') != -1)
 
 			def find_out_more(self) -> str:
 				"""Returns the url of the Find Out More link."""
-				return DR.flashy_find_element('#info-mainLink', self.element).get_attribute('href')
+				return DR.get_parent_element(\
+					DR.flashy_find_element('#info-mainLink', self.element)\
+					).get_attribute('href')
 
 			def view_highlights(self) -> str:
 				"""Returns the url of the VIEW HIGHLIGHTS button."""
@@ -455,7 +459,7 @@ class InteractiveMap(WrappedElement):
 				"""Clicks on one of the photos, opening the image carousel."""
 				DR.flashy_find_element('#info-carousel img', self.element).click()
 				DR.wait_until_present("#carousel-lightbox")
-				return ImageCarousel()
+				return InteractiveMap.ImageCarousel()
 
 			def random_itinerary(self) -> str:
 				"""Clicks on one of the Itinerary Suggestions links, and returns its title."""
@@ -464,6 +468,7 @@ class InteractiveMap(WrappedElement):
 					suge = random.choice(suges)
 					sug = suge.text
 					suge.click()
+					DR.wait_until(lambda _: DR.quietly_find_element('#info-title').text == sug)
 					return sug
 				except IndexError:	# There can apparently be no suggested itineraries.
 					return ''
@@ -476,8 +481,8 @@ class InteractiveMap(WrappedElement):
 		class MapPins(WrappedElement):
 			"""Represents the collection of pins that appear on the map when a menu is opened."""
 			def __init__(self):
-				self.pins = DR.flashy_find_elements('.marker')
-				self.element = DR.get_parent_element(self.pins[0])
+				self.pins = DR.flashy_find_elements('.marker div.bulb:not(.Itineraries)')
+				self.element = DR.get_parent_element(DR.get_parent_element(self.pins[0]))
 
 			def pick_random(self) -> str:
 				"""Picks a random pin and clicks it. Returns the name of its destination.
@@ -488,7 +493,7 @@ class InteractiveMap(WrappedElement):
 				name = pin.text
 				pin.click()
 				panel = DR.quietly_find_element('#info-box')
-				DR.wait_until(lambda: panel.get_attribute('style').search(r'rotateY\(0deg\)'))
+				DR.wait_until(lambda _: panel.get_attribute('style').find('rotateY(0deg)') != -1)
 				return name
 
 			def count(self) -> int:
@@ -522,7 +527,7 @@ class InteractiveMap(WrappedElement):
 		def close(self) -> None:
 			"""Clicks the X close button to hide the carousel"""
 			DR.flashy_find_element('#close-lightbox', self.element).click()
-			DR.wait_until_gone(self.element)
+			DR.wait_until_gone('#lightbox-inner')
 
 	class ZoomTools(WrappedElement):
 		"""Represents the Zoom In/Zoom Out button set."""
@@ -532,10 +537,12 @@ class InteractiveMap(WrappedElement):
 		def zoom_in(self) -> None:
 			"""Clicks the Zoom In button."""
 			DR.flashy_find_element('#zoomin', self.element).click()
+			time.sleep(DR.SHORT_WAIT)
 
 		def zoom_out(self) -> None:
 			"""Clicks the Zoom Out button."""
 			DR.flashy_find_element('#zoomout', self.element).click()
+			time.sleep(DR.SHORT_WAIT)	# Otherwise it tries to click where the pin *was*.
 
 class ContactUs(WrappedElement):
 	"""Represents the Contact Us page, which isn't a lot."""
@@ -547,6 +554,21 @@ class RegistrationForm(WrappedElement):
 	def __init__(self):
 		self.element = DR.flashy_find_element('#registration-form')
 
+	def __getattr__(self, name):
+		"""If an unknown GET message is received, see if there's a field with that name."""
+		return DR.flashy_find_element('[name*="{}"]'.format(\
+			name.replace('_', '-')), self.element).get_attribute('value')
+
+	def __setattr__(self, name, value):
+		"""If an unknown SET message is received, see if there's a field with that name."""
+		# Really should have seen this coming.
+		if name == 'element':
+			object.__setattr__(self, name, value)
+			return
+		elem = DR.flashy_find_element('[name*="{}"]'.format(name.replace('_', '-')), self.element)
+		elem.clear()
+		elem.send_keys(value)
+
 	def plain_text_fields(self, value: str=''):
 		"""Sets the value of all of the text fields that are mandatory,
 		but which don't need any particular value or format."""
@@ -555,25 +577,17 @@ class RegistrationForm(WrappedElement):
 			DR.blip_element(element)
 			element.send_keys(value)
 
-	def last_name(self, value: str='') -> None:
-		"""Overwrites the Last Name field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="lname"]', self.element).send_keys(value)
-
 	def date_of_birth(self, value: str='//') -> None:
 		"""Overwrites the Date Of Birth Name field to have the given D/M/Y value. Blank default."""
 		value = value.split('/')
-		DR.flashy_find_element('[name="birthdayday"]', self.element).send_keys(value[0])
-		DR.flashy_find_element('[name="birthdaymonth"]', self.element).send_keys(value[1])
-		DR.flashy_find_element('[name="birthdayyear"]', self.element).send_keys(value[2])
+		self.birthdayday = value[0]
+		self.birthdaymonth = value[1]
+		self.birthdayyear = value[2]
 
 	def pick_business_profile(self) -> None:
 		"""Picks a random option in the Business Profile list."""
 		sel = DR.flashy_find_element('[name="busprofile"]', self.element)
 		random.choice(DR.quietly_find_elements('option:not([value=""])', sel)).click()
-
-	def zip_postcode(self, value: str='') -> None:
-		"""Overwrites the Zip/Postcode field to have the given value. Blank default."""
-		DR.flashy_find_element('[name="zip"]', self.element).send_keys(value)
 
 	def pick_country(self, value: str='') -> None:
 		"""Picks the country with the given abbreviation from the Country list."""
@@ -597,8 +611,8 @@ class RegistrationForm(WrappedElement):
 
 	def email_address(self, value: str='') -> None:
 		"""Overwrites the Email Address and Verify Email fields to have the given value. Blank default."""
-		DR.flashy_find_element('#email', self.element).send_keys(value)
-		DR.flashy_find_element('#verifyemail', self.element).send_keys(value)
+		self.email = value
+		self.verifyemail = value
 
 	def how_many_years(self) -> None:
 		"""Sets the value of the How Many Years Selling field."""
@@ -633,8 +647,8 @@ class RegistrationForm(WrappedElement):
 
 	def password(self, value: str='') -> None:
 		"""Sets the value of the Create A Password and Re-Enter Password fields. Blank default."""
-		DR.flashy_find_element('#pwd', self.element).send_keys(value)
-		DR.flashy_find_element('[name="pwd1"]', self.element).send_keys(value)
+		self.pwd = value
+		self.pwd1 = value
 
 	def terms_and_conditions(self) -> None:
 		"""Agrees to the Terms And Conditions, without reading them."""
@@ -753,6 +767,10 @@ class Profile(WrappedElement):
 
 	def __setattr__(self, name, value):
 		"""If an unknown SET message is received, see if there's a field with that name."""
+		# Really should have seen this coming.
+		if name in {'element', 'change'}:
+			object.__setattr__(self, name, value)
+			return
 		elem = DR.flashy_find_element('[name*="{}"]'.format(name.replace('_', '-')), self.element)
 		elem.clear()
 		elem.send_keys(value)
@@ -811,7 +829,7 @@ class TrainingSummary(WrappedElement):
 		"""Clicks the View More Modules button."""
 		count = self.count_modules()
 		DR.flashy_find_element('.load-more', self.optional).click()
-		DR.wait_until(lambda: self.count_modules() != count or \
+		DR.wait_until(lambda _: self.count_modules() != count or \
 			DR.quietly_find_element('load-more', self.optional).get_attribute('disabled') == 'disabled')
 
 	def completion_types(self) -> None:
@@ -849,7 +867,8 @@ class AussieSpecialistPhotos(WrappedElement):
 
 		def open(self) -> None:
 			"""Clicks on the mosaic tile, opening it."""
-			DR.flashy_find_element('.flipper img[src*="image.adapt"]', self.element).click()
+			MinorElement('.flipper img[src*="image.adapt"]', self.element).point()
+			DR.flashy_find_element('.flipper a', self.element).click()
 			self.contentpane = DR.flashy_find_element('.active', self.element)
 
 		def get_description(self) -> MinorElement:
@@ -872,7 +891,35 @@ class SpecialistBadge(WrappedElement):
 		DR.flashy_find_element('img[src*="asp-badge.png"]')
 
 class Email:
-	"""Superclass for the email checks."""
+	"""Handler for the email checks. Due to languages, there's really no way to tell
+	which email is which, so to ensure schedule synchronicity, make sure
+	get_new_messages is called every time an email is expected."""
+	def __init__(self, userid):
+		self.email = userid
+
+	def get_new_messages(self) -> List[str]: # pylint: disable-msg=E1126
+		"""Polls the IMAP server untill a new email(s) are found, then
+		attempts to make sense of their ridiculous transmission formatting."""
+		results = []
+		with imaplib.IMAP4_SSL(DR.TEST_EMAIL_IMAP_SERVER) as imap:
+			imap.login(DR.TEST_EMAIL_USERNAME, DR.TEST_EMAIL_PASSWORD)
+			imap.select()
+			nums = DR.wait_until(lambda _: self.email_loop(imap))
+			# IMAP doesn't return number lists in a format that it can actually read??
+			_, ems = imap.fetch(nums, 'BODY[1]')
+			for ema in ems[1::2]:	# Yeah, the results come back wierd.
+				results.append(quopri.decodestring(ema[0])).decode()
+		return results
+
+	def email_loop(self, imap: imaplib.IMAP4_SSL) -> bool:
+		"""SEARCHes the server, checking for new email. Basically, put this in a wait-until loop."""
+		imap.noop()
+		# Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
+		# Containing a single bytestring of space-separated return values.
+		# And IMAP requires that imput values be comma separated. 		Because why not.
+		return ','.join(imap.search(None, 'FROM', DR.ASP_EMAIL, \
+			'TO', self.email, 'unseen')[1][0].split(' '))
+
 
 class AussieStore(WrappedElement):
 	"""Contains representations the various pages of the Aussie Store area.
@@ -995,7 +1042,7 @@ class AussieStore(WrappedElement):
 			rem = DR.blip_element(DR.quietly_find_elements('.cell-title', self.element)[rei])
 			ren = rem.text.casefold()
 			DR.blip_element(DR.quietly_find_elements('.product-remove')[rei]).click()
-			DR.wait_until(lambda: count == self.count())
+			DR.wait_until(lambda _: count == self.count())
 			self.element = DR.quietly_find_element('.shoppingcart')
 			return ren
 
@@ -1005,5 +1052,5 @@ class AussieStore(WrappedElement):
 			while count > 0:
 				DR.flashy_find_element('.product-remove').click()
 				count -= 1
-				DR.wait_until(lambda: count() == count)
+				DR.wait_until(lambda _: count() == count)
 				self.element = DR.quietly_find_element('.shoppingcart')

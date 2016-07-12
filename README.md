@@ -5,9 +5,10 @@ Placeholder for Python Selenium scripts
 1. Install Python.
   * Version 3.5 (32bit) was used to write this, but the 64bit edition or any 3.x version should work as well.
   * Ensure that the Python variables are added to your PATH, there should be an option for that on the installer.
-2. Using Command Prompt (Admin), use `pip` to install the Selenium Webdriver and TAP python libraries:
+2. Using Command Prompt (Admin), use `pip` to install the Selenium Webdriver, Beautiful Soup, and TAP python libraries:
   * `pip install selenium`
   * `pip install tap.py`
+  * `pip install beautifulsoup4`
 3. Download the WebDriver application for the browser(s) you intend to use, and ensure the executable is located on your PATH.
   * For example, place it in the Scripts directory of your Python installation.
 	* IE also requires that Protected Mode is set to the same value for every Security Level, set that in  the Security tab in IE's Internet Options dialog.

@@ -4,12 +4,12 @@ import re
 import time
 import random
 import hashlib
-import email
 import quopri
 import imaplib
 from types import MethodType
 from typing import Set, List
 from selenium.webdriver.remote.webelement import WebElement
+import bs4
 import drivery as DR
 
 class WrappedElement:
@@ -49,7 +49,8 @@ class SplashSelect(WrappedElement):
 
 	def get_values(self) -> Set[str]:
 		"""Gets a set containing the URLs of all the Language Options."""
-		return {x.get_attribute('value') for x in DR.quietly_find_elements('option:not([value="#"])', self.element)}
+		return {x.get_attribute('value') \
+			for x in DR.quietly_find_elements('option:not([value="#"])', self.element)}
 
 	def choose_locale(self) -> None:
 		"""Selects the Language Option representing the current locale."""
@@ -330,7 +331,8 @@ class FilteredSearch(WrappedElement):
 
 	def get_random_result(self) -> WrappedElement:
 		"""Picks a random one from the search results."""
-		result = self.SearchResult(DR.blip_element(random.choice(DR.quietly_find_elements('.mosaic-item'))))
+		result = self.SearchResult(DR.blip_element(\
+			random.choice(DR.quietly_find_elements('.mosaic-item'))))
 		return result
 
 class PDFPage(WrappedElement):
@@ -576,7 +578,7 @@ class RegistrationForm(WrappedElement):
 		for element in elements:
 			DR.blip_element(element)
 			element.send_keys(value)
-
+	# Deliberately uses the __setattr__, ignore the attribute define warning. pylint: disable-msg=W0201
 	def date_of_birth(self, value: str='//') -> None:
 		"""Overwrites the Date Of Birth Name field to have the given D/M/Y value. Blank default."""
 		value = value.split('/')
@@ -798,10 +800,10 @@ class Profile(WrappedElement):
 		"""Checks the Status Badge area, returns a string of the User Level."""
 		if DR.check_visible_quick('.profile-status img', self.element):
 			 img = DR.flashy_find_element('.profile-status img', self.element)
-			 return {'2.png': QUALIFIED, '3.png': PREMIER}\
-			 	.get(img.get_attribute('src')[-5:-1], TRAINEE)
+			 return {'2.png': self.QUALIFIED, '3.png': self.PREMIER}\
+			 	.get(img.get_attribute('src')[-5:-1], self.TRAINEE)
 		else:
-			return TRAINEE
+			return self.TRAINEE
 
 class TrainingSummary(WrappedElement):
 	"""Represents the two Training Summary modules list things."""
@@ -907,19 +909,32 @@ class Email:
 			nums = DR.wait_until(lambda _: self.email_loop(imap))
 			# IMAP doesn't return number lists in a format that it can actually read??
 			_, ems = imap.fetch(nums, 'BODY[1]')
-			for ema in ems[1::2]:	# Yeah, the results come back wierd.
-				results.append(quopri.decodestring(ema[0])).decode()
+			for ema in ems[::2]:	# Yeah, the results come back wierd.
+				results.append(quopri.decodestring(ema[1])).decode()
 		return results
 
-	def email_loop(self, imap: imaplib.IMAP4_SSL) -> bool:
+	def email_loop(self, imap: imaplib.IMAP4_SSL) -> bytes:
 		"""SEARCHes the server, checking for new email. Basically, put this in a wait-until loop."""
 		imap.noop()
 		# Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
 		# Containing a single bytestring of space-separated return values.
 		# And IMAP requires that imput values be comma separated. 		Because why not.
-		return ','.join(imap.search(None, 'FROM', DR.ASP_EMAIL, \
-			'TO', self.email, 'unseen')[1][0].split(' '))
+		return b','.join(imap.search(None, 'FROM', DR.ASP_EMAIL, \
+			'TO', self.email, 'unseen')[1][0].split(b' '))
 
+	class RegistrationEmail():
+		"""Represents the Registration Email, if used correctly. Correctly here meaning:
+		instantiate this shortly after registering, and be sure to attach it to
+		an email sub-address with no existing unread messages."""
+		def __init__(self, userid: str):
+			self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0])
+
+		def activation_link(self) -> str:
+			"""Returns the address of the Click Here To Activate Your Account link."""
+			return self.email.select('a[href*="activation"]')
+
+		def get_locale(self) -> str:
+			"""Returns the email's locale setting."""
 
 class AussieStore(WrappedElement):
 	"""Contains representations the various pages of the Aussie Store area.
@@ -1033,7 +1048,7 @@ class AussieStore(WrappedElement):
 
 		def count(self) -> int:
 			"""Counts the number of Products in the Cart."""
-			return len(DR.quietly_find_elements('.shoppingcart tr'))
+			return len(DR.quietly_find_elements('.shoppingcart tr', self.element))
 
 		def remove_random(self) -> str:
 			"""Clicks the Remove Product button on a random Product. Returns the ex-product's name."""

@@ -1,7 +1,11 @@
 """This is where all the specific Webdriver implementation details go."""
 
+import re
+import quopri
+import imaplib
 from types import FunctionType
-from typing import List, Union, Any
+from typing import List, Set, Union, Any
+import bs4
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -96,6 +100,10 @@ def refresh() -> None:
 	"""It's The Rules"""
 	DRIVER.refresh()
 
+def get(url: str) -> None:
+	"""RULES."""
+	DRIVER.get(url)
+
 def wait_for_page() -> None:
 	"""Holds up execution until the current page's url contains the Last Link value
 	and its	document.readyState is 'complete'. A decent approximation?"""
@@ -184,3 +192,51 @@ def bring_to_front(element: WebElement) -> WebElement:
 def execute_script(script: str, *args) -> Any:
 	"""Executes a javascript snippet, returning what the script returns."""
 	return DRIVER.execute_script(script, args)
+
+class Email:
+	"""Handler for the email checks. Due to languages, there's really no way to tell
+	which email is which, so to ensure schedule synchronicity, make sure
+	get_new_messages is called every time an email is expected."""
+	def __init__(self, userid):
+		self.email = userid
+
+	def get_new_messages(self) -> List[str]: # pylint: disable-msg=E1126
+		"""Polls the IMAP server untill a new email(s) are found, then
+		attempts to make sense of their ridiculous transmission formatting."""
+		results = []
+		with imaplib.IMAP4_SSL(TEST_EMAIL_IMAP_SERVER) as imap:
+			imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
+			imap.select()
+			nums = wait_until(lambda _: self.email_loop(imap))
+			# IMAP doesn't return number lists in a format that it can actually read??
+			_, ems = imap.fetch(nums, 'BODY[1]')
+			for ema in ems[::2]:	# Yeah, the results come back wierd.
+				results.append(quopri.decodestring(ema[1])).decode()
+		return results
+
+	def email_loop(self, imap: imaplib.IMAP4_SSL) -> bytes:
+		"""SEARCHes the server, checking for new email. Basically, put this in a wait-until loop."""
+		imap.noop()
+		# Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
+		# Containing a single bytestring of space-separated return values.
+		# And IMAP requires that imput values be comma separated. 		Because why not.
+		return b','.join(imap.search(None, 'FROM', ASP_EMAIL, \
+			'TO', self.email, 'unseen')[1][0].split(b' '))
+
+	class RegistrationEmail():
+		"""Represents the Registration Email, if used correctly. Correctly here meaning:
+		instantiate this shortly after registering, and be sure to attach it to
+		an email sub-address with no existing unread messages."""
+		def __init__(self, userid: str):
+			self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0], 'html.parser')
+
+		def activation_link(self) -> str:
+			"""Returns the address of the Click Here To Activate Your Account link."""
+			return self.email.select('a[href*="activation"]')
+
+		def get_locale(self) -> Set[str]: # pylint: disable-msg=E1126
+			"""Returns the email's locale setting."""
+			links = self.email.select('a[href*="t.updates.tourism.australia.com"]')
+			hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) \
+				for x in links.select('a[href*="t.updates"]')]
+			return {x.group().split('=')[-1] for x in hrefs if x}

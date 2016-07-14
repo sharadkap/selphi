@@ -4,12 +4,9 @@ import re
 import time
 import random
 import hashlib
-import quopri
-import imaplib
 from types import MethodType
 from typing import Set, List
 from selenium.webdriver.remote.webelement import WebElement
-import bs4
 import drivery as DR
 
 class WrappedElement:
@@ -551,8 +548,8 @@ class ContactUs(WrappedElement):
 	def __init__(self):
 		self.element = DR.flashy_find_element('a[href*="mailto:"]')
 
-class RegistrationForm(WrappedElement):
-	"""Represents the Registration Form in all its million <input>s glory."""
+class RegistrationForm(WrappedElement): # They aren't instance variables. pylint: disable-msg=R0902
+	"""Represents the Registration Form"""
 	def __init__(self):
 		self.element = DR.flashy_find_element('#registration-form')
 
@@ -567,7 +564,7 @@ class RegistrationForm(WrappedElement):
 		if name == 'element':
 			object.__setattr__(self, name, value)
 			return
-		elem = DR.flashy_find_element('[name*="{}"]'.format(name.replace('_', '-')), self.element)
+		elem = DR.flashy_find_element('[name="{}"]'.format(name.replace('_', '-')), self.element)
 		elem.clear()
 		elem.send_keys(value)
 
@@ -578,7 +575,8 @@ class RegistrationForm(WrappedElement):
 		for element in elements:
 			DR.blip_element(element)
 			element.send_keys(value)
-	# Deliberately uses the __setattr__, ignore the attribute define warning. pylint: disable-msg=W0201
+	# Deliberately uses the __setattr__, ignore the attribute define warning.
+	# pylint: disable-msg=W0201
 	def date_of_birth(self, value: str='//') -> None:
 		"""Overwrites the Date Of Birth Name field to have the given D/M/Y value. Blank default."""
 		value = value.split('/')
@@ -643,10 +641,6 @@ class RegistrationForm(WrappedElement):
 		for box in random.sample(sel, len(sel) // 2):
 			DR.blip_element(box).click()
 
-	def username(self, value: str='') -> None:
-		"""Sets the value of the Username field. Blank default."""
-		DR.flashy_find_element('[name="username"]', self.element).send_keys(value)
-
 	def password(self, value: str='') -> None:
 		"""Sets the value of the Create A Password and Re-Enter Password fields. Blank default."""
 		self.pwd = value
@@ -666,8 +660,8 @@ class RegistrationForm(WrappedElement):
 			return hashlib.md5(bits + str(get_time()).encode()).hexdigest()[1:6]
 		# It's time sensitive, so refresh the captcha immediately beforehand.
 		DR.flashy_find_element('a[onclick="captchaRefresh()"]', self.element).click()
-		DR.flashy_find_element('[name="captcha"]').send_keys(\
-			do_it(DR.flashy_find_element('#cq_captchakey').get_attribute('value').encode()))
+		time.sleep(DR.SHORT_WAIT)
+		self.captcha = do_it(DR.flashy_find_element('#cq_captchakey').get_attribute('value').encode())
 
 	def submit(self) -> None:
 		"""Clicks the Create My Account Button, and awaits confirmation."""
@@ -891,50 +885,6 @@ class SpecialistBadge(WrappedElement):
 		DR.flashy_find_element('a[href*="asp-badge.png"]').click()
 		DR.switch_to_window(1)
 		DR.flashy_find_element('img[src*="asp-badge.png"]')
-
-class Email:
-	"""Handler for the email checks. Due to languages, there's really no way to tell
-	which email is which, so to ensure schedule synchronicity, make sure
-	get_new_messages is called every time an email is expected."""
-	def __init__(self, userid):
-		self.email = userid
-
-	def get_new_messages(self) -> List[str]: # pylint: disable-msg=E1126
-		"""Polls the IMAP server untill a new email(s) are found, then
-		attempts to make sense of their ridiculous transmission formatting."""
-		results = []
-		with imaplib.IMAP4_SSL(DR.TEST_EMAIL_IMAP_SERVER) as imap:
-			imap.login(DR.TEST_EMAIL_USERNAME, DR.TEST_EMAIL_PASSWORD)
-			imap.select()
-			nums = DR.wait_until(lambda _: self.email_loop(imap))
-			# IMAP doesn't return number lists in a format that it can actually read??
-			_, ems = imap.fetch(nums, 'BODY[1]')
-			for ema in ems[::2]:	# Yeah, the results come back wierd.
-				results.append(quopri.decodestring(ema[1])).decode()
-		return results
-
-	def email_loop(self, imap: imaplib.IMAP4_SSL) -> bytes:
-		"""SEARCHes the server, checking for new email. Basically, put this in a wait-until loop."""
-		imap.noop()
-		# Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
-		# Containing a single bytestring of space-separated return values.
-		# And IMAP requires that imput values be comma separated. 		Because why not.
-		return b','.join(imap.search(None, 'FROM', DR.ASP_EMAIL, \
-			'TO', self.email, 'unseen')[1][0].split(b' '))
-
-	class RegistrationEmail():
-		"""Represents the Registration Email, if used correctly. Correctly here meaning:
-		instantiate this shortly after registering, and be sure to attach it to
-		an email sub-address with no existing unread messages."""
-		def __init__(self, userid: str):
-			self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0])
-
-		def activation_link(self) -> str:
-			"""Returns the address of the Click Here To Activate Your Account link."""
-			return self.email.select('a[href*="activation"]')
-
-		def get_locale(self) -> str:
-			"""Returns the email's locale setting."""
 
 class AussieStore(WrappedElement):
 	"""Contains representations the various pages of the Aussie Store area.

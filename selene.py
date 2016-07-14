@@ -326,17 +326,18 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		form.experiences()
 		# Better hope this test comes before the other ones!
 		self.USERNAME = localecode + environ + self.USERID
-		form.username(self.USERNAME)
+		form.username = self.USERNAME
 		form.password(DR.PASSWORD)
 		form.terms_and_conditions()
 		form.decaptcha()
 		# Click the Create Account button, popup should appear confirming account creation.
 		form.submit()
 		# Email should be sent confirming this.
-		regemail = CP.Email(self.USERID).get_new_messages()
+		regemail = DR.Email.RegistrationEmail(self.USERID)
+		self.assertEqual({DR.LOCALE[1:-1]}, regemail.get_locale())
 		# In the Registration Confirmation email, click the Activate Account link.
-
 		# Should open the Registration Acknowledgement page, confirming the account is set up.
+		DR.get(regemail.activation_link())
 
 	def test_Login(self):
 		"""Tests the Login-related functionality."""

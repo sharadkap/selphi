@@ -198,7 +198,7 @@ class Email:
 	which email is which, so to ensure schedule synchronicity, make sure
 	get_new_messages is called every time an email is expected."""
 	def __init__(self, userid):
-		self.email = userid
+		self.email = EMAIL.format(userid)
 
 	def get_new_messages(self) -> List[str]: # pylint: disable-msg=E1126
 		"""Polls the IMAP server untill a new email(s) are found, then
@@ -209,9 +209,9 @@ class Email:
 			imap.select()
 			nums = wait_until(lambda _: self.email_loop(imap))
 			# IMAP doesn't return number lists in a format that it can actually read??
-			_, ems = imap.fetch(nums, 'BODY[1]')
+			_, ems = imap.fetch(nums, 'BODY[2]')
 			for ema in ems[::2]:	# Yeah, the results come back wierd.
-				results.append(quopri.decodestring(ema[1])).decode()
+				results.append(quopri.decodestring(ema[1]).decode())
 		return results
 
 	def email_loop(self, imap: imaplib.IMAP4_SSL) -> bytes:
@@ -221,22 +221,46 @@ class Email:
 		# Containing a single bytestring of space-separated return values.
 		# And IMAP requires that imput values be comma separated. 		Because why not.
 		return b','.join(imap.search(None, 'FROM', ASP_EMAIL, \
-			'TO', self.email, 'unseen')[1][0].split(b' '))
+			'TO', self.email, 'UNSEEN')[1][0].split(b' '))
 
-	class RegistrationEmail():
-		"""Represents the Registration Email, if used correctly. Correctly here meaning:
-		instantiate this shortly after registering, and be sure to attach it to
-		an email sub-address with no existing unread messages."""
+	class LocalizedEmail():
+		"""Superclass for the get_locale method of the various emails."""
 		def __init__(self, userid: str):
 			self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0], 'html.parser')
-
-		def activation_link(self) -> str:
-			"""Returns the address of the Click Here To Activate Your Account link."""
-			return self.email.select('a[href*="activation"]')
+			self.userid = userid
 
 		def get_locale(self) -> Set[str]: # pylint: disable-msg=E1126
 			"""Returns the email's locale setting."""
 			links = self.email.select('a[href*="t.updates.tourism.australia.com"]')
-			hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) \
-				for x in links.select('a[href*="t.updates"]')]
+			hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) for x in links]
 			return {x.group().split('=')[-1] for x in hrefs if x}
+
+	class RegistrationEmail(LocalizedEmail):
+		"""Represents the Registration Email, if used correctly. Correctly here meaning:
+		instantiate this shortly after registering, and be sure to attach it to
+		an email sub-address with no existing unread messages."""
+		def activation_link(self) -> str:
+			"""Returns the address of the Click Here To Activate Your Account link."""
+			return self.email.select('a[href*="activation"]')[0]['href']
+
+	class ForgottenUsernameEmail(LocalizedEmail):
+		"""Represents the Forgotten Username Email.
+		If it is called at the right time, of course."""
+		def get_username(self) -> str:
+			"""Returns the Username that the email is trying to remind you of."""
+			return self.email.find('td', string=re.compile(self.userid)).string
+
+
+	class ForgottenPasswordEmail(LocalizedEmail):
+		"""Represents the Forgotten Password Email.
+		If it is called at the right time, of course."""
+		def get_username(self) -> str:
+			"""Forgotten Password email also contains your Username, returns that."""
+			return self.email.find('td', string=re.compile(self.userid)).string
+
+		def get_password(self) -> str:
+			"""Returns the new temporary password from the email."""
+			# No idea what the new password will look like, so use a relative search.
+			ustd = self.email.find('td', string=re.compile(self.userid))
+			# Get the Username cell, then wander through the tree a bit.
+			return ustd.parent.next_sibling.next_sibling.contents[3].string

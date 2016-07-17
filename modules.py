@@ -3,6 +3,7 @@ import os
 import time
 from typing import Union, List
 import argparse
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webdriver import WebDriverException
@@ -12,36 +13,60 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from modulescripts import LANGS, LANGS_D, MODULES, MODULES_D, SCRIPTS, USERS
 
-BROWSERS = {'chrome': Chrome, 'firefox': Firefox, 'ie': Ie, 'safari': Safari, \
-'opera': Opera, 'edge': Edge}
-PARSER = argparse.ArgumentParser()
-PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of [%(choices)s]. \
+RESET_MODULE = 'cpCmndGotoSlide=0'
+MINIWAIT = 0.5
+LIST_STR = List[str]	# pylint: disable-msg=E1126
+
+def do_module(driver: WebDriver, module: str) -> None:
+	"""Run this one if this is being imported as part of the Reg tests.
+	Be sure to have already navigated to the module page, pass in the driver
+	to be used, tell it which module this is and stand back. Names are:
+	1, 2, 3, act, qld, nsw, nt, sa, tas, vic, wa, aboriginal, golf, lodges, ra, walks, wine"""
+	global DRIVER	# pylint: disable-msg=W0601
+	DRIVER = driver
+	for elem in SCRIPTS[module]:
+		domo(elem)
+
+def main() -> None:
+	"""Run this if the modules suite is being executed as itself."""
+	# pylint: disable-msg=W0601
+	global ARGS, IMPLICITLY_WAIT, TIME_FORMAT, DRIVER, MOD_STEM_D, MOD_STEM, SCREENSHOT_DIR, RESULTS_FILE
+	# pylint: disable-msg=C0103
+	BROWSERS = {'chrome': Chrome, 'firefox': Firefox, 'ie': Ie, 'safari': Safari, \
+	'opera': Opera, 'edge': Edge}
+	PARSER = argparse.ArgumentParser()
+	PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of [%(choices)s]. \
 	Default is all.', nargs='+', type=str, choices=MODULES.keys(), metavar='')
-PARSER.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
+	PARSER.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
 	Default is all.', nargs='+', type=str, choices=LANGS.keys(), metavar='')
-PARSER.add_argument('-b', '--browser', help='Which browser to use. One or more of [%(choices)s]. \
+	PARSER.add_argument('-b', '--browser', help='Which browser to use. One or more of [%(choices)s]. \
 	Default is %(default)s', nargs=1, default=['chrome'], choices=BROWSERS.keys(), metavar='')
-PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
+	PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
 	action='store_true')
-PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding \
+	PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding \
 	an element is missing. Default is %(default)s', default=15, type=int, nargs=1)
-PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
+	PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
 	See https://docs.python.org/3/library/time.html#time.strftime for full formatting info. \
 	Default is %(default)s', default=['%Y/%m/%d %H:%M'], nargs='+', type=str)
-ARGS = PARSER.parse_args()
+	ARGS = PARSER.parse_args()
 
-MINIWAIT = 0.5
-IMPLICITLY_WAIT = ARGS.wait
-TIME_FORMAT = ' '.join(ARGS.timeformat)
-DRIVER = BROWSERS[ARGS.browser[0]]()
-DRIVER.implicitly_wait(IMPLICITLY_WAIT)
-DRIVER.maximize_window()
-MOD_STEM_D = 'https://prod.aussiespecialist.com/content/asp/captivate/{0}_{1}/index.html'
-MOD_STEM = 'https://prod.aussiespecialist.com/{0}/secure/training/training-summary/{1}.html'
-SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
-RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
-os.makedirs(SCREENSHOT_DIR, exist_ok=True)
-RESET_MODULE = 'cpCmndGotoSlide=0'
+	IMPLICITLY_WAIT = ARGS.wait
+	TIME_FORMAT = ' '.join(ARGS.timeformat)
+	DRIVER = BROWSERS[ARGS.browser[0]]()
+	DRIVER.implicitly_wait(IMPLICITLY_WAIT)
+	DRIVER.maximize_window()
+	MOD_STEM_D = 'https://prod.aussiespecialist.com/content/asp/captivate/{0}_{1}/index.html'
+	MOD_STEM = 'https://prod.aussiespecialist.com/{0}/secure/training/training-summary/{1}.html'
+	SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
+	RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
+	os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+
+	try:
+		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
+	except:
+		write_footer_entry(crash=True)
+	# Do remember to do this.
+	DRIVER.quit()
 
 def new_drag_drop(source: str, target: str) -> None:
 	"""Like the ActionChains drag and drop,
@@ -96,7 +121,7 @@ def pick_from_possibilities(locator: str) -> WebElement:
 		raise WebDriverException("Didn't find {0}".format(locator))
 	return eles[0]
 
-def full_languages_modules_run(langfilter: List[str]=None, modfilter: List[str]=None) -> None:
+def full_languages_modules_run(langfilter: LIST_STR=None, modfilter: LIST_STR=None) -> None:
 	"""Run the selected set of modules and locales, logging results,
 	and saving a screenshot in case of failure.	By default, will run all of them."""
 	if ARGS.direct:
@@ -159,7 +184,7 @@ def get_time() -> str:
 	"""Get the time, and formatted as well."""
 	return time.strftime(TIME_FORMAT)
 
-def write_header_row(mods: List[str]) -> None:
+def write_header_row(mods: LIST_STR) -> None:
 	"""Adds the header row to the output file. Columns are for mods."""
 	with open(RESULTS_FILE, mode='a') as log:
 		log.write('\n"START: {0}",'.format(get_time()))	# Header corner.
@@ -197,10 +222,4 @@ def draw_failure(lang: str, mod: str) -> None:
 		fil.write(imgdata)
 
 if __name__ == '__main__':
-	try:
-		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
-	except:
-		write_footer_entry(crash=True)
-	# Do remember to do this.
-	DRIVER.quit()
-	raise EOFError("This is the end of the file.")
+	main()

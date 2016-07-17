@@ -5,6 +5,7 @@ import random
 import unittest
 from tap import TAPTestRunner
 import drivery as DR
+import modules as MOD
 import components as CP
 
 class REGR(unittest.TestCase): # pylint: disable-msg=R0904
@@ -293,11 +294,12 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 	def test_Registration(self) -> None:
 		"""Checks the Registration process."""
+		global USERID, USERNAME
 		DR.open_home_page()
 		# Navigate to the Registration Page
 		CP.BodyRegisterButton().click()
 		# Random letters to make a unique username.
-		self.USERID = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
+		USERID = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
 		# The Country Code
 		langcode, localecode = DR.LOCALE.split('-')
 		# Username stuff, add the Environment prefix to identify the user.
@@ -318,23 +320,23 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		form.pick_state()
 		form.pick_language(langcode)
 		# Use an overloaded email.
-		form.email_address(DR.EMAIL.format(self.USERID))
+		form.email_address(DR.EMAIL.format(USERID))
 		form.how_many_years()
 		form.how_many_times()
 		form.how_many_bookings()
 		form.standard_categories()
 		form.experiences()
 		# Better hope this test comes before the other ones!
-		self.USERNAME = localecode + environ + self.USERID
-		form.username = self.USERNAME
+		USERNAME = localecode + environ + USERID
+		form.username = USERNAME
 		form.password(DR.PASSWORD)
 		form.terms_and_conditions()
 		form.decaptcha()
 		# Click the Create Account button, popup should appear confirming account creation.
 		form.submit()
 		# Email should be sent confirming this.
-		regemail = DR.Email.RegistrationEmail(self.USERID)
-		self.assertEqual({DR.LOCALE[1:-1]}, regemail.get_locale())
+		regemail = DR.Email.RegistrationEmail(USERID)
+		self.assertEqual({DR.LOCALE[1:]}, regemail.get_locale())
 		# In the Registration Confirmation email, click the Activate Account link.
 		# Should open the Registration Acknowledgement page, confirming the account is set up.
 		DR.get(regemail.activation_link())
@@ -343,7 +345,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Tests the Login-related functionality."""
 		# Log in.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Should proceed to the Secure welcome page.
 		self.assertIn(DR.LOCALE + '/secure.html', DR.current_url())
 		# Check the Nav Menu
@@ -369,51 +371,49 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		CP.SignIn().forgotten_username().click()
 		# Enter the user's email address into the Forgot Username form.
 		forgus = CP.ForgottenForm()
-		forgus.email(DR.EMAIL.format(self.USERID))
+		forgus.email(DR.EMAIL.format(USERID))
 		# Click the Submit button, a panel should appear confirming submission.
 		forgus.submit()
 		# An email should be received at the given address containing the Username.
-		# TODO ???
+		usnaema = DR.Email.ForgottenUsernameEmail(USERID)
+		self.assertEqual({DR.LOCALE[1:]}, usnaema.get_locale())
+		self.assertEqual(USERNAME, usnaema.get_username())
 
 	def test_Forgotten_Password(self):
 		"""Tests the Forgotten Password feature."""
+		global TEMP_PASS
 		DR.open_home_page()
 		# Click the Sign In link
 		# In the Sign In panel, click the Forgotten Password link.
 		CP.SignIn().forgotten_password().click()
 		# Enter the user's email address into the Forgot Password form.
 		forgpa = CP.ForgottenForm()
-		forgpa.email(DR.EMAIL.format(self.USERID))
+		forgpa.email(DR.EMAIL.format(USERID))
 		# Click the Submit button, a panel should appear confirming submission.
 		forgpa.submit()
 		# An email should be received at the given address containing the Username and new Password
-		# TODO Read that email and sign in with the new password.
+		uspaema = DR.Email.ForgottenPasswordEmail(USERID)
+		self.assertEqual({DR.LOCALE[1:]}, uspaema.get_locale())
+		self.assertEqual(USERNAME, uspaema.get_username())
+		# Read that email and sign in with the new password.
+		TEMP_PASS = uspaema.get_password()
 
 	def test_Change_Password(self):
 		"""Tests the Change Password feature."""
-		temp_pass = DR.PASSWORD
-		def double():
-			"""Log in, change the password, and log out."""
-			CP.SignIn().sign_in(self.USERNAME, temp_pass)
-			# In the Nav Menu, click the My Profile link.
-			CP.NavMenu().profile().click()
-			# Click the Change Password button, below the Profile Data fields.
-			CP.Profile().change().click()
-			# Fill out the Change Password Form with the Current Password and a New Password.
-			change = CP.ChangePassword()
-			change.current_password(temp_pass)
-			change.new_password(temp_pass[::-1])	# This is the password reversed
-			# Click the Submit button, a panel should appear confirming the password change, and
-			# The page should redirect back to the Profile page.
-			change.submit()
-			# Click the Sign Out link in the header.
-			CP.NavMenu().logout().click()
 		DR.open_home_page()
-		# Sign in and change the password.
-		double()
-		# Sign back in with the New Password. The system should accept the new password.
-		temp_pass = temp_pass[::-1]
-		double()	# Also change it back to the original
+		# Sign in with the new password, because these tests are being executed in order, right?
+		CP.SignIn().sign_in(USERNAME, TEMP_PASS)
+		# In the Nav Menu, click the My Profile link.
+		CP.NavMenu().profile().click()
+		# Click the Change Password button, below the Profile Data fields.
+		CP.Profile().change().click()
+		# Fill out the Change Password Form with the Current Password and a New Password.
+		change = CP.ChangePassword()
+		change.current_password(TEMP_PASS)
+		change.new_password(DR.PASSWORD)	# Use the regular password, of course.
+		# Click the Submit button, a panel should appear confirming the password change, and
+		# The page should redirect back to the Profile page.
+		change.submit()
 
 	def test_Favourites(self):
 		"""Tests the Sales Tools functionality."""
@@ -436,7 +436,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				favtitles.add(tile.get_title().text())
 
 		# Pre-condition: Should be signed in.
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		favcount = CP.HeaderHeartIcon().favourites_count()
 		# If there are already favourites, that's a problem, remove them. Messes with the count.
 		if favcount > 0:
@@ -480,7 +480,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Tests the Profile page."""
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to the Profile page.
 		CP.NavMenu().profile().click()
 		profile = CP.Profile()
@@ -516,7 +516,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Training Summary page."""
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to Training > Training Summary.
 		CP.Training().click().training_summary().click()
 		modules = CP.TrainingSummary()
@@ -540,16 +540,51 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		modules.load_more()
 		newcount = modules.count_modules()
 		self.assertEqual(oldcount, newcount)
+
+		# Go do a few of the modules.
+		modules.module_one()
+		MOD.do_module(DR.DRIVER, '1')
+		DR.back()
+		modules = CP.TrainingSummary()
+		modules.module_two()
+		MOD.do_module(DR.DRIVER, '2')
+		DR.back()
+		modules = CP.TrainingSummary()
+		modules.module_three()
+		MOD.do_module(DR.DRIVER, '3')
+		DR.back()
+		modules = CP.TrainingSummary()
+
+		# Should receive a halfway email here.
+		halfway = DR.Email.LocalizedEmail(USERID)
+		self.assertEqual(DR.LOCALE[1:], halfway.get_locale())
+		# Open this one, but don't finish it.
+		modules.module_vic()
+		DR.back()
+		modules = CP.TrainingSummary()
 		# Unstarted Modules should have a Let's Start button, and an (X) Incomplete label.
 		# Started-Not-Finished Modules should have an In Progress button and the Incomplete label.
 		# Completed Modules should have a Complete button and a (v/) Complete label.
 		modules.completion_types()
 
+		modules.module_nsw()
+		MOD.do_module(DR.DRIVER, 'nsw')
+		DR.back()
+		modules = CP.TrainingSummary()
+		modules.module_qld()
+		MOD.do_module(DR.DRIVER, 'qld')
+		DR.back()
+		modules = CP.TrainingSummary()
+
+		# Should receive the qualification email here.
+		qualified = DR.Email.LocalizedEmail(USERID)
+		self.assertEqual(DR.LOCALE[1:], qualified.get_locale())
+
 	def test_Aussie_Specialist_Club(self):
 		"""Checks the Aussie Specialist Club nav menu links."""
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Open the Aussie Specialist Club section in the Nav menu
 		club = CP.AussieSpecialistClub()
 		club.click()
@@ -566,7 +601,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Tests the Travel Club search."""
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Travel Club
 		CP.AussieSpecialistClub().click().travel_club().click()
 		# Search for results, changing the terms if none.
@@ -579,7 +614,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Famils page."""
 		# pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Famils
 		CP.AussieSpecialistClub().click().aussie_specialist_club().click()
 		# Maybe not available in all locales?
@@ -590,7 +625,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Aussie Specialist Photos page."""
 		# pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > AS Photos
 		CP.AussieSpecialistClub().click().aussie_specialist_photos().click()
 		# Should display Instagram Image Tiles, with links and descriptions
@@ -603,7 +638,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 	def test_Download_Qualification_Badge(self):
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Download Qualification Badge
 		CP.AussieSpecialistClub().click().asp_logo().click()
 		# Click the Download Qualification Badge link.
@@ -708,7 +743,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Preamblic mess.
 		CP.NavMenu().profile().click()
 		def xandxplusy(x: str, y: str=', '):
@@ -760,7 +795,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 	def test_Premier_Badge(self):
 		# Pre-condition: Logged in as a Premier User
 		DR.open_home_page()
-		CP.SignIn().sign_in(self.USERNAME, DR.PASSWORD)
+		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to the Profile Page.
 		CP.NavMenu().profile().click()
 		# The Status Badge area shows the Premier Aussie Specialist Icon.

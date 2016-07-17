@@ -196,7 +196,7 @@ class NavMenu(WrappedElement):
 	news_and_products = NewsAndProducts
 	aussie_specialist_club = AussieSpecialistClub
 	def __init__(self):
-		self.element = DR.flashy_find_element('#nav-bar-top .nav-bar-left')
+		self.element = DR.flashy_find_element('.main-nav-wrap')
 		attach_link(self, 'profile', selector='#link-{}')
 		attach_link(self, 'logout', selector='#link-{}')
 
@@ -660,7 +660,6 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
 			return hashlib.md5(bits + str(get_time()).encode()).hexdigest()[1:6]
 		# It's time sensitive, so refresh the captcha immediately beforehand.
 		DR.flashy_find_element('a[onclick="captchaRefresh()"]', self.element).click()
-		time.sleep(DR.SHORT_WAIT)
 		self.captcha = do_it(DR.flashy_find_element('#cq_captchakey').get_attribute('value').encode())
 
 	def submit(self) -> None:
@@ -802,8 +801,9 @@ class Profile(WrappedElement):
 class TrainingSummary(WrappedElement):
 	"""Represents the two Training Summary modules list things."""
 	def __init__(self):
-		self.core = DR.flashy_find_element('.trainingModuleStatus:first')
-		self.optional = DR.flashy_find_element('.trainingModuleStatus:last')
+		lis = DR.flashy_find_elements('.trainingModuleStatus')
+		self.core = lis[0]
+		self.optional = lis[1]
 
 	def filter_optional(self) -> None:
 		"""Changes the filter on the Optional Modules, then clicks Refresh Results."""
@@ -827,6 +827,53 @@ class TrainingSummary(WrappedElement):
 		DR.flashy_find_element('.load-more', self.optional).click()
 		DR.wait_until(lambda _: self.count_modules() != count or \
 			DR.quietly_find_element('load-more', self.optional).get_attribute('disabled') == 'disabled')
+
+	def wait_for_module(self) -> None:
+		"""Iframes don't really integrate into the DOM ReadyState, so have to check this one explicitly."""
+		# Switch into the iframe,
+		DR.switch_to_frame(DR.flashy_find_element('iframe[src^="/content/"]'))
+		# Then, wait until something is actually present
+		DR.wait_until_present('[id^="Text_Caption_"]')
+		# Then, wait until the loading overlay is gone.
+		DR.wait_until_gone('#preloaderImage')
+		# And then, set the module to slide one, just in case.
+		DR.execute_script('cpCmndGotoSlide=0')
+
+	def module_one(self) -> None:
+		"""Opens the First Core Module."""
+		MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.core).click()
+		DR.wait_for_page()
+		self.wait_for_module()
+
+	def module_two(self) -> None:
+		"""Opens the Second Core Module."""
+		MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.core).click()
+		DR.wait_for_page()
+		self.wait_for_module()
+
+	def module_three(self) -> None:
+		"""Opens the First Core Module."""
+		MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.core).click()
+		DR.wait_for_page()
+		self.wait_for_module()
+
+	def module_nsw(self) -> None:
+		"""Opens the First Optional Module."""
+		MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.optional).click()
+		DR.wait_for_page()
+		self.wait_for_module()
+
+	def module_qld(self) -> None:
+		"""Opens the Second Optional Module."""
+		MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.optional).click()
+		DR.wait_for_page()
+		self.wait_for_module()
+
+	def module_vic(self) -> None:
+		"""Opens the Third Optional Module."""
+		MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.optional).click()
+		DR.wait_for_page()
+		self.wait_for_module()
 
 	def completion_types(self) -> None:
 		"""Gets all of the Module entries, then checks how complete they are,

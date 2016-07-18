@@ -37,5 +37,3 @@ The selenium exceptions don't give a huge amount of information as to what went 
 When the test is running, refrain from moving the mouse pointer around in the active window.
 
 The Drag+Drop actions use mouse position, so moving the mouse around will interfere with that, likely breaking execution.
-
-Don't mind that EOFError, it's a workaround for the debugger.

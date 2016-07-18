@@ -103,12 +103,16 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the content of the Footer."""
 		DR.open_home_page()
 		footer = CP.Footer()
-		# The Footer should have: Find us on: Social icons and links.
-		footer.facebook()
-		footer.twitter()
-		footer.plus_google()
-		footer.instagram()
-		footer.youtube()
+		if DR.CN_MODE:
+			# China is different, of course.
+			footer.wechat()
+		else:
+			# The Footer should have: Find us on: Social icons and links.
+			footer.facebook()
+			footer.twitter()
+			footer.plus_google()
+			footer.instagram()
+			footer.youtube()
 		# About this site: links through to relevant pages
 		footer.sitemap()
 		footer.privacy_policy()
@@ -427,19 +431,21 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				# The Panels should unfold, showing a description, More Info link, and heart button.
 				# They aren't too well labelled though, so be sure to actually watch the playback.
 				self.assertTrue(tile.get_description().is_displayed())
-				self.assertTrue(tile.get_more_info_link().is_displayed())
+				self.assertTrue(tile.get_link().is_displayed())
 				# Click on the Heart buttons of those mosaics.
 				tile.add_to_favourites()
 				# The Heart Icon in the header should pulse and have a number incremented.
 				favcount += 1
 				self.assertEqual(favcount, CP.HeaderHeartIcon().favourites_count())
-				favtitles.add(tile.get_title().text())
+				favtitles.add(tile.get_title())
 
 		# Pre-condition: Should be signed in.
+		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		favcount = CP.HeaderHeartIcon().favourites_count()
 		# If there are already favourites, that's a problem, remove them. Messes with the count.
 		if favcount > 0:
+			favcount = 0
 			CP.SalesResources().click().my_sales_tools().click()
 			for x in CP.MySalesTools().get_favourites():
 				x.close()
@@ -522,10 +528,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		modules = CP.TrainingSummary()
 		# Change the value of the Optional Modules Filter Form.
 		oldlist = modules.get_optional_titles()
-		modules.filter_optional()
+		modules.filter_optional_niche()
 		# The Optional Modules should be filtered.
 		newlist = modules.get_optional_titles()
 		self.assertNotEqual(oldlist, newlist)
+		modules.filter_optional_sto()
 		# Click the View More Modules button.
 		oldcount = modules.count_modules()
 		modules.load_more()
@@ -535,7 +542,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		oldcount = newcount
 		modules.load_more()
 		newcount = modules.count_modules()
-		self.assertEqual(oldcount + 1, newcount)
+		self.assertEqual(oldcount + 2, newcount)
 		oldcount = newcount
 		modules.load_more()
 		newcount = modules.count_modules()
@@ -544,23 +551,23 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Go do a few of the modules.
 		modules.module_one()
 		MOD.do_module(DR.DRIVER, '1')
-		DR.back()
+		DR.back();DR.back()	# The module clicks the Back To Training.
 		modules = CP.TrainingSummary()
 		modules.module_two()
 		MOD.do_module(DR.DRIVER, '2')
-		DR.back()
+		DR.back();DR.back()	# That button links to the LIVE page.
 		modules = CP.TrainingSummary()
 		modules.module_three()
 		MOD.do_module(DR.DRIVER, '3')
-		DR.back()
+		DR.back();DR.back()	# No guarantee that we are testing LIVE, though.
 		modules = CP.TrainingSummary()
 
 		# Should receive a halfway email here.
 		halfway = DR.Email.LocalizedEmail(USERID)
-		self.assertEqual(DR.LOCALE[1:], halfway.get_locale())
+		self.assertEqual({DR.LOCALE[1:]}, halfway.get_locale())
 		# Open this one, but don't finish it.
 		modules.module_vic()
-		DR.back()
+		DR.back();DR.back()
 		modules = CP.TrainingSummary()
 		# Unstarted Modules should have a Let's Start button, and an (X) Incomplete label.
 		# Started-Not-Finished Modules should have an In Progress button and the Incomplete label.
@@ -569,7 +576,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		modules.module_nsw()
 		MOD.do_module(DR.DRIVER, 'nsw')
-		DR.back()
+		DR.back();DR.back()
 		modules = CP.TrainingSummary()
 		modules.module_qld()
 		MOD.do_module(DR.DRIVER, 'qld')
@@ -578,7 +585,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		# Should receive the qualification email here.
 		qualified = DR.Email.LocalizedEmail(USERID)
-		self.assertEqual(DR.LOCALE[1:], qualified.get_locale())
+		self.assertEqual({DR.LOCALE[1:]}, qualified.get_locale())
 
 	def test_Aussie_Specialist_Club(self):
 		"""Checks the Aussie Specialist Club nav menu links."""
@@ -817,3 +824,13 @@ if __name__ == '__main__':
 	runner.set_outdir(os.path.join(os.path.split(__file__)[0]))
 	runner.set_format('Result of: {method_name} - {short_description}')
 	runner.run(tests)
+
+
+if False:
+	import os
+	os.chdir(r'C:\Users\bzalakos\Documents\GitHub\selphi')
+	import selene
+	r = selene.REGR()
+	selene.USERID = 'XMKT'
+	selene.USERNAME='gbwwwXMKT'
+	selene.DR.begin()

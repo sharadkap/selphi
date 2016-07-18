@@ -31,7 +31,7 @@ class WrappedElement:
 
 	def __getattr__(self, name):
 		"""Basically just to stop pylint from complaining about dynamic attributes."""
-		raise AttributeError('No, the {0} attribute does not exist.'.format(name))
+		raise AttributeError('No, the {0} attribute does not exist on {1}.'.format(name, type(self)))
 
 class MinorElement(WrappedElement):
 	"""Superclass for all the internally used minor elements; with no unique
@@ -98,6 +98,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
 		def open(self) -> None:
 			"""Clicks on the mosaic tile, opening it.
 			Panel contents is a bit of a mess though, have to account for responsive design."""
+			DR.execute_script('scrollBy(0,-200);return 0')	# That header does insist on being in the way.
 			self.element.click()
 			self.contentpane = [x for x in DR.flashy_find_elements(\
 				'.mosaic-item-detail-container.active') if x.is_displayed()][0]
@@ -221,6 +222,7 @@ class Footer(WrappedElement):
 		attach_link(self, 'youtube', selector='[href*="www.{}.com"]')
 		attach_link(self, 'twitter', selector='[href*="{}.com"]')
 		attach_link(self, 'instagram', selector='[href*="{}.com"]')
+		attach_link(self, 'wechat', selector='[href*=#qr_image]')
 		attach_link(self, 'sitemap')
 		attach_link(self, 'privacy-policy')
 		attach_link(self, 'terms-and-conditions')
@@ -346,7 +348,7 @@ class HeaderMapIcon(WrappedElement):
 class HeaderHeartIcon(WrappedElement):
 	"""Represents the Heart Icon in the Header. Complete with favourites count."""
 	def __init__(self):
-		self.element = DR.flashy_find_element('.icon-heart-animate-container')
+		self.element = DR.flashy_find_element('.favourite-summary')
 
 	def favourites_count(self) -> int:
 		"""Returns the number of favourites as indicated by the icon subtitle."""
@@ -805,17 +807,25 @@ class TrainingSummary(WrappedElement):
 		self.core = lis[0]
 		self.optional = lis[1]
 
-	def filter_optional(self) -> None:
+	def filter_optional_niche(self) -> None:
+		"""Changes the filter on the Optional Modules, then clicks Refresh Results."""
+		sel = DR.flashy_find_element('[name="Optional"]', self.optional)
+		DR.quietly_find_element('[value="TrainingModule:Optional/Niche"]', sel).click()
+		DR.execute_script('for(a of arguments[0])a.remove();', \
+			DR.quietly_find_elements('.mosaic-grid-1', self.optional))
+		DR.flashy_find_element('#btn-id', self.optional).click()
+
+	def filter_optional_sto(self) -> None:
 		"""Changes the filter on the Optional Modules, then clicks Refresh Results."""
 		sel = DR.flashy_find_element('[name="Optional"]', self.optional)
 		DR.quietly_find_element('[value="TrainingModule:Optional/StateandTerritories"]', sel).click()
 		DR.execute_script('for(a of arguments[0])a.remove();', \
-			DR.quietly_find_elements('.mosaic-item', self.optional))
+			DR.quietly_find_elements('.mosaic-grid-1', self.optional))
 		DR.flashy_find_element('#btn-id', self.optional).click()
 
 	def count_modules(self) -> int:
 		"""Returns the number of Optional Modules displayed."""
-		return len(DR.flashy_find_elements('mosaic-item', self.optional))
+		return len(DR.flashy_find_elements('.mosaic-item', self.optional))
 
 	def get_optional_titles(self) -> List[str]: # pylint: disable-msg=E1126
 		"""Returns a list of the titles of the currently displayed Optional Modules"""
@@ -826,12 +836,12 @@ class TrainingSummary(WrappedElement):
 		count = self.count_modules()
 		DR.flashy_find_element('.load-more', self.optional).click()
 		DR.wait_until(lambda _: self.count_modules() != count or \
-			DR.quietly_find_element('load-more', self.optional).get_attribute('disabled') == 'disabled')
+			DR.quietly_find_element('.load-more', self.optional).get_attribute('disabled') == 'true')
 
 	def wait_for_module(self) -> None:
 		"""Iframes don't really integrate into the DOM ReadyState, so have to check this one explicitly."""
 		# Switch into the iframe,
-		DR.switch_to_frame(DR.flashy_find_element('iframe[src^="/content/"]'))
+		DR.switch_to_frame('iframe[src^="/content/"]')
 		# Then, wait until something is actually present
 		DR.wait_until_present('[id^="Text_Caption_"]')
 		# Then, wait until the loading overlay is gone.

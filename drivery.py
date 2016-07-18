@@ -22,9 +22,10 @@ LONG_WAIT = 30
 SHORT_WAIT = 2
 
 # """The root website domain to access."""
-BASE_URL = "https://www.aussiespecialist.com"
+BASE_URL = 'https://www.aussiespecialist.com'
 # """The Language-Country Code of the locale to test.
 LOCALE = '/en-gb'
+CN_MODE = False
 # """To aid in checking for Page Loaded Status, note the last link clicked.
 	# TODO: Add a property to this?"""
 LAST_LINK = ''
@@ -80,9 +81,8 @@ def close() -> None:
 ###Navigation Methods.###
 
 def splash_page() -> None:
-	"""Navigates to the Splash Page.
-	Or the url set as BASE_URL, rather. But those should be the same."""
-	DRIVER.get(BASE_URL)
+	"""Navigates to the Splash Page."""
+	DRIVER.get(BASE_URL + '/splash.html')
 
 def open_home_page() -> None:
 	"""Opens the Welcome Page. Shortcut method."""
@@ -191,7 +191,7 @@ def bring_to_front(element: WebElement) -> WebElement:
 
 def execute_script(script: str, *args) -> Any:
 	"""Executes a javascript snippet, returning what the script returns."""
-	return DRIVER.execute_script(script, args)
+	return DRIVER.execute_script(script, *args)
 
 class Email:
 	"""Handler for the email checks. Due to languages, there's really no way to tell

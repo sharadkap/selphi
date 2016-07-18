@@ -15,10 +15,10 @@ Placeholder for Python Selenium scripts
 4. Clone or download this repository to some location in which you have file create/write access.
 
 ## Execution
-Currently, the ASP Website test suite is under refurbishment.
-The ASP Modules test suite is functionally complete, and has a rudimentary CLI:
-* Opening the script from Windows Explorer will begin a test of all modules in all locales.
-* To customise the suite of tests, run the script from the command line, (with `py modules.py`) using the `-l`/`--locales` and `-m`/`--modules` options.
+Currently, the ASP Website test suite is mostly done, some fixes still to be made.
+The ASP Modules test suite is functionally complete, and can be customised through Command-Line execution:
+* Opening the script from Windows Explorer, or with no arguments, will begin a test of all modules in all locales.
+* To customise the suite of tests, run from the command line, (with `py modules.py`) using the `-l`/`--locales` and `-m`/`--modules` options.
 * Use the `-h` option to get the list of possible values.
 * By default, it will access the modules within the website, use the `-d`/`--direct` option to access the modules directly.
 * Chrome is the default browser used, can be changed with the `-b`/`--browser` option.

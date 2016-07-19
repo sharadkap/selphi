@@ -98,7 +98,8 @@ class WhatYouCanSeeMosaic(WrappedElement):
 		def open(self) -> None:
 			"""Clicks on the mosaic tile, opening it.
 			Panel contents is a bit of a mess though, have to account for responsive design."""
-			DR.execute_script('scrollBy(0,-200);return 0')	# That header does insist on being in the way.
+			DR.blip_element(self.element)
+			DR.execute_script('scrollBy(0,-400);return 0')	# That header does insist on being in the way.
 			self.element.click()
 			self.contentpane = [x for x in DR.flashy_find_elements(\
 				'.mosaic-item-detail-container.active') if x.is_displayed()][0]
@@ -775,7 +776,7 @@ class Profile(WrappedElement):
 	def get_state(self) -> str:
 		"""Gets the text of the selected state option."""
 		sel = DR.flashy_find_element('[name="state"]', self.element)
-		return DR.quietly_find_element(':selected', sel).text
+		return DR.quietly_find_element('[value="{0}"]'.format(sel.get_attribute('value')), sel).text
 
 	def set_state(self) -> None:
 		"""Randomly sets the value of the State field. Returns the chosen value."""
@@ -796,9 +797,14 @@ class Profile(WrappedElement):
 		if DR.check_visible_quick('.profile-status img', self.element):
 			 img = DR.flashy_find_element('.profile-status img', self.element)
 			 return {'2.png': self.QUALIFIED, '3.png': self.PREMIER}\
-			 	.get(img.get_attribute('src')[-5:-1], self.TRAINEE)
+			 	.get(img.get_attribute('src')[-5:], self.TRAINEE)
 		else:
 			return self.TRAINEE
+
+	def module_badges(self) -> Set[str]:
+		"""Checks the Recent Achievements section, returns a set of the badges attained."""
+		return {x.get_attribute('alt').split('_')[-1] \
+			for x in DR.flashy_find_elements('.Achievements .profile-status img')}
 
 class TrainingSummary(WrappedElement):
 	"""Represents the two Training Summary modules list things."""
@@ -839,7 +845,7 @@ class TrainingSummary(WrappedElement):
 			DR.quietly_find_element('.load-more', self.optional).get_attribute('disabled') == 'true')
 
 	def wait_for_module(self) -> None:
-		"""Iframes don't really integrate into the DOM ReadyState, so have to check this one explicitly."""
+		"""Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly."""
 		# Switch into the iframe,
 		DR.switch_to_frame('iframe[src^="/content/"]')
 		# Then, wait until something is actually present
@@ -891,8 +897,8 @@ class TrainingSummary(WrappedElement):
 		mods = DR.flashy_find_elements('.mosaic-item', self.core) + \
 			DR.flashy_find_elements('.mosaic-item', self.optional)
 		for mod in mods:
-			button = DR.flashy_find_element('.training-continue')
-			if re.search(button.get_attribute('data-ta-data-layer'), 'Resume-ASP|Start-ASP'):
+			button = DR.flashy_find_element('.training-continue', mod)
+			if re.search('Resume-ASP|Start-ASP', button.get_attribute('data-ta-data-layer')):
 				DR.flashy_find_element('img[src*="icon-incomplete.png"]', mod)
 			else:
 				DR.flashy_find_element('img[src*="icon-complete.png"]', mod)
@@ -915,14 +921,15 @@ class AussieSpecialistPhotos(WrappedElement):
 		"""Represents an individual Aussie Specialist Photo.
 		Don't instantiate this from the test script directly, it needs a WebElement"""
 		def __init__(self, element: WebElement):
-			self.element = DR.blip_element(element)
+			self.element = DR.get_parent_element(DR.get_parent_element(DR.blip_element(element)))
 			self.contentpane = None
 
 		def open(self) -> None:
 			"""Clicks on the mosaic tile, opening it."""
 			MinorElement('.flipper img[src*="image.adapt"]', self.element).point()
 			DR.flashy_find_element('.flipper a', self.element).click()
-			self.contentpane = DR.flashy_find_element('.active', self.element)
+			self.contentpane = [x for x in DR.flashy_find_elements(\
+				'.mosaic-item-detail-container.active') if x.is_displayed()][0]
 
 		def get_description(self) -> MinorElement:
 			"""Returns the description text in a tile's pane. Has to be open."""
@@ -934,14 +941,17 @@ class AussieSpecialistPhotos(WrappedElement):
 
 		def close(self) -> None:
 			"""Clicks the X button in the tiles content. Has to be open first."""
-			DR.flashy_find_element('.icon-close', self.contentpane).click()
+			cl = DR.flashy_find_element('.icon-close', self.contentpane)
+
+			cl.click()
 
 class SpecialistBadge(WrappedElement):
 	"""Represents the Aussie Specialist Badge Download page and image. Kinda minimal."""
 	def __init__(self):
 		DR.flashy_find_element('a[href*="asp-badge.png"]').click()
 		DR.switch_to_window(1)
-		DR.flashy_find_element('img[src*="asp-badge.png"]')
+		# There's no jQuery on a bare image, so can't highlight.
+		DR.quietly_find_element('img[src*="asp-badge.png"]')
 
 class AussieStore(WrappedElement):
 	"""Contains representations the various pages of the Aussie Store area.
@@ -951,12 +961,13 @@ class AussieStore(WrappedElement):
 
 	def my_cart(self) -> None:
 		"""Clicks on the My Cart icon."""
-		DR.flashy_find_element('#myCartIcon', self.element)
+		DR.flashy_find_element('#myCartIcon', self.element).click()
 
 	def empty_cart_notice(self) -> None:
 		"""Closes the Your Cart Is Empty message. If it's open."""
-		DR.flashy_find_element('.fancybox-skin', self.element)
+		DR.flashy_find_element('.fancybox-skin')
 		DR.flashy_find_element('.fancybox-close').click()
+		DR.wait_until_gone('.fancybox-skin')
 
 	class CategoriesMenu(WrappedElement):
 		"""Represents the list of store Categories to the left."""
@@ -996,7 +1007,7 @@ class AussieStore(WrappedElement):
 
 		def random_product(self) -> str:
 			"""Clicks on a random Product link and returns the product's name."""
-			return self.goto_iteree(random.randint(0, len(self.products() - 1)))
+			return self.goto_iteree(random.randint(0, len(self.products) - 1))
 
 	class ProductPage(WrappedElement):
 		"""Represents a Product's Page."""
@@ -1015,7 +1026,7 @@ class AussieStore(WrappedElement):
 		def select_max_quantity(self) -> None:
 			"""Selects the largest available amount in the quantity selector."""
 			sel = DR.flashy_find_element('[name="product-quantity"]', self.element)
-			DR.quietly_find_element('option:last', sel).click()
+			DR.quietly_find_elements('option', sel)[-1].click()
 
 		def add_to_cart(self) -> bool:
 			"""Clicks the Add To Cart button.
@@ -1023,6 +1034,7 @@ class AussieStore(WrappedElement):
 			DR.flashy_find_element('#cart', self.element).click()
 			if DR.check_visible_quick('.fancybox-skin'):
 				DR.flashy_find_element('.fancybox-close').click()
+				DR.wait_until_gone('.fancybox-skin')
 				return False
 			DR.LAST_LINK = 'cart.html'
 			DR.wait_for_page()
@@ -1047,7 +1059,7 @@ class AussieStore(WrappedElement):
 		def contact_details(self) -> str:
 			"""Gets the contact details shown at the bottom of the Cart page. Tidy up a bit, too."""
 			text = DR.flashy_find_element('.store-order-box-left p:nth-child(2)', self.element).text
-			text = '\n'.join([x.strip() for x in text.replace('  ', ' ').split('\n')])
+			return '\n'.join([x.strip() for x in text.replace('  ', ' ').split('\n')])
 
 		def get_product_names(self) -> List[str]: # pylint: disable-msg=E1126
 			"""Gets a list of the names of all of the Products in the Cart."""
@@ -1064,8 +1076,8 @@ class AussieStore(WrappedElement):
 			rem = DR.blip_element(DR.quietly_find_elements('.cell-title', self.element)[rei])
 			ren = rem.text.casefold()
 			DR.blip_element(DR.quietly_find_elements('.product-remove')[rei]).click()
-			DR.wait_until(lambda _: count == self.count())
 			self.element = DR.quietly_find_element('.shoppingcart')
+			DR.wait_until(lambda _: count == self.count())
 			return ren
 
 		def remove_all(self) -> None:
@@ -1074,5 +1086,5 @@ class AussieStore(WrappedElement):
 			while count > 0:
 				DR.flashy_find_element('.product-remove').click()
 				count -= 1
-				DR.wait_until(lambda _: count() == count)
 				self.element = DR.quietly_find_element('.shoppingcart')
+				DR.wait_until(lambda _: self.count() == count)

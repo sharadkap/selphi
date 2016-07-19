@@ -120,8 +120,11 @@ def wait_until_present(selector: str) -> WebElement:
 def wait_until_gone(selector: str) -> WebElement:
 	"""Holds up execution until the selectored element is not visibly present.
 	EC doesn't seem to support local searches, so be sure the selector is page-unique."""
-	return WebDriverWait(DRIVER, LONG_WAIT).until(\
+	DRIVER.implicitly_wait(0.5)	# The poll_freq value is not, in fact, the wait time.
+	ret = WebDriverWait(DRIVER, LONG_WAIT).until(\
 		EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
+	DRIVER.implicitly_wait(LONG_WAIT)
+	return ret
 
 def wait_until(condition: FunctionType) -> Any:
 	"""Holds up execution, repeatedly calling the given function until it returns truthy."""
@@ -200,28 +203,39 @@ class Email:
 	def __init__(self, userid):
 		self.email = EMAIL.format(userid)
 
-	def get_new_messages(self) -> List[str]: # pylint: disable-msg=E1126
-		"""Polls the IMAP server untill a new email(s) are found, then
+	def get_all_locales(self) -> Set[str]: 	# pylint: disable-msg=E1126
+		"""Collects all of the emails received by this email subaddress,
+		and returns a set of Locale codes representing each one found."""
+		locs = set()
+		ems = [bs4.BeautifulSoup(x, 'html.parser') for x in self.get_new_messages(really_get_new=False)]
+		for em in ems:
+			links = em.select('a[href*="t.updates.tourism.australia.com"]')
+			hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) for x in links]
+			locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
+		return locs
+
+	def get_new_messages(self, really_get_new: bool=True) -> List[str]: # pylint: disable-msg=E1126
+		"""Polls the IMAP server untill a (maybe) new email(s) are found, then
 		attempts to make sense of their ridiculous transmission formatting."""
 		results = []
 		with imaplib.IMAP4_SSL(TEST_EMAIL_IMAP_SERVER) as imap:
 			imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
 			imap.select()
-			nums = wait_until(lambda _: self.email_loop(imap))
+			nums = wait_until(lambda _: self.email_loop(imap, really_get_new))
 			# IMAP doesn't return number lists in a format that it can actually read??
 			_, ems = imap.fetch(nums, 'BODY[2]')
 			for ema in ems[::2]:	# Yeah, the results come back wierd.
 				results.append(quopri.decodestring(ema[1]).decode())
 		return results
 
-	def email_loop(self, imap: imaplib.IMAP4_SSL) -> bytes:
-		"""SEARCHes the server, checking for new email. Basically, put this in a wait-until loop."""
+	def email_loop(self, imap: imaplib.IMAP4_SSL, really_get_new: bool=True) -> bytes:
+		"""SEARCHes the server, checking for (maybe) new email. Basically, put this in a wait-until loop."""
 		imap.noop()
 		# Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
 		# Containing a single bytestring of space-separated return values.
 		# And IMAP requires that imput values be comma separated. 		Because why not.
 		return b','.join(imap.search(None, 'FROM', ASP_EMAIL, \
-			'TO', self.email, 'UNSEEN')[1][0].split(b' '))
+			'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
 	class LocalizedEmail():
 		"""Superclass for the get_locale method of the various emails."""

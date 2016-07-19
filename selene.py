@@ -380,7 +380,6 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		forgus.submit()
 		# An email should be received at the given address containing the Username.
 		usnaema = DR.Email.ForgottenUsernameEmail(USERID)
-		self.assertEqual({DR.LOCALE[1:]}, usnaema.get_locale())
 		self.assertEqual(USERNAME, usnaema.get_username())
 
 	def test_Forgotten_Password(self):
@@ -397,7 +396,6 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		forgpa.submit()
 		# An email should be received at the given address containing the Username and new Password
 		uspaema = DR.Email.ForgottenPasswordEmail(USERID)
-		self.assertEqual({DR.LOCALE[1:]}, uspaema.get_locale())
 		self.assertEqual(USERNAME, uspaema.get_username())
 		# Read that email and sign in with the new password.
 		TEMP_PASS = uspaema.get_password()
@@ -491,7 +489,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		CP.NavMenu().profile().click()
 		profile = CP.Profile()
 		# Modify the values of several of the fields, but leave TEST in the names.
-		words = "A Series Of Random Words To Use For Sampling Or Some Such Thing"
+		words = "A Series Of Random Words To Use For Sampling Or Some Such Thing".split()
 		def pick_words(num: int):
 			"""Gets random words."""
 			return [random.choice(words) for x in range(num)]
@@ -509,14 +507,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		self.assertEqual(profile.bio, bio)
 		self.assertEqual(profile.state, state)
 		self.assertEqual(profile.lname, lastname)
-		self.assertIn(lastname, CP.NavMenu().user_names())
-
-		#### TODO ####
-		# Navigate to Training > Training Summary.
-		# Open a Module as yet incomplete.
-		# Complete the Module.
-		# Go back to the Profile page.
-		# The Module's Completion Badge should be at the top of the Recent Achievements list.
+		self.assertIn(lastname.strip(), CP.NavMenu().user_names())
 
 	def test_Training_Summary(self):
 		"""Checks the Training Summary page."""
@@ -564,10 +555,9 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		# Should receive a halfway email here.
 		halfway = DR.Email.LocalizedEmail(USERID)
-		self.assertEqual({DR.LOCALE[1:]}, halfway.get_locale())
 		# Open this one, but don't finish it.
 		modules.module_vic()
-		DR.back();DR.back()
+		DR.back()
 		modules = CP.TrainingSummary()
 		# Unstarted Modules should have a Let's Start button, and an (X) Incomplete label.
 		# Started-Not-Finished Modules should have an In Progress button and the Incomplete label.
@@ -581,11 +571,15 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		modules.module_qld()
 		MOD.do_module(DR.DRIVER, 'qld')
 		DR.back()
-		modules = CP.TrainingSummary()
 
 		# Should receive the qualification email here.
 		qualified = DR.Email.LocalizedEmail(USERID)
-		self.assertEqual({DR.LOCALE[1:]}, qualified.get_locale())
+
+		# Go back to the Profile page.
+		CP.NavMenu().profile().click()
+		# The Modules' Completion Badges should be in the Recent Achievements list.
+		profile = CP.Profile()
+		self.assertSetEqual({'mod1', 'mod2', 'mod3', 'nsw', 'qld'}, profile.module_badges())
 
 	def test_Aussie_Specialist_Club(self):
 		"""Checks the Aussie Specialist Club nav menu links."""
@@ -643,6 +637,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			pic.close()
 
 	def test_Download_Qualification_Badge(self):
+		"""Checks the Download Qualification Badge page."""
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
@@ -652,21 +647,17 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Badge image should be downloaded/opened in a new tab.
 		CP.SpecialistBadge()
 
-#### TODO: Get the website thing to check the email thing? ####
 	def test_Campaign(self):
-		# TODO: Implement action: "pre-condition: User has registered, forgotten Username and
-		# Password, and has Qualified, and received emails for each of these five events."
-		# TODO: Implement action: "Check the wording and links of each of the five emails:"
-		# TODO: Implement action: "Registration Acknowledgement"
-		# TODO: Implement action: "Forgotten Username"
-		# TODO: Implement action: "Forgotten Password"
-		# TODO: Implement action: "Half Way Through Course"
-		# TODO: Implement action: "Course Complete"
-		# TODO: Implement result: "Link should point ot the correct pages in the correct locale."
-		# TODO: Implement result: "Email and subject line is fully translated, if applicable."
-		raise NotImplementedError("For now, go check it yourself?")
+		"""Ensures that all emails received are in the correct locale."""
+		# Pre-condition: User has registered, forgotten Username and
+		# Password, and has Qualified, and received emails for each of these five events.
+		# Links should point ot the correct pages in the correct locale.
+		self.assertEqual({DR.LOCALE[1:]}, DR.Email(USERID).get_all_locales())
 
 	def submit_store_order(self):
+		"""When in the Aussie Store, submit an order.
+		Except don't actually ever do this. That form is hooked up to real delivery agents,
+		most of whom would rather not be bombarded with Test Emails."""
 		# Go to the Cart Page.
 		DR.flashy_find_element('.fancybox-close').click()
 		DR.flashy_find_element('#myCartIcon').click()
@@ -692,8 +683,10 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# deliver materials to the test address.
 
 	def test_Aussie_Store(self):
+		"""Checks all of the Aussie Store functionality, except for actually placing an order."""
 		# Just gotta put this here.
 		def examine_products(category):
+			"""Given a category, check a bunch of randomly selected items."""
 			nonlocal productcount, productnames
 			# Click on the Category link.
 			CP.AussieStore.CategoriesMenu().goto_iteree(category)
@@ -723,20 +716,22 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 					CP.AussieStore.CartPage().remove_all()
 					productcount = 0
 					productnames.clear()
+					CP.AussieStore.CategoriesMenu().goto_iteree(category)
+					grid = CP.AussieStore.ProductGrid()
 					continue
 				# Otherwise, continue as normal.
 				productcount += 1
-				productnames.add(prodname)
+				productnames.add(prodname.casefold())
 				# Should redirect to the Cart page.
 				cart = CP.AussieStore.CartPage()
 				# Cart page should show a list of all of the products added thus far.
-				self.assertEqual(productnames, set(cart.get_product_names()))
+				self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
 				# (do not do for all) Click the X beside one of the products.
 				if random.random() < 0.2:
 					productnames.remove(cart.remove_random())
 					productcount -= 1
 					# That product should be removed from the Cart.
-					self.assertEqual(productnames, cart.get_product_names())
+					self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
 				else: # If one was removed, it's not going to be overbooked.
 					# Go back to the Product Page,
 					DR.back()
@@ -747,6 +742,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 					self.assertFalse(product.add_to_cart())
 				# Back to Category Page, try the next one.
 				CP.AussieStore.CategoriesMenu().goto_iteree(category)
+				grid = CP.AussieStore.ProductGrid()
 
 		# Pre-condition: Logged in as a Qualified User.
 		DR.open_home_page()
@@ -769,7 +765,8 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Navigate to ASC > Aussie Store
 		CP.AussieSpecialistClub().click().aussie_store().click()
 		# Click the Cart button
-		store = CP.AussieStore().my_cart()
+		store = CP.AussieStore()
+		store.my_cart()
 		# Should get a popup message about the Cart being Empty.
 		store.empty_cart_notice()
 		# Click on one of the Product Images
@@ -791,15 +788,12 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		productcount = 0
 		productnames = set()
 		catnum = CP.AussieStore.CategoriesMenu().count()
-		for cat in range(catnum)[1:-1]:
+		for cat in range(catnum)[1:]:
 			# And do the stuff. And stop doing the stuff if the cart tops out.
 			examine_products(cat)
 
-		# The Downloads section isn't actually there, so never mind this bit?
-		# TODO: Click on the Downloads Category link.
-		# TODO: Navigates to the Downloads page.
-
 	def test_Premier_Badge(self):
+		"""Checks that the Profile PPage has a Premier Badge. Expect this one to fail."""
 		# Pre-condition: Logged in as a Premier User
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
@@ -824,13 +818,3 @@ if __name__ == '__main__':
 	runner.set_outdir(os.path.join(os.path.split(__file__)[0]))
 	runner.set_format('Result of: {method_name} - {short_description}')
 	runner.run(tests)
-
-
-if False:
-	import os
-	os.chdir(r'C:\Users\bzalakos\Documents\GitHub\selphi')
-	import selene
-	r = selene.REGR()
-	selene.USERID = 'XMKT'
-	selene.USERNAME='gbwwwXMKT'
-	selene.DR.begin()

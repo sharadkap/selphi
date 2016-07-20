@@ -44,13 +44,13 @@ def main() -> None:
 	PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
 	action='store_true')
 	PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding \
-	an element is missing. Default is %(default)s', default=15, type=int, nargs=1)
+	an element is missing. Default is %(default)s', default=[15], type=int, nargs=1)
 	PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
 	See https://docs.python.org/3/library/time.html#time.strftime for full formatting info. \
 	Default is %(default)s', default=['%Y/%m/%d %H:%M'], nargs='+', type=str)
 	ARGS = PARSER.parse_args()
 
-	IMPLICITLY_WAIT = ARGS.wait
+	IMPLICITLY_WAIT = ARGS.wait[0]
 	TIME_FORMAT = ' '.join(ARGS.timeformat)
 	DRIVER = BROWSERS[ARGS.browser[0]]()
 	DRIVER.implicitly_wait(IMPLICITLY_WAIT)

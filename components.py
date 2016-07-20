@@ -63,6 +63,8 @@ class WelcomeVideo(WrappedElement):
 	def play(self) -> None:
 		"""Clicks the video's Play button."""
 		DR.flashy_find_element('.cts-icon-play', self.element).click()
+		if DR.CN_MODE:	# In China, you have to click it twice.
+			DR.flashy_find_element('.vjs-poster', self.element).click()
 
 	def is_playing(self) -> bool:
 		"""Checks whether the video is playing."""

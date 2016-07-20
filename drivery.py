@@ -6,7 +6,7 @@ import imaplib
 from types import FunctionType
 from typing import List, Set, Union, Any
 import bs4
-from selenium import webdriver
+from selenium.webdriver import Chrome, Edge, Firefox, Ie, Opera, Safari
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -21,11 +21,17 @@ LONG_WAIT = 30
 # """Time in seconds to poll for something that should be absent or already here."""
 SHORT_WAIT = 2
 
+CN_MODE = False
 # """The root website domain to access."""
 BASE_URL = 'https://www.aussiespecialist.com'
+CN_BASE_URL = 'https://www.aussiespecialist.cn'
 # """The Language-Country Code of the locale to test.
 LOCALE = '/en-gb'
-CN_MODE = False
+LOCALES = {'ca': '/en-ca', 'in': '/en-in', 'my': '/en-my', 'sg': '/en-sg', \
+'gb': '/en-gb', 'us': '/en-us', \
+'ehk': '/en-hk', 'zhk': '/zh-hk', 'id': '/id-id', 'jp': '/ja-jp', 'kr': '/ko-kr', \
+'br': '/pt-br', 'cl': '/es-cl', 'de': '/de-de', 'fr': '/fr-fr', 'it': '/it-it'}
+CN_LOCALE = '/zh-cn'
 # """To aid in checking for Page Loaded Status, note the last link clicked.
 	# TODO: Add a property to this?"""
 LAST_LINK = ''
@@ -43,7 +49,10 @@ LATIN_EMAIL_ENCODING = 'windows-1252'
 EXTENDED_EMAIL_ENCODING = 'utf-8'
 
 # """The main WebDriver runner reference."""
-DRIVER = webdriver.Chrome		# Global variable placeholder
+BROWSER_TYPE = Chrome
+BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox, \
+	'ie': Ie, 'opera': Opera, 'safari': Safari}
+DRIVER = Chrome		# Global variable placeholder
 
 # """A Set of the full list of options that should be in the splash page language selector."""
 LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
@@ -70,7 +79,7 @@ def begin() -> None:
 	"""The test part calls this at the beginning of each test. Sets up DRIVER."""
 	global DRIVER	# pylint: disable-msg=W0603
 	# It's fine, the AUS.com tests use Global State. Static instance reference anyway.
-	DRIVER = webdriver.Chrome()
+	DRIVER = BROWSER_TYPE()
 	DRIVER.implicitly_wait(LONG_WAIT)
 	DRIVER.maximize_window()
 
@@ -208,8 +217,8 @@ class Email:
 		and returns a set of Locale codes representing each one found."""
 		locs = set()
 		ems = [bs4.BeautifulSoup(x, 'html.parser') for x in self.get_new_messages(really_get_new=False)]
-		for em in ems:
-			links = em.select('a[href*="t.updates.tourism.australia.com"]')
+		for ema in ems:
+			links = ema.select('a[href*="t.updates.tourism.australia.com"]')
 			hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) for x in links]
 			locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
 		return locs
@@ -229,7 +238,7 @@ class Email:
 		return results
 
 	def email_loop(self, imap: imaplib.IMAP4_SSL, really_get_new: bool=True) -> bytes:
-		"""SEARCHes the server, checking for (maybe) new email. Basically, put this in a wait-until loop."""
+		"""SEARCHes the server, checking for (maybe) new email. Put this in a wait-until loop."""
 		imap.noop()
 		# Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
 		# Containing a single bytestring of space-separated return values.

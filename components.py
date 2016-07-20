@@ -16,7 +16,7 @@ class WrappedElement:
 
 	def click(self) -> 'WrappedElement':
 		"""Clicks on the element."""
-		DR.LAST_LINK = self.element.get_attribute('href')
+		DR.LAST_LINK = DR.fix_url(self.element.get_attribute('href'))
 		self.element.click()
 		return self
 
@@ -46,7 +46,7 @@ class SplashSelect(WrappedElement):
 
 	def get_values(self) -> Set[str]:
 		"""Gets a set containing the URLs of all the Language Options."""
-		return {x.get_attribute('value') \
+		return {DR.fix_url(x.get_attribute('value')) \
 			for x in DR.quietly_find_elements('option:not([value="#"])', self.element)}
 
 	def choose_locale(self) -> None:
@@ -225,15 +225,19 @@ class Footer(WrappedElement):
 		attach_link(self, 'youtube', selector='[href*="www.{}.com"]')
 		attach_link(self, 'twitter', selector='[href*="{}.com"]')
 		attach_link(self, 'instagram', selector='[href*="{}.com"]')
-		attach_link(self, 'wechat', selector='[href*=#qr_image]')
+		attach_link(self, 'wechat', selector='[href*="#qr_image"]')
 		attach_link(self, 'sitemap')
 		attach_link(self, 'privacy-policy')
 		attach_link(self, 'terms-and-conditions')
 		attach_link(self, 'terms-of-use')
 		attach_link(self, 'contact-us')
-		attach_link(self, 'australia', selector='[href*="www.{}.com"]')
-		attach_link(self, 'tourism.australia', selector='[href*="www.{}.com"]')
-		attach_link(self, 'businessevents.australia', selector='[href*="{}.com"]')
+		if DR.CN_MODE:
+			attach_link(self, 'australia', selector='[href*="www.{}.cn"]')
+			attach_link(self, 'businessevents.australia', selector='[href*="{}.cn"]')
+		else:
+			attach_link(self, 'australia', selector='[href*="www.{}.com"]')
+			attach_link(self, 'tourism.australia', selector='[href*="www.{}.com"]')
+			attach_link(self, 'businessevents.australia', selector='[href*="{}.com"]')
 
 class Sitemap(WrappedElement):
 	"""Represents the Sitemap link cloud."""
@@ -268,7 +272,7 @@ class FilteredSearch(WrappedElement):
 		def view_more_information(self) -> None:
 			"""Navigates to the result's main page, clicks the View More Info link."""
 			link = DR.flashy_find_element('.search-results-copy-container a', self.element)
-			DR.LAST_LINK = link.get_attribute('href')
+			DR.LAST_LINK = DR.fix_url(link.get_attribute('href'))
 			link.click()
 			DR.wait_for_page()
 
@@ -485,7 +489,8 @@ class InteractiveMap(WrappedElement):
 		class MapPins(WrappedElement):
 			"""Represents the collection of pins that appear on the map when a menu is opened."""
 			def __init__(self):
-				self.pins = DR.flashy_find_elements('.marker div.bulb:not(.Itineraries)')
+				self.pins = DR.flashy_find_elements('{} div.bulb:not(.Itineraries)'\
+					.format('.MapPushpinBase' if DR.CN_MODE else '.marker'))
 				self.element = DR.get_parent_element(DR.get_parent_element(self.pins[0]))
 
 			def pick_random(self) -> str:
@@ -497,7 +502,7 @@ class InteractiveMap(WrappedElement):
 				name = pin.text
 				pin.click()
 				panel = DR.quietly_find_element('#info-box')
-				DR.wait_until(lambda _: panel.get_attribute('style').find('rotateY(0deg)') != -1)
+				DR.wait_until(lambda _: panel.is_displayed() and panel.get_attribute('style').find('rotateY(0deg)') != -1)
 				return name
 
 			def count(self) -> int:

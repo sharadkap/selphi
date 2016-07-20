@@ -15,6 +15,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 	# pylint: disable-msg=C0103
 	# They can't be functions, that would defeat the entire purpose of the test suite.
 	# pylint: disable-msg=R0201
+	# Super don't care pylint: disable-msg=C0321
 	def setUp(self) -> None:
 		"""Called just before each test is run, sets up the browser and test records."""
 		# Initialise the browser connection.
@@ -63,6 +64,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		# Click on 'About' in the Mega Menu.
 		about = CP.About().point()
+		if DR.CN_MODE: about.click()
 		# The About section should have: About, Why Register,
 		# Program FAQ, Site Usage, Contact Us
 		about.about()
@@ -73,6 +75,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		# Click on 'Sales Resources' in the Mega Menu.
 		sales = CP.SalesResources().point()
+		if DR.CN_MODE: sales.click()
 		# The Sales section should have: Sales Resources (Landing), Interactive Map,
 		# Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
 		# Itinerary Search, Australian Events, Destination FAQ
@@ -87,16 +90,19 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		# Click on 'Training' in the Mega Menu.
 		train = CP.Training().point()
+		if DR.CN_MODE: train.click()
 		# The Training section should have: *Training (Landing page only)
 		train.training()
 
 		# Click on 'News & Products' in the Mega Menu.
 		news = CP.NewsAndProducts().point()
+		if DR.CN_MODE: news.click()
 		# The News section should have: *News and Product Updates (Landing page only)
 		news.news_and_product_updates()
 
 		# Click on 'Aussie Specialist Club' in the Mega Menu.
 		club = CP.AussieSpecialistClub().point()
+		if DR.CN_MODE: club.click()
 		# The Club section should have: *Aussie Specialist Club (Landing page only)
 		club.aussie_specialist_club()
 
@@ -122,7 +128,8 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		footer.contact_us()
 		# Other sites: Links through to Aus.com, Corporate site and Business Events.
 		footer.australia()
-		footer.tourism_australia()
+		if not DR.CN_MODE:	# China doesn't have this one.
+			footer.tourism_australia()
 		footer.businessevents_australia()
 		# Click the Change Your Country link.
 		footer.splash().click()
@@ -144,15 +151,18 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		sitemap_links = sitemap.get_all_links()
 		self.assertTrue(nav_links.issubset(sitemap_links))
 		# And should also have Change Password, Unsubscribe, and Coming Soon links.
-		sitemap.change()
-		sitemap.newsletter_unsubscribe()
-		sitemap.coming_soon()
+		# But China doesn't.
+		if not DR.CN_MODE:
+			sitemap.change()
+			sitemap.newsletter_unsubscribe()
+			sitemap.coming_soon()
 
 	def test_Filtered_Search__Itineraries(self) -> None:
 		"""Checks the Itineraries Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Itinerary Suggestions.
-		CP.SalesResources().point().itineraries_search_and_feature().click()
+		if DR.CN_MODE: CP.SalesResources().click().itineraries_search_and_feature().click()
+		else: CP.SalesResources().point().itineraries_search_and_feature().click()
 		# Do a random search and validate the results.
 		search = CP.FilteredSearch()
 		search.random_search()
@@ -162,7 +172,8 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Tests the Fact Sheet Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Fact Sheets.
-		CP.SalesResources().point().fact_sheets_overview().click()
+		if DR.CN_MODE: CP.SalesResources().click().fact_sheets_overview().click()
+		else: CP.SalesResources().point().fact_sheets_overview().click()
 		# Do a random search. (In Fact Sheet +PDFs Mode) Then validate the results.
 		search = CP.FilteredSearch(fact_sheet_mode=True)
 		search.random_search()
@@ -254,19 +265,21 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		self.assertEqual(fomlink, panel.view_highlights())
 		# Click the Photos
 		imgnum = panel.count_photos()
-		photos = panel.open_photos()
-		# The Photo Viewer should appear, can be scrolled through, displays different images.
-		# But if there was only one image available, skip this scrolling bit.
-		if not imgnum == 1:
-			imgone = photos.current_image_source()
-			photos.next()
-			imgtwo = photos.current_image_source()
-			self.assertNotEqual(imgone, imgtwo)
-			photos.next()
-			imgone = photos.current_image_source()
-			self.assertNotEqual(imgtwo, imgone)
-		# Close the Photo Viewer
-		photos.close()
+		# China doesn't do this bit.
+		if not DR.CN_MODE:
+			photos = panel.open_photos()
+			# The Photo Viewer should appear, can be scrolled through, displays different images.
+			# But if there was only one image available, skip this scrolling bit.
+			if not imgnum == 1:
+				imgone = photos.current_image_source()
+				photos.next()
+				imgtwo = photos.current_image_source()
+				self.assertNotEqual(imgone, imgtwo)
+				photos.next()
+				imgone = photos.current_image_source()
+				self.assertNotEqual(imgtwo, imgone)
+			# Close the Photo Viewer
+			photos.close()
 		# Click on one of the Itinerary Suggestion links
 		itiname = panel.random_itinerary()
 		# If there were no Itinerary links, skip this bit.
@@ -512,6 +525,12 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 	def test_Training_Summary(self):
 		"""Checks the Training Summary page."""
+		def back():
+			"""The Module clicks the Back To Training button, which leads to LIVE
+			No guarantee that the testing is going on in LIVE."""
+			nonlocal modules
+			DR.back();DR.back()
+			modules = CP.TrainingSummary()
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
@@ -543,19 +562,16 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Go do a few of the modules.
 		modules.module_one()
 		MOD.do_module(DR.DRIVER, '1')
-		DR.back();DR.back()	# The module clicks the Back To Training.
-		modules = CP.TrainingSummary()
+		back()
 		modules.module_two()
 		MOD.do_module(DR.DRIVER, '2')
-		DR.back();DR.back()	# That button links to the LIVE page.
-		modules = CP.TrainingSummary()
+		back()
 		modules.module_three()
 		MOD.do_module(DR.DRIVER, '3')
-		DR.back();DR.back()	# No guarantee that we are testing LIVE, though.
-		modules = CP.TrainingSummary()
+		back()
 
 		# Should receive a halfway email here.
-		halfway = DR.Email.LocalizedEmail(USERID)
+		DR.Email.LocalizedEmail(USERID)
 		# Open this one, but don't finish it.
 		modules.module_vic()
 		DR.back()
@@ -567,14 +583,13 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		modules.module_nsw()
 		MOD.do_module(DR.DRIVER, 'nsw')
-		DR.back();DR.back()
-		modules = CP.TrainingSummary()
+		back()
 		modules.module_qld()
 		MOD.do_module(DR.DRIVER, 'qld')
 		DR.back()
 
 		# Should receive the qualification email here.
-		qualified = DR.Email.LocalizedEmail(USERID)
+		DR.Email.LocalizedEmail(USERID)
 
 		# Go back to the Profile page.
 		CP.NavMenu().profile().click()

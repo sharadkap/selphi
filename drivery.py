@@ -129,7 +129,7 @@ def wait_until_present(selector: str) -> WebElement:
 def wait_until_gone(selector: str) -> WebElement:
 	"""Holds up execution until the selectored element is not visibly present.
 	EC doesn't seem to support local searches, so be sure the selector is page-unique."""
-	DRIVER.implicitly_wait(0.5)	# The poll_freq value is not, in fact, the wait time.
+	DRIVER.implicitly_wait(0.5)	# The poll_freq value is not, in fact, the wait-til-fail time.
 	ret = WebDriverWait(DRIVER, LONG_WAIT).until(\
 		EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
 	DRIVER.implicitly_wait(LONG_WAIT)
@@ -146,6 +146,10 @@ def switch_to_window(window: int) -> None:
 def switch_to_frame(selector: str) -> None:
 	"""Switches WebDriver's focus into the given iframe."""
 	DRIVER.switch_to.frame(flashy_find_element(selector))
+
+def fix_url(url: str) -> str:
+	"""Use this to remove that /content/asp/ stuff from URLs."""
+	return (url or '').replace('/content/asp/', '/').replace('_', '-', 1)
 
 ###Some methods to shorten Element Manipulation/Verification.###
 

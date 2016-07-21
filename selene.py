@@ -288,16 +288,18 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			panel = CP.InteractiveMap.Controls.InfoPanel()
 			# The selected Itinerary should open.
 			self.assertEqual(itiname, panel.get_title())
-			# Its route should appear and gain focus on the map, but zoom out a bit first,
-			# the pins will sometimes pop up behind the menu panel.
-			CP.InteractiveMap.ZoomTools().zoom_out()
-			pins = CP.InteractiveMap.MapArea.MapPins()
-			# The Find Out More link should link to the relevant Itinerary Page.
-			self.assertIn(DR.LOCALE, panel.find_out_more())
-			# Click on one of the Route Pins
-			pins.pick_random()
-			# An info box should appear at the pin.
-			CP.InteractiveMap.MapArea.InfoPopup()
+			# China's map doesn't show the Route Highlights.
+			if not DR.CN_MODE:
+				# Its route should appear and gain focus on the map, but zoom out a bit first,
+				# the pins will sometimes pop up behind the menu panel.
+				CP.InteractiveMap.ZoomTools().zoom_out()
+				pins = CP.InteractiveMap.MapArea.MapPins()
+				# The Find Out More link should link to the relevant Itinerary Page.
+				self.assertIn(DR.LOCALE, panel.find_out_more())
+				# Click on one of the Route Pins
+				pins.pick_random()
+				# An info box should appear at the pin.
+				CP.InteractiveMap.MapArea.InfoPopup()
 		# Click the Back To Menu Button, the panel should spin back to the Main Map Menu
 		panel.back_to_menu()
 
@@ -417,8 +419,8 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 	def test_Change_Password(self):
 		"""Tests the Change Password feature."""
 		DR.open_home_page()
-		# Sign in with the new password, because these tests are being executed in order, right?
-		CP.SignIn().sign_in(USERNAME, TEMP_PASS)
+		# Sign in with the new password, because these tests *are* being executed in order, right?
+		CP.SignIn().sign_in(USERNAME, TEMP_PASS, new_password=True)
 		# In the Nav Menu, click the My Profile link.
 		CP.NavMenu().profile().click()
 		# Click the Change Password button, below the Profile Data fields.
@@ -633,7 +635,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Famils
-		CP.AussieSpecialistClub().click().aussie_specialist_club().click()
+		CP.AussieSpecialistClub().click().famils().click()
 		# Maybe not available in all locales?
 		# Should Display Famils page content.
 		CP.Famils()

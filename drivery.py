@@ -149,7 +149,7 @@ def switch_to_frame(selector: str) -> None:
 
 def fix_url(url: str) -> str:
 	"""Use this to remove that /content/asp/ stuff from URLs."""
-	return (url or '').replace('/content/asp/', '/').replace('_', '-', 1)
+	return re.sub(r'(/\w\w)_(\w\w/)', r'\1-\2', (url or '').replace('/content/asp/', '/'), count=1)
 
 ###Some methods to shorten Element Manipulation/Verification.###
 
@@ -235,8 +235,10 @@ class Email:
 			imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
 			imap.select()
 			nums = wait_until(lambda _: self.email_loop(imap, really_get_new))
-			# IMAP doesn't return number lists in a format that it can actually read??
-			_, ems = imap.fetch(nums, 'BODY[2]')
+			# The Latin Character Set emails have two parts, the second of which is the one you want.
+			got, ems = imap.fetch(nums, 'BODY[2]')
+			if got == 'NO':
+				got, ems = imap.fetch(nums, 'body[1]')
 			for ema in ems[::2]:	# Yeah, the results come back wierd.
 				results.append(quopri.decodestring(ema[1]).decode())
 		return results

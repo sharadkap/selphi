@@ -182,6 +182,7 @@ class AussieSpecialistClub(WrappedElement):
 		self.element = DR.flashy_find_element('#nav-main-panel-5')
 		attach_link(self, 'aussie-specialist-club')
 		attach_link(self, 'travel-club')
+		attach_link(self, 'famils')
 		attach_link(self, 'aussie-specialist-photos')
 		attach_link(self, 'asp-logo')
 		attach_link(self, 'aussie-store')
@@ -502,7 +503,8 @@ class InteractiveMap(WrappedElement):
 				name = pin.text
 				pin.click()
 				panel = DR.quietly_find_element('#info-box')
-				DR.wait_until(lambda _: panel.is_displayed() and panel.get_attribute('style').find('rotateY(0deg)') != -1)
+				DR.wait_until(lambda _: panel.is_displayed() and \
+					panel.get_attribute('style').find('rotateY(0deg)') != -1)
 				return name
 
 			def count(self) -> int:
@@ -685,12 +687,12 @@ class SignIn(WrappedElement):
 		attach_link(self, 'forgotten-username')
 		attach_link(self, 'forgotten-password')
 
-	def sign_in(self, user: str, passw: str) -> None:
+	def sign_in(self, user: str, passw: str, new_password=False) -> None:
 		"""Logs in using the given Username and Password."""
 		DR.flashy_find_element('#j_username', self.element).send_keys(user)
 		DR.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
 		DR.flashy_find_element('#usersignin', self.element).click()
-		DR.LAST_LINK = '/secure'
+		DR.LAST_LINK = '/change.html' if new_password else '/secure'
 		DR.wait_for_page()
 
 class ForgottenForm(WrappedElement):
@@ -948,9 +950,8 @@ class AussieSpecialistPhotos(WrappedElement):
 
 		def close(self) -> None:
 			"""Clicks the X button in the tiles content. Has to be open first."""
-			cl = DR.flashy_find_element('.icon-close', self.contentpane)
-
-			cl.click()
+			close = DR.flashy_find_element('.icon-close', self.contentpane)
+			close.click()
 
 class SpecialistBadge(WrappedElement):
 	"""Represents the Aussie Specialist Badge Download page and image. Kinda minimal."""

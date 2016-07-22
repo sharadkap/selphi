@@ -856,8 +856,8 @@ def main():
 		password Welcome1. Only do this if your custom suite does not include Registration', \
 		default=[None], nargs=1, metavar='')
 	parser.add_argument('-t', '--tests', help='Which tests to run. Will be run in the order supplied. \
-		Default is all, in the default testing order. Choices are {}'\
-			.format(['{} for {}'.format(x, testnames[x]) for x in testnames]), nargs='+', \
+		Default is all, in the default testing order. Choices are [{}]'\
+			.format(', '.join(['\'{}\' for {}'.format(x, testnames[x]) for x in testnames])), nargs='+', \
 		choices=testnames.keys(), default=testnames.keys(), type=str, metavar='')
 	args = parser.parse_args()
 

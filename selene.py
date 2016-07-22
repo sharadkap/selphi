@@ -821,11 +821,18 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		profile = CP.Profile()
 		self.assertEqual(profile.user_level(), CP.Profile.PREMIER)
 
-if __name__ == '__main__':
-	# Not really constants, no. 	pylint: disable-msg=C0103
+def main():
+	"""Read the arguments, run the tests."""
+	global USERNAME, USERID		# I'm sure it's fine. pylint: disable-msg=W0601
+	# Sort the tests by declaration order, not alphabetical order.
+	lineno = lambda f: getattr(REGR, f).__code__.co_firstlineno
+	testnames = [x for x in dir(REGR) if x.startswith('test_')]
+	testnames.sort(key=lineno)
+
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-e', '--environment', help='The Domain of the environment to test. \
-		Default is %(default)s.', nargs=1, type=str, default=[DR.BASE_URL], metavar='')
+		Remember to include http(s). Default is %(default)s.', nargs=1, type=str, \
+		default=[DR.BASE_URL], metavar='')
 	group = parser.add_mutually_exclusive_group()
 	group.add_argument('-c', '--china', help='Use this option to run in China Mode.	\
 		China Mode will test /zh-cn only, cannot be used with the -l option, and, if no Environment \
@@ -835,32 +842,48 @@ if __name__ == '__main__':
 		choices=DR.LOCALES.keys(), default=['gb'], metavar='')
 	parser.add_argument('-b', '--browser', help='Which browser to use. One or more of [%(choices)s]. \
 		Default is %(default)s', nargs=1, default=['chrome'], choices=DR.BROWSERS.keys(), metavar='')
+	parser.add_argument('-u', '--username', help='The Username to use in testing. \
+		Due to the way the tests are structured, it will have to be a Test Account formatted user: \
+		last four characters the email subaddress code (testeratta+xxxx@gmail.com), \
+		password Welcome1. Only do this if your custom suite does not include Registration', \
+		default=[None], nargs=1, metavar='')
+	parser.add_argument('-t', '--tests', help='Which tests to run. Will be run in the order supplied. \
+		Default is all, in the default testing order. Choices are [%(choices)s]', nargs='+', \
+		choices=testnames, default=testnames, type=str, metavar='')
 	args = parser.parse_args()
 
-	# Sort the tests by declaration order, not alphabetical order.
-	lineno = lambda f: getattr(REGR, f).__code__.co_firstlineno
-	lncmp = lambda a, b: lineno(a) - lineno(b)
+	# Set the settings from the given arguments
 	DR.BROWSER_TYPE = DR.BROWSERS[args.browser[0]]
-
 	DR.CN_MODE = args.china
+	if args.username[0]:
+		USERNAME = args.username[0]
+		USERID = USERNAME[-4:]	# The mail ID is the last four characters.
+	# If a url was given, make that the default.
 	envchanged = args.environment[0] != DR.BASE_URL
 	if envchanged:
 		DR.BASE_URL = args.environment[0]
 	else:
+		# China gets its own, if it wasn't already given.
 		if DR.CN_MODE:
 			DR.BASE_URL = DR.CN_BASE_URL
 
+	# Create the test runner, choose the output path: right next to the test script file.
 	runner = TAPTestRunner()
 	runner.set_outdir(os.path.join(os.path.split(__file__)[0]))
 	runner.set_format('Result of: {method_name} - {short_description}')
 
+	# Get the chosen test methods from the REGR suite.
+	tests = unittest.TestSuite([REGR(x) for x in args.tests])
+	# Run them in each locale.
 	for locale in args.locales:
+		# If China Mode, do it in China, otherwise set the locale for each loop
 		if DR.CN_MODE:
 			DR.LOCALE = DR.CN_LOCALE
 		else:
 			DR.LOCALE = DR.LOCALES[locale]
-		tests = unittest.TestSuite()
-		loader = unittest.TestLoader()
-		loader.sortTestMethodsUsing = lncmp
-		tests.addTests(loader.loadTestsFromTestCase(REGR))
-		runner.run(tests)
+		suite = unittest.TestSuite()
+		suite.addTests(tests)
+		runner.run(suite)
+
+if __name__ == '__main__':
+	main()

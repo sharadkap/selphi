@@ -4,6 +4,7 @@ import os
 import random
 import argparse
 import unittest
+from collections import OrderedDict
 from tap import TAPTestRunner
 import drivery as DR
 import modules as MOD
@@ -825,9 +826,16 @@ def main():
 	"""Read the arguments, run the tests."""
 	global USERNAME, USERID		# I'm sure it's fine. pylint: disable-msg=W0601
 	# Sort the tests by declaration order, not alphabetical order.
-	lineno = lambda f: getattr(REGR, f).__code__.co_firstlineno
-	testnames = [x for x in dir(REGR) if x.startswith('test_')]
-	testnames.sort(key=lineno)
+	testnames = OrderedDict([('SPL', 'test_Splash_Page'), ('HPG', 'test_Homepage'), \
+		('NAV', 'test_Navigation'), ('FTR', 'test_Footer'), ('SMP', 'test_Sitemap'), \
+		('ITN', 'test_Filtered_Search__Itineraries'), ('FCT', 'test_Filtered_Search__Fact_Sheets'), \
+		('MAP', 'test_Interactive_Map'), ('CTC', 'test_Contact_Us'), ('REG', 'test_Registration'), \
+		('LOG', 'test_Login'), ('FUN', 'test_Forgotten_Username'), ('FPW', 'test_Forgotten_Password'), \
+		('CPW', 'test_Change_Password'), ('FAV', 'test_Favourites'), ('PRF', 'test_My_Profile'), \
+		('TRN', 'test_Training_Summary'), ('ASC', 'test_Aussie_Specialist_Club'), \
+		('TVL', 'test_Travel_Club'), ('FML', 'test_Famils'), ('PHT', 'test_Aussie_Specialist_Photos'), \
+		('DLB', 'test_Download_Qualification_Badge'), ('CMP', 'test_Campaign'), \
+		('STR', 'test_Aussie_Store'), ('PRM', 'test_Premier_Badge')])
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-e', '--environment', help='The Domain of the environment to test. \
@@ -848,8 +856,9 @@ def main():
 		password Welcome1. Only do this if your custom suite does not include Registration', \
 		default=[None], nargs=1, metavar='')
 	parser.add_argument('-t', '--tests', help='Which tests to run. Will be run in the order supplied. \
-		Default is all, in the default testing order. Choices are [%(choices)s]', nargs='+', \
-		choices=testnames, default=testnames, type=str, metavar='')
+		Default is all, in the default testing order. Choices are {}'\
+			.format(['{} for {}'.format(x, testnames[x]) for x in testnames]), nargs='+', \
+		choices=testnames.keys(), default=testnames.keys(), type=str, metavar='')
 	args = parser.parse_args()
 
 	# Set the settings from the given arguments
@@ -873,7 +882,7 @@ def main():
 	runner.set_format('Result of: {method_name} - {short_description}')
 
 	# Get the chosen test methods from the REGR suite.
-	tests = unittest.TestSuite([REGR(x) for x in args.tests])
+	tests = unittest.TestSuite([REGR(testnames[x]) for x in args.tests])
 	# Run them in each locale.
 	for locale in args.locales:
 		# If China Mode, do it in China, otherwise set the locale for each loop

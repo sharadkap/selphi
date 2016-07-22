@@ -20,6 +20,8 @@ Open Menu Button, so the z-index is added to be more specific.
 A Tuple, like ('s15_GBR', 'gbr_drop') signifies a Drag And Drop, with the first
 one being dragged to the second. Note, Tuples can contain Lists too."""
 
+from collections import OrderedDict
+
 USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
 'sg': 'sgprodyyw', 'gb': 'gbwwwvjvz', 'us': 'usprokcmi', \
 'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
@@ -37,22 +39,22 @@ LANGS = {'ca': 'en-ca', 'in': 'en-in', 'my': 'en-my', 'sg': 'en-sg', \
 'ehk': 'en-hk', 'zhk': 'zh-hk', 'id': 'id-id', 'jp': 'ja-jp', 'kr': 'ko-kr', \
 'br': 'pt-br', 'cl': 'es-cl', 'de': 'de-de', 'fr': 'fr-fr', 'it': 'it-it'}
 
-MODULES_D = {'1': 'core_mod1', '2': 'core_mod2', '3': 'core_mod3', \
-'act': 'sto_act', 'nsw': 'sto_nsw', 'nt': 'sto_nt', 'qld': 'sto_qld', \
-	'sa': 'sto_sa', 'tas': 'sto_tas', 'vic': 'sto_vic', 'wa': 'sto_wa', \
-'aboriginal': 'niche_aboriginal', 'golf': 'niche_golf', 'lodges': 'niche_lodges', \
-	'ra': 'niche_ra', 'walks': 'niche_walks', 'wine': 'niche_wine'}
+MODULES_D = OrderedDict([('1', 'core_mod1'), ('2', 'core_mod2'), ('3', 'core_mod3'), \
+		('act', 'sto_act'), ('nsw', 'sto_nsw'), ('nt', 'sto_nt'), ('qld', 'sto_qld'), \
+		('sa', 'sto_sa'), ('tas', 'sto_tas'), ('vic', 'sto_vic'), ('wa', 'sto_wa'), \
+	('aboriginal', 'niche_aboriginal'), ('golf', 'niche_golf'), ('lodges', 'niche_lodges'), \
+		('ra', 'niche_ra'), ('walks', 'niche_walks'), ('wine', 'niche_wine')])
 
 # So this happened.
 M = 'mandatory-modules/core-module'
 OPT = 'optional-modules/'
 S = OPT + 'state-and-territory/sto_'
 N = OPT + 'niche/niche_'
-MODULES = {'1': M + '1', '2': M + '2', '3': M + '3', \
-'act': S + 'act', 'nsw': S + 'nsw', 'nt': S + 'nt', 'qld': S + 'qld', \
-	'sa': S + 'sa', 'tas': S + 'tas', 'vic': S + 'vic', 'wa': S + 'wa', \
-'aboriginal': N + 'aboriginal', 'golf': N + 'golf', 'lodges': N + 'lodges', \
-	'ra': N + 'ra', 'walks': N + 'walks', 'wine': N + 'winery'}
+MODULES = OrderedDict([('1', M + '1'), ('2', M + '2'), ('3', M + '3'), \
+		('act', S + 'act'), ('nsw', S + 'nsw'), ('nt', S + 'nt'), ('qld', S + 'qld'), \
+		('sa', S + 'sa'), ('tas', S + 'tas'), ('vic', S + 'vic'), ('wa', S + 'wa'), \
+	('aboriginal', N + 'aboriginal'), ('golf', N + 'golf'), ('lodges', N + 'lodges'), \
+		('ra', N + 'ra'), ('walks', N + 'walks'), ('wine', N + 'winery')])
 
 MOD_1_SCRIPT = ['Button_728', \
 ['Button_902', 'Button_903', 'Button_953', 'Button_918', \

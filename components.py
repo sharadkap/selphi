@@ -800,7 +800,7 @@ class Profile(WrappedElement):
 		DR.wait_until_present('.fancybox-skin')
 
 	# Enum Hack:
-	TRAINEE = 'trainee';QUALIFIED = 'qualified';PREMIER = 'premier'
+	TRAINEE, QUALIFIED, PREMIER = 'trainee', 'qualified', 'premier'
 	def user_level(self) -> str:
 		"""Checks the Status Badge area, returns a string of the User Level."""
 		if DR.check_visible_quick('.profile-status img', self.element):
@@ -813,7 +813,7 @@ class Profile(WrappedElement):
 	def module_badges(self) -> Set[str]:
 		"""Checks the Recent Achievements section, returns a set of the badges attained."""
 		return {x.get_attribute('alt').split('_')[-1] \
-			for x in DR.flashy_find_elements('.Achievements .profile-status img')}
+			for x in DR.flashy_find_elements('.Achievements .profile-status img', self.element)}
 
 class TrainingSummary(WrappedElement):
 	"""Represents the two Training Summary modules list things."""

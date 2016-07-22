@@ -315,7 +315,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 	def test_Registration(self) -> None:
 		"""Checks the Registration process."""
-		global USERID, USERNAME
+		global USERID, USERNAME	# I'm sure it's fine. pylint: disable-msg=W0601
 		DR.open_home_page()
 		# Navigate to the Registration Page
 		CP.BodyRegisterButton().click()
@@ -401,7 +401,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 	def test_Forgotten_Password(self):
 		"""Tests the Forgotten Password feature."""
-		global TEMP_PASS
+		global TEMP_PASS	# I'm sure it's fine. pylint: disable-msg=W0601
 		DR.open_home_page()
 		# Click the Sign In link
 		# In the Sign In panel, click the Forgotten Password link.

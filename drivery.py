@@ -33,7 +33,6 @@ LOCALES = {'ca': '/en-ca', 'in': '/en-in', 'my': '/en-my', 'sg': '/en-sg', \
 'br': '/pt-br', 'cl': '/es-cl', 'de': '/de-de', 'fr': '/fr-fr', 'it': '/it-it'}
 CN_LOCALE = '/zh-cn'
 # """To aid in checking for Page Loaded Status, note the last link clicked.
-	# TODO: Add a property to this?"""
 LAST_LINK = ''
 
 # """The generic standard Test Account Password."""
@@ -49,7 +48,7 @@ LATIN_EMAIL_ENCODING = 'windows-1252'
 EXTENDED_EMAIL_ENCODING = 'utf-8'
 
 # """The main WebDriver runner reference."""
-BROWSER_TYPE = Chrome
+BROWSER_TYPE = Chrome	# Not really a Class, just a reference to one. pylint: disable-msg=C0103
 BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox, \
 	'ie': Ie, 'opera': Opera, 'safari': Safari}
 DRIVER = Chrome		# Global variable placeholder
@@ -141,11 +140,11 @@ def wait_until(condition: FunctionType) -> Any:
 
 def switch_to_window(window: int) -> None:
 	"""Switch WebDriver's focus to the second open tab or window."""
-	DRIVER.switch_to.window(DRIVER.window_handles[window])
+	DRIVER.switch_to.window(DRIVER.window_handles[window])	# Yes it does. pylint: disable-msg=E1101
 
 def switch_to_frame(selector: str) -> None:
 	"""Switches WebDriver's focus into the given iframe."""
-	DRIVER.switch_to.frame(flashy_find_element(selector))
+	DRIVER.switch_to.frame(flashy_find_element(selector))	# Yes it does. pylint: disable-msg=E1101
 
 def fix_url(url: str) -> str:
 	"""Use this to remove that /content/asp/ stuff from URLs."""
@@ -252,7 +251,7 @@ class Email:
 		return b','.join(imap.search(None, 'FROM', ASP_EMAIL, \
 			'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
-	class LocalizedEmail():
+	class LocalizedEmail():	# Oh, whatever. pylint: disable-msg=R0903
 		"""Superclass for the get_locale method of the various emails."""
 		def __init__(self, userid: str):
 			self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0], 'html.parser')

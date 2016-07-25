@@ -44,8 +44,8 @@ TEST_EMAIL_IMAP_SERVER = 'imap.gmail.com'
 TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
 TEST_EMAIL_PASSWORD = 'WelcomeTest'
 ASP_EMAIL = 'tourism-au@updates.tourism.australia.com'
+ASP_CN_EMAIL = 'asp-cn@tourism.australia.com'
 LATIN_EMAIL_ENCODING = 'windows-1252'
-EXTENDED_EMAIL_ENCODING = 'utf-8'
 
 # """The main WebDriver runner reference."""
 BROWSER_TYPE = Chrome	# Not really a Class, just a reference to one. pylint: disable-msg=C0103
@@ -221,9 +221,14 @@ class Email:
 		locs = set()
 		ems = [bs4.BeautifulSoup(x, 'html.parser') for x in self.get_new_messages(really_get_new=False)]
 		for ema in ems:
-			links = ema.select('a[href*="t.updates.tourism.australia.com"]')
-			hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) for x in links]
-			locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
+			if CN_MODE:	# China does not have locale-tagged links.
+				links = ema.select('a[href*="t.dpc.rimanggis.com"]')
+				hrefs = {x['href'].split('.')[-1] for x in links}
+				locs = locs.union({'zh-cn'} if hrefs == {'json'} else hrefs)
+			else:
+				links = ema.select('a[href*="t.updates.tourism.australia.com"]')
+				hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) for x in links]
+				locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
 		return locs
 
 	def get_new_messages(self, really_get_new: bool=True) -> List[str]: # pylint: disable-msg=E1126
@@ -239,7 +244,10 @@ class Email:
 			if got == 'NO':
 				got, ems = imap.fetch(nums, 'body[1]')
 			for ema in ems[::2]:	# Yeah, the results come back wierd.
-				results.append(quopri.decodestring(ema[1]).decode())
+				try:
+					results.append(quopri.decodestring(ema[1]).decode())
+				except UnicodeDecodeError:	# Some quasi-latin languages are different
+					results.append(quopri.decodestring(ema[1]).decode(LATIN_EMAIL_ENCODING))
 		return results
 
 	def email_loop(self, imap: imaplib.IMAP4_SSL, really_get_new: bool=True) -> bytes:
@@ -248,20 +256,14 @@ class Email:
 		# Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
 		# Containing a single bytestring of space-separated return values.
 		# And IMAP requires that imput values be comma separated. 		Because why not.
-		return b','.join(imap.search(None, 'FROM', ASP_EMAIL, \
+		return b','.join(imap.search(None, 'FROM', ASP_CN_EMAIL if CN_MODE else ASP_EMAIL, \
 			'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
 	class LocalizedEmail():	# Oh, whatever. pylint: disable-msg=R0903
-		"""Superclass for the get_locale method of the various emails."""
+		"""Superclass for the various emails."""
 		def __init__(self, userid: str):
 			self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0], 'html.parser')
 			self.userid = userid
-
-		def get_locale(self) -> Set[str]: # pylint: disable-msg=E1126
-			"""Returns the email's locale setting."""
-			links = self.email.select('a[href*="t.updates.tourism.australia.com"]')
-			hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) for x in links]
-			return {x.group().split('=')[-1] for x in hrefs if x}
 
 	class RegistrationEmail(LocalizedEmail):
 		"""Represents the Registration Email, if used correctly. Correctly here meaning:
@@ -269,7 +271,10 @@ class Email:
 		an email sub-address with no existing unread messages."""
 		def activation_link(self) -> str:
 			"""Returns the address of the Click Here To Activate Your Account link."""
-			return self.email.select('a[href*="activation"]')[0]['href']
+			if CN_MODE:	# China does not have that format of link.
+				return self.email.a['href']
+			else:
+				return self.email.select('a[href*="activation"]')[0]['href']
 
 	class ForgottenUsernameEmail(LocalizedEmail):
 		"""Represents the Forgotten Username Email.

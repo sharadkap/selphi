@@ -136,7 +136,16 @@ def attach_link(section: WrappedElement, name: str, selector: str='[href*="{}.ht
 		.format(type(section), name.replace('-', ' ').replace('.', ' ').title())
 	section.__setattr__(name.replace('-', '_').replace('.', '_'), link_maker)
 
-class About(WrappedElement):
+class NavSection(WrappedElement):
+	"""Methods common to the five Nav Menu sections."""
+	def open(self) -> WrappedElement:
+		"""Opens the menu, whether that be by clicking or by pointing."""
+		self.point()
+		if self.element.get_attribute('class').find('is-open') == -1:
+			self.click()
+		return self
+
+class About(NavSection):
 	"""Represents the About menu in the main nav menu."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-1')
@@ -146,7 +155,7 @@ class About(WrappedElement):
 		attach_link(self, 'program-faq')
 		attach_link(self, 'contact-us')
 
-class SalesResources(WrappedElement):
+class SalesResources(NavSection):
 	"""Represents the Sales Resources menu in the main nav menu."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-2')
@@ -160,7 +169,7 @@ class SalesResources(WrappedElement):
 		attach_link(self, 'destination-faq')
 		attach_link(self, 'image-and-video-galleries')
 
-class Training(WrappedElement):
+class Training(NavSection):
 	"""Represents the Training menu in the main nav menu."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-3')
@@ -168,7 +177,7 @@ class Training(WrappedElement):
 		attach_link(self, 'training-summary')
 		attach_link(self, 'webinars')
 
-class NewsAndProducts(WrappedElement):
+class NewsAndProducts(NavSection):
 	"""Represents the News And Products menu in the main nav menu."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-4')
@@ -176,7 +185,7 @@ class NewsAndProducts(WrappedElement):
 		attach_link(self, 'latest-news')
 		attach_link(self, 'product-videos')
 
-class AussieSpecialistClub(WrappedElement):
+class AussieSpecialistClub(NavSection):
 	"""Represents the Aussie Specialist Club menu in the main nav menu."""
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-5')
@@ -360,6 +369,9 @@ class HeaderHeartIcon(WrappedElement):
 
 	def favourites_count(self) -> int:
 		"""Returns the number of favourites as indicated by the icon subtitle."""
+		anim = DR.quietly_find_element('.icon-heart-animate', self.element)
+		DR.wait_until(lambda _: anim.get_attribute('style') == '' or \
+			anim.get_attribute('style').find('opacity: 0;') != -1)
 		try:
 			return int(DR.flashy_find_element('.my-trip-count', self.element).text)
 		except ValueError:
@@ -601,6 +613,11 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
 		sel = DR.flashy_find_element('[name="busprofile"]', self.element)
 		random.choice(DR.quietly_find_elements('option:not([value=""])', sel)).click()
 
+	def pick_partner(self) -> None:
+		"""Picks a random option in the PReferred Travel Partners list."""
+		sel = DR.flashy_find_element('[name="affiliationtype"]', self.element)
+		random.choice(DR.quietly_find_elements('option:not([value=""])', sel)).click()
+
 	def pick_country(self, value: str='') -> None:
 		"""Picks the country with the given abbreviation from the Country list."""
 		sel = DR.flashy_find_element('#country_id', self.element)
@@ -624,7 +641,8 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
 	def email_address(self, value: str='') -> None:
 		"""Overwrites the Email Address and Verify Email fields to have the given value. Blank default."""
 		self.email = value
-		self.verifyemail = value
+		# China does not have this email verification.
+		if not DR.CN_MODE: self.verifyemail = value
 
 	def how_many_years(self) -> None:
 		"""Sets the value of the How Many Years Selling field."""
@@ -760,6 +778,10 @@ class MySalesTools(WrappedElement):
 		"""Gets all of the saved sales tools entries."""
 		return [self.SalesTool(x) for x in \
 			DR.flashy_find_elements('.search-result-row-spacing', self.element)]
+
+	def home_search(self) -> WrappedElement:
+		"""Gets that Home button Search button pair that appears when the list is empty."""
+		return DR.wait_until_present('.dreamtrip-cta')
 
 class Profile(WrappedElement):
 	"""Represents the Profile page form."""

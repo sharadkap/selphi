@@ -64,8 +64,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks that the contents of the Signed Out Nav Menu are correct."""
 		DR.open_home_page()
 		# Click on 'About' in the Mega Menu.
-		about = CP.About().point()
-		if DR.CN_MODE: about.click()
+		about = CP.About().open()
 		# The About section should have: About, Why Register,
 		# Program FAQ, Site Usage, Contact Us
 		about.about()
@@ -75,8 +74,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		about.contact_us()
 
 		# Click on 'Sales Resources' in the Mega Menu.
-		sales = CP.SalesResources().point()
-		if DR.CN_MODE: sales.click()
+		sales = CP.SalesResources().open()
 		# The Sales section should have: Sales Resources (Landing), Interactive Map,
 		# Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
 		# Itinerary Search, Australian Events, Destination FAQ
@@ -90,20 +88,17 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		sales.image_and_video_galleries()
 
 		# Click on 'Training' in the Mega Menu.
-		train = CP.Training().point()
-		if DR.CN_MODE: train.click()
+		train = CP.Training().open()
 		# The Training section should have: *Training (Landing page only)
 		train.training()
 
 		# Click on 'News & Products' in the Mega Menu.
-		news = CP.NewsAndProducts().point()
-		if DR.CN_MODE: news.click()
+		news = CP.NewsAndProducts().open()
 		# The News section should have: *News and Product Updates (Landing page only)
 		news.news_and_product_updates()
 
 		# Click on 'Aussie Specialist Club' in the Mega Menu.
-		club = CP.AussieSpecialistClub().point()
-		if DR.CN_MODE: club.click()
+		club = CP.AussieSpecialistClub().open()
 		# The Club section should have: *Aussie Specialist Club (Landing page only)
 		club.aussie_specialist_club()
 
@@ -162,8 +157,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Itineraries Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Itinerary Suggestions.
-		if DR.CN_MODE: CP.SalesResources().click().itineraries_search_and_feature().click()
-		else: CP.SalesResources().point().itineraries_search_and_feature().click()
+		CP.SalesResources().open().itineraries_search_and_feature().click()
 		# Do a random search and validate the results.
 		search = CP.FilteredSearch()
 		search.random_search()
@@ -173,8 +167,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Tests the Fact Sheet Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Fact Sheets.
-		if DR.CN_MODE: CP.SalesResources().click().fact_sheets_overview().click()
-		else: CP.SalesResources().point().fact_sheets_overview().click()
+		CP.SalesResources().open().fact_sheets_overview().click()
 		# Do a random search. (In Fact Sheet +PDFs Mode) Then validate the results.
 		search = CP.FilteredSearch(fact_sheet_mode=True)
 		search.random_search()
@@ -308,7 +301,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Contact Us page."""
 		DR.open_home_page()
 		# Navigate to About > Contact Us.
-		CP.About().point().contact_us().click()
+		if DR.CN_MODE: CP.About().open().contact_us().click()
 		# "Click the Contact Us link, Default email client should open, with the To field populated
 		#   with the relevant contact." Can't actually test that, so a 'mailto:' will have to do.
 		CP.ContactUs()
@@ -337,9 +330,13 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		form.date_of_birth('12/12/1212')
 		form.pick_business_profile()
 		form.zip = zipcode
-		form.pick_country(localecode.upper())
+		# If in China, pick an Official Preferred Travel Partner
+		if DR.CN_MODE: form.pick_partner()
+		# If in China, it is already China.
+		if not DR.CN_MODE: form.pick_country(localecode.upper())
 		form.pick_state()
-		form.pick_language(langcode)
+		# If in China, it is already Chinese.
+		if not DR.CN_MODE: form.pick_language(langcode)
 		# Use an overloaded email.
 		form.email_address(DR.EMAIL.format(USERID))
 		form.how_many_years()
@@ -357,7 +354,6 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		form.submit()
 		# Email should be sent confirming this.
 		regemail = DR.Email.RegistrationEmail(USERID)
-		self.assertEqual({DR.LOCALE[1:]}, regemail.get_locale())
 		# In the Registration Confirmation email, click the Activate Account link.
 		# Should open the Registration Acknowledgement page, confirming the account is set up.
 		DR.get(regemail.activation_link())
@@ -371,14 +367,14 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		self.assertIn(DR.LOCALE + '/secure.html', DR.current_url())
 		# Check the Nav Menu
 		# The Sales section should now have the My Sales Tools link
-		CP.SalesResources().click().my_sales_tools()
+		CP.SalesResources().open().my_sales_tools()
 		# The Training Section should now have the Training Summary and Webinars links.
-		train = CP.Training().click()
+		train = CP.Training().open()
 		train.webinars()
 		train.training_summary()
 		# The News & Updates section should have the Latest News Link
 		# The News section should now  have the Product Updates link.
-		news = CP.NewsAndProducts().click()
+		news = CP.NewsAndProducts().open()
 		news.latest_news()
 		news.product_videos()
 		# The Club section should not be present. (Don't instantiate it, it isn't there)
@@ -439,7 +435,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		favtitles = set()
 		def mosaicad(num):
 			"""Opens a mosaic, checks it, and adds it to sales tools"""
-			nonlocal favcount, favtitles
+			nonlocal favtitles
 			# Click on some of the Mosaic panels.
 			for tile in CP.WhatYouCanSeeMosaic().random_selection(num):
 				tile.open()
@@ -449,42 +445,39 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				self.assertTrue(tile.get_link().is_displayed())
 				# Click on the Heart buttons of those mosaics.
 				tile.add_to_favourites()
-				# The Heart Icon in the header should pulse and have a number incremented.
-				favcount += 1
-				self.assertEqual(favcount, CP.HeaderHeartIcon().favourites_count())
 				favtitles.add(tile.get_title())
+				# The Heart Icon in the header should pulse and have a number incremented.
+				self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
 
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
-		favcount = CP.HeaderHeartIcon().favourites_count()
 		# If there are already favourites, that's a problem, remove them. Messes with the count.
-		if favcount > 0:
-			favcount = 0
-			CP.SalesResources().click().my_sales_tools().click()
+		if CP.HeaderHeartIcon().favourites_count() != 0:
+			CP.SalesResources().open().my_sales_tools().click()
 			for x in CP.MySalesTools().get_favourites():
 				x.close()
 		# Navigate to the About page.
-		CP.About().click().about().click()
+		CP.About().open().about().click()
 		# Add some of the mosaics to Sales Tools
 		mosaicad(3)
 		# Navigate to Sales Resources > Australian Events.
-		CP.SalesResources().click().events().click()
+		CP.SalesResources().open().events().click()
 		# Click the Add To Sales Tools buttons of some of the Event Mosaics.
 		mosaicad(6)
 		# Navigate to Sales Resources > Fact Sheets.
-		CP.SalesResources().click().fact_sheets_overview().click()
+		CP.SalesResources().open().fact_sheets_overview().click()
 		# Click the Add To Sales Tools buttons on a few of the results.
 		search = CP.FilteredSearch(fact_sheet_mode=True)
 		for result in search.get_all_results():
 			result.add_to_favourites()
-			favcount += 1
-			self.assertEqual(favcount, CP.HeaderHeartIcon().favourites_count())
 			favtitles.add(result.get_title())
+			self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
 		# Click the Heart Icon in the header, the My Sales Tools page should be displayed.
 		CP.HeaderHeartIcon().click()
 		# The My Sales Tools page should have an entry for each of the pages added previously.
-		faves = CP.MySalesTools().get_favourites()
+		tools = CP.MySalesTools()
+		faves = tools.get_favourites()
 		favpagetitles = {x.get_title() for x in faves}
 		self.assertTrue(favtitles.issubset(favpagetitles))
 		# Entries should have an X button, a Title, a Description, and a More Info link.
@@ -494,8 +487,10 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			fave.get_link()
 			# Click several of the listed items' X buttons.
 			fave.close()
+		# There will now be a set of buttons present instead of the favourites list.
+		tools.home_search()
 		# The entries should be removed from the list.
-		self.assertEqual(0, len(CP.MySalesTools().get_favourites()))
+		self.assertEqual(0, len(tools.get_favourites()))
 
 	def test_My_Profile(self):
 		"""Tests the Profile page."""
@@ -538,7 +533,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to Training > Training Summary.
-		CP.Training().click().training_summary().click()
+		CP.Training().open().training_summary().click()
 		modules = CP.TrainingSummary()
 		# Change the value of the Optional Modules Filter Form.
 		oldlist = modules.get_optional_titles()
@@ -623,7 +618,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Travel Club
-		CP.AussieSpecialistClub().click().travel_club().click()
+		CP.AussieSpecialistClub().open().travel_club().click()
 		# Search for results, changing the terms if none.
 		travelsearch = CP.FilteredSearch()
 		travelsearch.random_search()
@@ -636,7 +631,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Famils
-		CP.AussieSpecialistClub().click().famils().click()
+		CP.AussieSpecialistClub().open().famils().click()
 		# Maybe not available in all locales?
 		# Should Display Famils page content.
 		CP.Famils()
@@ -647,7 +642,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > AS Photos
-		CP.AussieSpecialistClub().click().aussie_specialist_photos().click()
+		CP.AussieSpecialistClub().open().aussie_specialist_photos().click()
 		# Should display Instagram Image Tiles, with links and descriptions
 		for pic in CP.AussieSpecialistPhotos().random_images(10):
 			pic.open()
@@ -661,7 +656,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to ASC > Download Qualification Badge
-		CP.AussieSpecialistClub().click().asp_logo().click()
+		CP.AussieSpecialistClub().open().asp_logo().click()
 		# Click the Download Qualification Badge link.
 		# Badge image should be downloaded/opened in a new tab.
 		CP.SpecialistBadge()
@@ -692,7 +687,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# and Contact Us (which links to the Contact Us page).
 		DR.quietly_find_element('.confirmation-page p:nth-child(3) a[href*="about/contact-us.html"]')
 
-		#### TODO: Email valdation? ####
+		#### TODO: Email validation? ####
 		# Check your email client under the user's email address.
 		# Should have received an email detailing the contents of the order
 		# and the correct delivery address.
@@ -782,7 +777,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			profile.country + '\n' + \
 			profile.countrycode + profile.phone
 		# Navigate to ASC > Aussie Store
-		CP.AussieSpecialistClub().click().aussie_store().click()
+		CP.AussieSpecialistClub().open().aussie_store().click()
 		# Click the Cart button
 		store = CP.AussieStore()
 		store.my_cart()

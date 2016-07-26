@@ -804,12 +804,24 @@ class Profile(WrappedElement):
 		elem.clear()
 		elem.send_keys(value)
 
+	def get_partner(self) -> str:
+		"""Gets the text of the selected Travel Partner option."""
+		sel = DR.flashy_find_element('[name="affiliationtype"]', self.element)
+		return DR.quietly_find_element('[value="{0}"]'.format(sel.get_attribute('value')), sel).text
+
+	def set_partner(self) -> None:
+		"""Randomly sets the value of the Travel Partner field. Returns the chosen value."""
+		opt = random.choice(DR.flashy_find_element('[name="affiliationtype"]', self.element)\
+			.find_elements_by_css_selector('option:not([value=""])'))
+		opt.click()
+		return opt.text
+
 	def get_state(self) -> str:
 		"""Gets the text of the selected state option."""
 		sel = DR.flashy_find_element('[name="state"]', self.element)
 		return DR.quietly_find_element('[value="{0}"]'.format(sel.get_attribute('value')), sel).text
 
-	def set_state(self) -> None:
+	def set_state(self) -> str:
 		"""Randomly sets the value of the State field. Returns the chosen value."""
 		opt = random.choice(DR.flashy_find_element('[name="state"]', self.element)\
 			.find_elements_by_css_selector('option:not([value=""])'))
@@ -840,7 +852,10 @@ class Profile(WrappedElement):
 class TrainingSummary(WrappedElement):
 	"""Represents the two Training Summary modules list things."""
 	def __init__(self):
-		lis = DR.flashy_find_elements('.trainingModuleStatus')
+		if DR.CN_MODE:
+			lis = DR.flashy_find_elements('.scf-content-card')
+		else:
+			lis = DR.flashy_find_elements('.trainingModuleStatus')
 		self.core = lis[0]
 		self.optional = lis[1]
 
@@ -888,9 +903,12 @@ class TrainingSummary(WrappedElement):
 
 	def module_one(self) -> None:
 		"""Opens the First Core Module."""
-		MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.core).click()
-		DR.wait_for_page()
-		self.wait_for_module()
+		if DR.CN_MODE:
+			
+		else:
+			MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.core).click()
+			DR.wait_for_page()
+			self.wait_for_module()
 
 	def module_two(self) -> None:
 		"""Opens the Second Core Module."""

@@ -508,6 +508,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		bio = ' '.join(pick_words(10))
 		lastname = ' TEST '.join(pick_words(2))
 		state = profile.set_state()
+		if DR.CN_MODE: partner = profile.set_partner()
 		profile.bio = bio
 		profile.lname = lastname
 		# Click the Save Changes button, a panel confirming changes saved should appear.
@@ -518,6 +519,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		profile = CP.Profile()
 		self.assertEqual(profile.bio, bio)
 		self.assertEqual(profile.state, state)
+		if DR.CN_MODE: self.assertEqual(partner, profile.get_partner())
 		self.assertEqual(profile.lname, lastname)
 		self.assertIn(lastname.strip(), CP.NavMenu().user_names())
 
@@ -527,7 +529,8 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			"""The Module clicks the Back To Training button, which leads to LIVE
 			No guarantee that the testing is going on in LIVE."""
 			nonlocal modules
-			DR.back();DR.back()
+			DR.back()
+			CP.Training().open().training_summary().click()
 			modules = CP.TrainingSummary()
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
@@ -535,27 +538,29 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Navigate to Training > Training Summary.
 		CP.Training().open().training_summary().click()
 		modules = CP.TrainingSummary()
-		# Change the value of the Optional Modules Filter Form.
-		oldlist = modules.get_optional_titles()
-		modules.filter_optional_niche()
-		# The Optional Modules should be filtered.
-		newlist = modules.get_optional_titles()
-		self.assertNotEqual(oldlist, newlist)
-		modules.filter_optional_sto()
-		# Click the View More Modules button.
-		oldcount = modules.count_modules()
-		modules.load_more()
-		# Three more modules should be displayed, up to the total amount available.
-		newcount = modules.count_modules()
-		self.assertEqual(oldcount + 3, newcount)
-		oldcount = newcount
-		modules.load_more()
-		newcount = modules.count_modules()
-		self.assertEqual(oldcount + 2, newcount)
-		oldcount = newcount
-		modules.load_more()
-		newcount = modules.count_modules()
-		self.assertEqual(oldcount, newcount)
+		#China does not have a filtering module display.
+		if not DR.CN_MODE:
+			# Change the value of the Optional Modules Filter Form.
+			oldlist = modules.get_optional_titles()
+			modules.filter_optional_niche()
+			# The Optional Modules should be filtered.
+			newlist = modules.get_optional_titles()
+			self.assertNotEqual(oldlist, newlist)
+			modules.filter_optional_sto()
+			# Click the View More Modules button.
+			oldcount = modules.count_modules()
+			modules.load_more()
+			# Three more modules should be displayed, up to the total amount available.
+			newcount = modules.count_modules()
+			self.assertEqual(oldcount + 3, newcount)
+			oldcount = newcount
+			modules.load_more()
+			newcount = modules.count_modules()
+			self.assertEqual(oldcount + 2, newcount)
+			oldcount = newcount
+			modules.load_more()
+			newcount = modules.count_modules()
+			self.assertEqual(oldcount, newcount)
 
 		# Go do a few of the modules.
 		modules.module_one()
@@ -873,6 +878,11 @@ def main():
 
 	# Create the test runner, choose the output path: right next to the test script file.
 	runner = TAPTestRunner()
+	oldopen = __builtins__.open
+	def newopen(*args, **kwargs):
+		kwargs['encoding'] = 'UTF-8'
+		return oldopen(*args, **kwargs)
+	__builtins__.open = newopen
 	runner.set_outdir(os.path.join(os.path.split(__file__)[0]))
 	runner.set_format('Result of: {method_name} - {short_description}')
 

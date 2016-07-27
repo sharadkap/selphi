@@ -59,6 +59,9 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 	"/en-hk.html", "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", \
 	"/pt-br.html", "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html", \
 	"https://www.aussiespecialist.cn/zh-cn"}
+# A script to scroll a single element into view proper, just in case. Parent chain handles modules.
+SCROLL_SCRIPT = 'window.parent.parent.parent.scrollTo(0,arguments[0].getBoundingClientRect().top\
+	+window.pageYOffset-window.innerHeight/2)'
 # """A JS script that applies the 'element-highlighted' animation."""
 BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;}\
     50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}}\
@@ -151,6 +154,11 @@ def fix_url(url: str) -> str:
 	return re.sub(r'(/\w\w)_(\w\w/)', r'\1-\2', (url or '').replace('/content/asp/', '/'), count=1)
 
 ###Some methods to shorten Element Manipulation/Verification.###
+
+def scroll_element(elle: WebElement) -> WebElement:
+	"""Scrolls a single element into view, it wouldn't make sense to do multiple."""
+	DRIVER.execute_script(SCROLL_SCRIPT, elle)
+	return elle
 
 def blip_element(elle: ELEMENT_OR_LIST) -> ELEMENT_OR_LIST:
 	"""Scrolls (an) element(s) into view, and highlights (i)t(hem).

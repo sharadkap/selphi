@@ -892,8 +892,14 @@ class TrainingSummary(WrappedElement):
 
 	def wait_for_module(self) -> None:
 		"""Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly."""
-		# Switch into the iframe,
-		DR.switch_to_frame('iframe[src^="/content/"]')
+		if DR.CN_MODE:	# China is different, of course.
+			DR.flashy_find_element('.scf-play-button').click()
+			# Switch into the frame stack
+			DR.switch_to_frame('iframe[src^="/content/"]')
+			DR.switch_to_frame('frame#ScormContent')
+		else:
+			# Switch into the iframe,
+			DR.switch_to_frame('iframe[src^="/content/"]')
 		# Then, wait until something is actually present
 		DR.wait_until_present('[id^="Text_Caption_"]')
 		# Then, wait until the loading overlay is gone.
@@ -904,40 +910,61 @@ class TrainingSummary(WrappedElement):
 	def module_one(self) -> None:
 		"""Opens the First Core Module."""
 		if DR.CN_MODE:
-			
+			DR.blip_element(self.core).click()
+			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[0]).click()
 		else:
 			MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.core).click()
 			DR.wait_for_page()
-			self.wait_for_module()
+		self.wait_for_module()
 
 	def module_two(self) -> None:
 		"""Opens the Second Core Module."""
-		MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.core).click()
-		DR.wait_for_page()
+		if DR.CN_MODE:
+			DR.blip_element(self.core).click()
+			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[1]).click()
+		else:
+			MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.core).click()
+			DR.wait_for_page()
 		self.wait_for_module()
 
 	def module_three(self) -> None:
 		"""Opens the First Core Module."""
-		MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.core).click()
-		DR.wait_for_page()
+		if DR.CN_MODE:
+			DR.blip_element(self.core).click()
+			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[2]).click()
+		else:
+			MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.core).click()
+			DR.wait_for_page()
 		self.wait_for_module()
 
 	def module_nsw(self) -> None:
 		"""Opens the First Optional Module."""
-		MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.optional).click()
-		DR.wait_for_page()
+		if DR.CN_MODE:
+			DR.blip_element(self.optional).click()
+			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[0]).click()
+		else:
+			MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.optional).click()
+			DR.wait_for_page()
 		self.wait_for_module()
 
 	def module_qld(self) -> None:
 		"""Opens the Second Optional Module."""
-		MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.optional).click()
-		DR.wait_for_page()
+		if DR.CN_MODE:
+			DR.blip_element(self.core).click()
+			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[1]).click()
+		else:
+			MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.optional).click()
+			DR.wait_for_page()
 		self.wait_for_module()
 
 	def module_vic(self) -> None:
 		"""Opens the Third Optional Module."""
-		MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.optional).click()
-		DR.wait_for_page()
+		if DR.CN_MODE:
+			DR.blip_element(self.core).click()
+			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[2]).click()
+		else:
+			MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.optional).click()
+			DR.wait_for_page()
 		self.wait_for_module()
 
 	def completion_types(self) -> None:

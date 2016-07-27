@@ -101,6 +101,10 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		club = CP.AussieSpecialistClub().open()
 		# The Club section should have: *Aussie Specialist Club (Landing page only)
 		club.aussie_specialist_club()
+		# China shows most of its ASC stuff from the get-go.
+		if DR.CN_MODE:
+			club.famils()
+			club.aussie_specialist_photos()
 
 	def test_Footer(self) -> None:
 		"""Checks the content of the Footer."""
@@ -612,10 +616,13 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Aussie Specialist Club (Landing Page), Travel Club, Aussie Specialist Photos
 		# Download Qualification Badge, Aussie Store (May not be available in all locales)
 		club.aussie_specialist_club()
-		club.travel_club()
 		club.aussie_specialist_photos()
-		club.asp_logo()
-		club.aussie_store()
+		club.famils()
+		club.travel_club()
+		# But china doesn't have these two.
+		if not DR.CN_MODE:
+			club.asp_logo()
+			club.aussie_store()
 
 	def test_Travel_Club(self):
 		"""Tests the Travel Club search."""
@@ -652,19 +659,22 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		for pic in CP.AussieSpecialistPhotos().random_images(10):
 			pic.open()
 			pic.get_description()
-			pic.get_link()
+			if not DR.CN_MODE: # China does not have Instagram.
+				pic.get_link()
 			pic.close()
 
 	def test_Download_Qualification_Badge(self):
 		"""Checks the Download Qualification Badge page."""
-		# Pre-condition: Logged in as a Qualified User.
-		DR.open_home_page()
-		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
-		# Navigate to ASC > Download Qualification Badge
-		CP.AussieSpecialistClub().open().asp_logo().click()
-		# Click the Download Qualification Badge link.
-		# Badge image should be downloaded/opened in a new tab.
-		CP.SpecialistBadge()
+		# China doesn't have this?
+		if not DR.CN_MODE:
+			# Pre-condition: Logged in as a Qualified User.
+			DR.open_home_page()
+			CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
+			# Navigate to ASC > Download Qualification Badge
+			CP.AussieSpecialistClub().open().asp_logo().click()
+			# Click the Download Qualification Badge link.
+			# Badge image should be downloaded/opened in a new tab.
+			CP.SpecialistBadge()
 
 	def test_Campaign(self):
 		"""Ensures that all emails received are in the correct locale."""
@@ -703,113 +713,115 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 	def test_Aussie_Store(self):
 		"""Checks all of the Aussie Store functionality, except for actually placing an order."""
-		# Just gotta put this here.
-		def examine_products(category):
-			"""Given a category, check a bunch of randomly selected items."""
-			nonlocal productcount, productnames
-			# Click on the Category link.
-			CP.AussieStore.CategoriesMenu().goto_iteree(category)
-			# Choose a few of the Products present, and for each of them {
-			grid = CP.AussieStore.ProductGrid()
-			gridcount = grid.count()
-			howmany = min([gridcount, max([gridcount//3, 5])])
-			for prodnum in random.sample(range(gridcount), howmany):
-				# Click on the Product Image
-				prodname = grid.goto_iteree(prodnum)
-				# Should link to the Product's Page
-				product = CP.AussieStore.ProductPage()
-				self.assertEqual(prodname, product.name())
-				# Product Page should have a unique Code, which also should not be N/A or null.
-				code = product.unique_code()
-				self.assertNotIn('N/A', code)
-				self.assertNotIn('null', code)
-				# Select a Quantity.
-				product.select_max_quantity()
-				# Click the Add To Cart button.
-				# However, If The Cart Is Full: (Once 10-12 or so Products have been added)
-				if not product.add_to_cart():
-					# Currently, do not attempt to actually submit an order,
-					# this magnitude of unattended orders would upset someone at the STOs.
-					# do not self.submit_store_order(), just dump them.
-					CP.AussieStore().my_cart()
-					CP.AussieStore.CartPage().remove_all()
-					productcount = 0
-					productnames.clear()
+		# China doesn't have the store.
+		if not DR.CN_MODE:
+			# Just gotta put this here.
+			def examine_products(category):
+				"""Given a category, check a bunch of randomly selected items."""
+				nonlocal productcount, productnames
+				# Click on the Category link.
+				CP.AussieStore.CategoriesMenu().goto_iteree(category)
+				# Choose a few of the Products present, and for each of them {
+				grid = CP.AussieStore.ProductGrid()
+				gridcount = grid.count()
+				howmany = min([gridcount, max([gridcount//3, 5])])
+				for prodnum in random.sample(range(gridcount), howmany):
+					# Click on the Product Image
+					prodname = grid.goto_iteree(prodnum)
+					# Should link to the Product's Page
+					product = CP.AussieStore.ProductPage()
+					self.assertEqual(prodname, product.name())
+					# Product Page should have a unique Code, which also should not be N/A or null.
+					code = product.unique_code()
+					self.assertNotIn('N/A', code)
+					self.assertNotIn('null', code)
+					# Select a Quantity.
+					product.select_max_quantity()
+					# Click the Add To Cart button.
+					# However, If The Cart Is Full: (Once 10-12 or so Products have been added)
+					if not product.add_to_cart():
+						# Currently, do not attempt to actually submit an order,
+						# this magnitude of unattended orders would upset someone at the STOs.
+						# do not self.submit_store_order(), just dump them.
+						CP.AussieStore().my_cart()
+						CP.AussieStore.CartPage().remove_all()
+						productcount = 0
+						productnames.clear()
+						CP.AussieStore.CategoriesMenu().goto_iteree(category)
+						grid = CP.AussieStore.ProductGrid()
+						continue
+					# Otherwise, continue as normal.
+					productcount += 1
+					productnames.add(prodname.casefold())
+					# Should redirect to the Cart page.
+					cart = CP.AussieStore.CartPage()
+					# Cart page should show a list of all of the products added thus far.
+					self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
+					# (do not do for all) Click the X beside one of the products.
+					if random.random() < 0.2:
+						productnames.remove(cart.remove_random())
+						productcount -= 1
+						# That product should be removed from the Cart.
+						self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
+					else: # If one was removed, it's not going to be overbooked.
+						# Go back to the Product Page,
+						DR.back()
+						# and attempt to add more of it to the Cart, beyond the Quantity permitted.
+						product = CP.AussieStore.ProductPage()
+						product.select_max_quantity()
+						# A panel should pop up, notifying that Maximum Quantity was exceeded.
+						self.assertFalse(product.add_to_cart())
+					# Back to Category Page, try the next one.
 					CP.AussieStore.CategoriesMenu().goto_iteree(category)
 					grid = CP.AussieStore.ProductGrid()
-					continue
-				# Otherwise, continue as normal.
-				productcount += 1
-				productnames.add(prodname.casefold())
-				# Should redirect to the Cart page.
-				cart = CP.AussieStore.CartPage()
-				# Cart page should show a list of all of the products added thus far.
-				self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
-				# (do not do for all) Click the X beside one of the products.
-				if random.random() < 0.2:
-					productnames.remove(cart.remove_random())
-					productcount -= 1
-					# That product should be removed from the Cart.
-					self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
-				else: # If one was removed, it's not going to be overbooked.
-					# Go back to the Product Page,
-					DR.back()
-					# and attempt to add more of it to the Cart, beyond the Quantity permitted.
-					product = CP.AussieStore.ProductPage()
-					product.select_max_quantity()
-					# A panel should pop up, notifying that Maximum Quantity was exceeded.
-					self.assertFalse(product.add_to_cart())
-				# Back to Category Page, try the next one.
-				CP.AussieStore.CategoriesMenu().goto_iteree(category)
-				grid = CP.AussieStore.ProductGrid()
 
-		# Pre-condition: Logged in as a Qualified User.
-		DR.open_home_page()
-		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
-		# Preamblic mess.
-		CP.NavMenu().profile().click()
-		def xandxplusy(x: str, y: str=', '):
-			"""Basically, if X is not blank, append Y to it."""
-			return x and x + y
-		# First, create a set of profile data that matches the formatting given in the Store.
-		profile = CP.Profile()
-		# No space between the comma and newline on the address there.
-		contactBlob = profile.fname + ' ' + profile.lname + '\n' + \
-			(xandxplusy(profile.address1) + xandxplusy(profile.address2) + \
-				xandxplusy(profile.address3)).strip() + '\n' + \
-			profile.town + '\n' + \
-			profile.get_state() + ', ' + profile.zip + '\n' + \
-			profile.country + '\n' + \
-			profile.countrycode + profile.phone
-		# Navigate to ASC > Aussie Store
-		CP.AussieSpecialistClub().open().aussie_store().click()
-		# Click the Cart button
-		store = CP.AussieStore()
-		store.my_cart()
-		# Should get a popup message about the Cart being Empty.
-		store.empty_cart_notice()
-		# Click on one of the Product Images
-		productname = CP.AussieStore.ProductGrid().random_product()
-		# Should redirect to that Product's page
-		product = CP.AussieStore.ProductPage()
-		self.assertEqual(product.name(), productname)
-		# Click the Add To Cart button, should go to the Cart Page
-		product.add_to_cart()
-		cart = CP.AussieStore.CartPage()
-		# The User's Name and Contact Details should be displayed with the same values
-		# as displayed in the Profile. Any Blank Profile fields should not show up as 'null'.
-		cartcontact = cart.contact_details()
-		self.assertEqual(cartcontact, contactBlob)
-		self.assertNotIn('null', cartcontact)
-		# Tidy up the cart before going into the large test.
-		cart.remove_all()
-		# For each of the categories, (except All Products), go through it,
-		productcount = 0
-		productnames = set()
-		catnum = CP.AussieStore.CategoriesMenu().count()
-		for cat in range(catnum)[1:]:
-			# And do the stuff. And stop doing the stuff if the cart tops out.
-			examine_products(cat)
+			# Pre-condition: Logged in as a Qualified User.
+			DR.open_home_page()
+			CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
+			# Preamblic mess.
+			CP.NavMenu().profile().click()
+			def xandxplusy(x: str, y: str=', '):
+				"""Basically, if X is not blank, append Y to it."""
+				return x and x + y
+			# First, create a set of profile data that matches the formatting given in the Store.
+			profile = CP.Profile()
+			# No space between the comma and newline on the address there.
+			contactBlob = profile.fname + ' ' + profile.lname + '\n' + \
+				(xandxplusy(profile.address1) + xandxplusy(profile.address2) + \
+					xandxplusy(profile.address3)).strip() + '\n' + \
+				profile.town + '\n' + \
+				profile.get_state() + ', ' + profile.zip + '\n' + \
+				profile.country + '\n' + \
+				profile.countrycode + profile.phone
+			# Navigate to ASC > Aussie Store
+			CP.AussieSpecialistClub().open().aussie_store().click()
+			# Click the Cart button
+			store = CP.AussieStore()
+			store.my_cart()
+			# Should get a popup message about the Cart being Empty.
+			store.empty_cart_notice()
+			# Click on one of the Product Images
+			productname = CP.AussieStore.ProductGrid().random_product()
+			# Should redirect to that Product's page
+			product = CP.AussieStore.ProductPage()
+			self.assertEqual(product.name(), productname)
+			# Click the Add To Cart button, should go to the Cart Page
+			product.add_to_cart()
+			cart = CP.AussieStore.CartPage()
+			# The User's Name and Contact Details should be displayed with the same values
+			# as displayed in the Profile. Any Blank Profile fields should not show up as 'null'.
+			cartcontact = cart.contact_details()
+			self.assertEqual(cartcontact, contactBlob)
+			self.assertNotIn('null', cartcontact)
+			# Tidy up the cart before going into the large test.
+			cart.remove_all()
+			# For each of the categories, (except All Products), go through it,
+			productcount = 0
+			productnames = set()
+			catnum = CP.AussieStore.CategoriesMenu().count()
+			for cat in range(catnum)[1:]:
+				# And do the stuff. And stop doing the stuff if the cart tops out.
+				examine_products(cat)
 
 	def test_Premier_Badge(self):
 		"""Checks that the Profile PPage has a Premier Badge. Expect this one to fail."""
@@ -878,11 +890,21 @@ def main():
 
 	# Create the test runner, choose the output path: right next to the test script file.
 	runner = TAPTestRunner()
+	# Method overrides, because how else do you set file encoding three libraries down?
 	oldopen = __builtins__.open
 	def newopen(*args, **kwargs):
 		kwargs['encoding'] = 'UTF-8'
 		return oldopen(*args, **kwargs)
 	__builtins__.open = newopen
+	# Another one, that menu sure does get in the way sometimes.
+	oldclick = DR.WebElement.click
+	def newclick(*args, **kwargs):
+		try:
+			oldclick(*args, **kwargs)
+		except MOD.WebDriverException:
+			DR.scroll_element(args[0])
+			oldclick(*args, **kwargs)
+	DR.WebElement.click = newclick
 	runner.set_outdir(os.path.join(os.path.split(__file__)[0]))
 	runner.set_format('Result of: {method_name} - {short_description}')
 

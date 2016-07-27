@@ -179,7 +179,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
 	('answer_waterfront', 'drop_waterfront'), ('answer_market_dar', 'drop_market_dar'), \
 		('answer_croc', 'drop_croc'), 'Button_70', 'nt_next', \
 'Button_2881', \
-	('drag_syd', 'drop_sydney'), ('drag_per', 'drop_perth'), \
+	('drag_syd', 'drop_sydney'), (['drag_per', 'drag_perth1'], 'drop_perth'), \
 		('drag_melb', 'drop_melbourne'), ('drag_hob', 'drop_hobart'), \
 		('drag_dar', 'drop_darwin'), ('drag_can', 'drop_canberra'), \
 		('drag_bris', 'drop_brisbane'), ('drag_ade', 'drop_adelaide'), 'Button_2854', \

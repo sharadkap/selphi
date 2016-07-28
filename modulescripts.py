@@ -25,25 +25,40 @@ from collections import OrderedDict
 USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
 'sg': 'sgprodyyw', 'gb': 'gbwwwvjvz', 'us': 'usprokcmi', \
 'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
-'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb'}
+'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
+'cn': 'cnwwwAYYC'}
 
 LANGS_D = {'ca': 'en_ca/ca_en', 'in': 'en_in/in_en', 'my': 'en_my/my_en', \
 	'sg': 'en_sg/sg_en', 'gb': 'en_uk/uk_en', 'us': 'en_us/us_en', \
 'ehk':'en_hk/hk_en', 'zhk':'zh_hk/hk_zh', 'id': 'id_id/id_id', \
 	'jp': 'ja_jp/jp_ja', 'kr': 'ko_kr/kr_ko', \
 'br': 'pt_br/br_pt', 'cl': 'es_cl/cl_es', 'de': 'de_de/de_de', \
-	'fr': 'fr_fr/fr_fr', 'it': 'it_it/it_it'}
+	'fr': 'fr_fr/fr_fr', 'it': 'it_it/it_it', \
+'cn': 'zh_cn'}
 
 LANGS = {'ca': 'en-ca', 'in': 'en-in', 'my': 'en-my', 'sg': 'en-sg', \
 	'gb': 'en-gb', 'us': 'en-us', \
 'ehk': 'en-hk', 'zhk': 'zh-hk', 'id': 'id-id', 'jp': 'ja-jp', 'kr': 'ko-kr', \
-'br': 'pt-br', 'cl': 'es-cl', 'de': 'de-de', 'fr': 'fr-fr', 'it': 'it-it'}
+'br': 'pt-br', 'cl': 'es-cl', 'de': 'de-de', 'fr': 'fr-fr', 'it': 'it-it', \
+'cn': 'zh-cn'}
 
 MODULES_D = OrderedDict([('1', 'core_mod1'), ('2', 'core_mod2'), ('3', 'core_mod3'), \
-		('act', 'sto_act'), ('nsw', 'sto_nsw'), ('nt', 'sto_nt'), ('qld', 'sto_qld'), \
+	('act', 'sto_act'), ('nsw', 'sto_nsw'), ('nt', 'sto_nt'), ('qld', 'sto_qld'), \
 		('sa', 'sto_sa'), ('tas', 'sto_tas'), ('vic', 'sto_vic'), ('wa', 'sto_wa'), \
 	('aboriginal', 'niche_aboriginal'), ('golf', 'niche_golf'), ('lodges', 'niche_lodges'), \
 		('ra', 'niche_ra'), ('walks', 'niche_walks'), ('wine', 'niche_wine')])
+
+# uuuuugggh
+MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
+		('3', ('core_3', 'core_mod3_ali')), \
+	('act', ('_1', 'sto_act_0407')), ('nsw', ('_20', 'sto_nsw_ali')), \
+		('nt', ('nt', 'sto_nt_ali')), ('qld', ('qld', 'sto_qld_ali')), \
+		('sa', ('sa', 'sto_sa_ali')), ('tas', ('_18', 'sto_tas_ali0321')), \
+		('vic', ('_17', 'sto_vic_ali')), ('wa', ('wa', 'sto_wa_ali')), \
+	('aboriginal', ('niche_aboriginal', 'Aboriginal_Exp_HO_ali')), \
+		('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
+		('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
+		('wine', ('niche_wine', 'niche_wine_ali'))])
 
 # So this happened.
 M = 'mandatory-modules/core-module'
@@ -537,7 +552,7 @@ WA_SCRIPT = ['Button_2016', \
 'Button_2377', 'Button_2088', \
 'Button_2061', \
 'Button_2184', \
-'Button_2383']
+['Button_2383', 'Button_2553']]
 
 ABORIGINAL_SCRIPT = ['Button_33', \
 'Button_29', 'Button_30', 'Button_31', 'Button_18', \

@@ -384,56 +384,6 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# The Club section should not be present. (Don't instantiate it, it isn't there)
 		self.assertTrue(CP.AussieSpecialistClub.not_present())
 
-	def test_Forgotten_Username(self):
-		"""Tests the Forgotten Username feature."""
-		DR.open_home_page()
-		# Click the Sign In link
-		# In the Sign In panel, click the Forgotten Username link.
-		CP.SignIn().forgotten_username().click()
-		# Enter the user's email address into the Forgot Username form.
-		forgus = CP.ForgottenForm()
-		forgus.email(DR.EMAIL.format(USERID))
-		# Click the Submit button, a panel should appear confirming submission.
-		forgus.submit()
-		# An email should be received at the given address containing the Username.
-		usnaema = DR.Email.ForgottenUsernameEmail(USERID)
-		self.assertEqual(USERNAME, usnaema.get_username())
-
-	def test_Forgotten_Password(self):
-		"""Tests the Forgotten Password feature."""
-		global TEMP_PASS	# I'm sure it's fine. pylint: disable-msg=W0601
-		DR.open_home_page()
-		# Click the Sign In link
-		# In the Sign In panel, click the Forgotten Password link.
-		CP.SignIn().forgotten_password().click()
-		# Enter the user's email address into the Forgot Password form.
-		forgpa = CP.ForgottenForm()
-		forgpa.email(DR.EMAIL.format(USERID))
-		# Click the Submit button, a panel should appear confirming submission.
-		forgpa.submit()
-		# An email should be received at the given address containing the Username and new Password
-		uspaema = DR.Email.ForgottenPasswordEmail(USERID)
-		self.assertEqual(USERNAME, uspaema.get_username())
-		# Read that email and sign in with the new password.
-		TEMP_PASS = uspaema.get_password()
-
-	def test_Change_Password(self):
-		"""Tests the Change Password feature."""
-		DR.open_home_page()
-		# Sign in with the new password, because these tests *are* being executed in order, right?
-		CP.SignIn().sign_in(USERNAME, TEMP_PASS, new_password=True)
-		# In the Nav Menu, click the My Profile link.
-		CP.NavMenu().profile().click()
-		# Click the Change Password button, below the Profile Data fields.
-		CP.Profile().change().click()
-		# Fill out the Change Password Form with the Current Password and a New Password.
-		change = CP.ChangePassword()
-		change.current_password(TEMP_PASS)
-		change.new_password(DR.PASSWORD)	# Use the regular password, of course.
-		# Click the Submit button, a panel should appear confirming the password change, and
-		# The page should redirect back to the Profile page.
-		change.submit()
-
 	def test_Favourites(self):
 		"""Tests the Sales Tools functionality."""
 		favtitles = set()
@@ -529,10 +479,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 	def test_Training_Summary(self):
 		"""Checks the Training Summary page."""
-		def back():
-			"""The Module clicks the Back To Training button, which leads to LIVE
-			No guarantee that the testing is going on in LIVE."""
+		def do_mod_then_back(mod: str) -> None:
+			"""Doing the Module clicks the Back To Training button, which leads to LIVE
+			No guarantee that the testing is going on in LIVE, so go back manually."""
 			nonlocal modules
+			MOD.do_module(DR.DRIVER, mod)
 			DR.back()
 			CP.Training().open().training_summary().click()
 			modules = CP.TrainingSummary()
@@ -568,14 +519,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 
 		# Go do a few of the modules.
 		modules.module_one()
-		MOD.do_module(DR.DRIVER, '1')
-		back()
+		do_mod_then_back('1')
 		modules.module_two()
-		MOD.do_module(DR.DRIVER, '2')
-		back()
+		do_mod_then_back('2')
 		modules.module_three()
-		MOD.do_module(DR.DRIVER, '3')
-		back()
+		do_mod_then_back('3')
 
 		# Should receive a halfway email here.
 		DR.Email.LocalizedEmail(USERID)
@@ -589,11 +537,9 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		modules.completion_types()
 
 		modules.module_nsw()
-		MOD.do_module(DR.DRIVER, 'nsw')
-		back()
+		do_mod_then_back('nsw')
 		modules.module_qld()
-		MOD.do_module(DR.DRIVER, 'qld')
-		DR.back()
+		do_mod_then_back('qld')
 
 		# Should receive the qualification email here.
 		DR.Email.LocalizedEmail(USERID)
@@ -676,17 +622,12 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			# Badge image should be downloaded/opened in a new tab.
 			CP.SpecialistBadge()
 
-	def test_Campaign(self):
-		"""Ensures that all emails received are in the correct locale."""
-		# Pre-condition: User has registered, forgotten Username and
-		# Password, and has Qualified, and received emails for each of these five events.
-		# Links should point ot the correct pages in the correct locale.
-		self.assertEqual({DR.LOCALE[1:]}, DR.Email(USERID).get_all_locales())
-
 	def submit_store_order(self):
 		"""When in the Aussie Store, submit an order.
 		Except don't actually ever do this. That form is hooked up to real delivery agents,
 		most of whom would rather not be bombarded with Test Emails."""
+		raise NotImplementedError('Do Not.')	# Do Not.
+		# pylint: disable-msg=W0101
 		# Go to the Cart Page.
 		DR.flashy_find_element('.fancybox-close').click()
 		DR.flashy_find_element('#myCartIcon').click()
@@ -834,6 +775,63 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		profile = CP.Profile()
 		self.assertEqual(profile.user_level(), CP.Profile.PREMIER)
 
+	def test_Forgotten_Username(self):
+		"""Tests the Forgotten Username feature."""
+		DR.open_home_page()
+		# Click the Sign In link
+		# In the Sign In panel, click the Forgotten Username link.
+		CP.SignIn().forgotten_username().click()
+		# Enter the user's email address into the Forgot Username form.
+		forgus = CP.ForgottenForm()
+		forgus.email(DR.EMAIL.format(USERID))
+		# Click the Submit button, a panel should appear confirming submission.
+		forgus.submit()
+		# An email should be received at the given address containing the Username.
+		usnaema = DR.Email.ForgottenUsernameEmail(USERID)
+		self.assertEqual(USERNAME, usnaema.get_username())
+
+	def test_Forgotten_Password(self):
+		"""Tests the Forgotten Password feature."""
+		global TEMP_PASS	# I'm sure it's fine. pylint: disable-msg=W0601
+		DR.open_home_page()
+		# Click the Sign In link
+		# In the Sign In panel, click the Forgotten Password link.
+		CP.SignIn().forgotten_password().click()
+		# Enter the user's email address into the Forgot Password form.
+		forgpa = CP.ForgottenForm()
+		forgpa.email(DR.EMAIL.format(USERID))
+		# Click the Submit button, a panel should appear confirming submission.
+		forgpa.submit()
+		# An email should be received at the given address containing the Username and new Password
+		uspaema = DR.Email.ForgottenPasswordEmail(USERID)
+		self.assertEqual(USERNAME, uspaema.get_username())
+		# Read that email and sign in with the new password.
+		TEMP_PASS = uspaema.get_password()
+
+	def test_Change_Password(self):
+		"""Tests the Change Password feature."""
+		DR.open_home_page()
+		# Sign in with the new password, because these tests *are* being executed in order, right?
+		CP.SignIn().sign_in(USERNAME, TEMP_PASS, new_password=True)
+		# In the Nav Menu, click the My Profile link.
+		CP.NavMenu().profile().click()
+		# Click the Change Password button, below the Profile Data fields.
+		CP.Profile().change().click()
+		# Fill out the Change Password Form with the Current Password and a New Password.
+		change = CP.ChangePassword()
+		change.current_password(TEMP_PASS)
+		change.new_password(DR.PASSWORD)	# Use the regular password, of course.
+		# Click the Submit button, a panel should appear confirming the password change, and
+		# The page should redirect back to the Profile page.
+		change.submit()
+
+	def test_Campaign(self):
+		"""Ensures that all emails received are in the correct locale."""
+		# Pre-condition: User has registered, forgotten Username and
+		# Password, and has Qualified, and received emails for each of these five events.
+		# Links should point ot the correct pages in the correct locale.
+		self.assertEqual({DR.LOCALE[1:]}, DR.Email(USERID).get_all_locales())
+
 def main():
 	"""Read the arguments, run the tests."""
 	global USERNAME, USERID		# I'm sure it's fine. pylint: disable-msg=W0601
@@ -842,12 +840,12 @@ def main():
 		('NAV', 'test_Navigation'), ('FTR', 'test_Footer'), ('SMP', 'test_Sitemap'), \
 		('ITN', 'test_Filtered_Search__Itineraries'), ('FCT', 'test_Filtered_Search__Fact_Sheets'), \
 		('MAP', 'test_Interactive_Map'), ('CTC', 'test_Contact_Us'), ('REG', 'test_Registration'), \
-		('LOG', 'test_Login'), ('FUN', 'test_Forgotten_Username'), ('FPW', 'test_Forgotten_Password'), \
-		('CPW', 'test_Change_Password'), ('FAV', 'test_Favourites'), ('PRF', 'test_My_Profile'), \
+		('LOG', 'test_Login'), ('FAV', 'test_Favourites'), ('PRF', 'test_My_Profile'), \
 		('TRN', 'test_Training_Summary'), ('ASC', 'test_Aussie_Specialist_Club'), \
 		('TVL', 'test_Travel_Club'), ('FML', 'test_Famils'), ('PHT', 'test_Aussie_Specialist_Photos'), \
-		('DLB', 'test_Download_Qualification_Badge'), ('CMP', 'test_Campaign'), \
-		('STR', 'test_Aussie_Store'), ('PRM', 'test_Premier_Badge')])
+		('DLB', 'test_Download_Qualification_Badge'), ('STR', 'test_Aussie_Store'), ('PRM', 'test_Premier_Badge'), \
+		('FUN', 'test_Forgotten_Username'), ('FPW', 'test_Forgotten_Password'), \
+		('CPW', 'test_Change_Password'), ('CMP', 'test_Campaign')])
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-e', '--environment', help='The Domain of the environment to test. \
@@ -893,12 +891,14 @@ def main():
 	# Method overrides, because how else do you set file encoding three libraries down?
 	oldopen = __builtins__.open
 	def newopen(*args, **kwargs):
+		"""Overwrite the default open function to ensure utf encoding."""
 		kwargs['encoding'] = 'UTF-8'
 		return oldopen(*args, **kwargs)
 	__builtins__.open = newopen
 	# Another one, that menu sure does get in the way sometimes.
 	oldclick = DR.WebElement.click
 	def newclick(*args, **kwargs):
+		"""Overwrite the WebElement.click method to make sure that it isn't behind the nav menu."""
 		try:
 			oldclick(*args, **kwargs)
 		except MOD.WebDriverException:

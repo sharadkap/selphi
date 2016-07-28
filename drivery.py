@@ -273,7 +273,7 @@ class Email:
 			self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0], 'html.parser')
 			self.userid = userid
 
-	class RegistrationEmail(LocalizedEmail):
+	class RegistrationEmail(LocalizedEmail):	# pylint: disable-msg=R0903
 		"""Represents the Registration Email, if used correctly. Correctly here meaning:
 		instantiate this shortly after registering, and be sure to attach it to
 		an email sub-address with no existing unread messages."""
@@ -284,7 +284,7 @@ class Email:
 			else:
 				return self.email.select('a[href*="activation"]')[0]['href']
 
-	class ForgottenUsernameEmail(LocalizedEmail):
+	class ForgottenUsernameEmail(LocalizedEmail):	# pylint: disable-msg=R0903
 		"""Represents the Forgotten Username Email.
 		If it is called at the right time, of course."""
 		def get_username(self) -> str:

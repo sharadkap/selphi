@@ -7,7 +7,8 @@ Core 1
 		ID: 918
 		DE: 900
 	Slide 6
-		India, Singapore, Malaysia are uniquely named.
+		Singapore, Malaysia are uniquely named.
+		India: Button_930, Button_931
 		Default: expensive_button, time_button, Button_560
 	Slide 8
 		JP: 914, 902, 905, 916

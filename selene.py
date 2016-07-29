@@ -1,6 +1,7 @@
 """Test execution goes in here, but no browser interaction implementation details."""
 
 import os
+import time
 import random
 import argparse
 import unittest
@@ -101,10 +102,6 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		club = CP.AussieSpecialistClub().open()
 		# The Club section should have: *Aussie Specialist Club (Landing page only)
 		club.aussie_specialist_club()
-		# China shows most of its ASC stuff from the get-go.
-		if DR.CN_MODE:
-			club.famils()
-			club.aussie_specialist_photos()
 
 	def test_Footer(self) -> None:
 		"""Checks the content of the Footer."""
@@ -381,8 +378,14 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		news = CP.NewsAndProducts().open()
 		news.latest_news()
 		news.product_videos()
-		# The Club section should not be present. (Don't instantiate it, it isn't there)
-		self.assertTrue(CP.AussieSpecialistClub.not_present())
+		# China shows most of its ASC stuff to unqualified users, yes.
+		if DR.CN_MODE:
+			club = CP.AussieSpecialistClub().open()
+			club.famils()
+			club.aussie_specialist_photos()
+		else:
+			# The Club section should not be present. (Don't instantiate it, it isn't there)
+			self.assertTrue(CP.AussieSpecialistClub.not_present())
 
 	def test_Favourites(self):
 		"""Tests the Sales Tools functionality."""
@@ -843,9 +846,9 @@ def main():
 		('LOG', 'test_Login'), ('FAV', 'test_Favourites'), ('PRF', 'test_My_Profile'), \
 		('TRN', 'test_Training_Summary'), ('ASC', 'test_Aussie_Specialist_Club'), \
 		('TVL', 'test_Travel_Club'), ('FML', 'test_Famils'), ('PHT', 'test_Aussie_Specialist_Photos'), \
-		('DLB', 'test_Download_Qualification_Badge'), ('STR', 'test_Aussie_Store'), ('PRM', 'test_Premier_Badge'), \
-		('FUN', 'test_Forgotten_Username'), ('FPW', 'test_Forgotten_Password'), \
-		('CPW', 'test_Change_Password'), ('CMP', 'test_Campaign')])
+		('DLB', 'test_Download_Qualification_Badge'), ('STR', 'test_Aussie_Store'), \
+		('PRM', 'test_Premier_Badge'), ('FUN', 'test_Forgotten_Username'), \
+		('FPW', 'test_Forgotten_Password'), ('CPW', 'test_Change_Password'), ('CMP', 'test_Campaign')])
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-e', '--environment', help='The Domain of the environment to test. \
@@ -905,7 +908,8 @@ def main():
 			DR.scroll_element(args[0])
 			oldclick(*args, **kwargs)
 	DR.WebElement.click = newclick
-	runner.set_outdir(os.path.join(os.path.split(__file__)[0]))
+	outdir = os.path.split(__file__)[0]
+	runner.set_outdir(outdir)
 	runner.set_format('Result of: {method_name} - {short_description}')
 
 	# Get the chosen test methods from the REGR suite.
@@ -920,6 +924,10 @@ def main():
 		suite = unittest.TestSuite()
 		suite.addTests(tests)
 		runner.run(suite)
+	# And finally, give a unique name to the output file so you don't overwrite it every time!
+	olfil = os.path.join(outdir, 'REGR.tap')
+	newfil = os.path.join(outdir, 'REGR_{}.tap'.format(time.strftime('%Y%m%d_%H%M')))
+	os.rename(olfil, newfil)
 
 if __name__ == '__main__':
 	main()

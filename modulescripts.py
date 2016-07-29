@@ -84,8 +84,8 @@ MOD_1_SCRIPT = ['Button_728', \
 	('s7Sights', 'Image_95'), ('s7landscape', 'Image_95'), ('s7Fresh', 'Image_94'), \
 	('s7Wine', 'Image_94'), ('s7picnic', 'Image_93'), ('s7Roads', 'Image_91'), \
  	'Button_558', \
-['expensive_button', 'Barriers_India_Vbtn2', 'Barriers_Singapore_btn2', 'Barriers_Malaysia_btn2'], \
-	['time_button', 'Barriers_India_Vbtn3', 'Barriers_Singapore_btn3', 'Barriers_Malaysia_btn3'], \
+['expensive_button', 'Button_930', 'Barriers_Singapore_btn2', 'Barriers_Malaysia_btn2'], \
+	['time_button', 'Button_931', 'Barriers_Singapore_btn3', 'Barriers_Malaysia_btn3'], \
 	['Button_560', 'Button_939', 'Button_1009', 'Button_995'], \
 's10_btn1', 'Button_650', 'Button_653', 'Button_660', 'Button_564', \
 ['Button_690', 'Button_914'], ['Button_674', 'Button_902'], \

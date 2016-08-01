@@ -20,12 +20,12 @@ Placeholder for Python Selenium scripts
   * `gem install hiptest-publisher`
 
 ## Execution
-Currently, the Global part of the ASP Website test suite is done, changes still to be made to accomodate China's particularities, and can be executed or given customised instructions via the command line:
+The test suite can be executed either by double-clicking the file or via the command line:
 * Running the script from Windows Explorer will begin an End To End run with a new user in GB Production using Chrome.
 * Currently, Firefox is undergoing a transition to a new web driver, and so FF47 is incompatible with selenium 2.5~something for now.
 * To customise the test suite, run from the command line (the cmd.exe terminal) as `selene.py` with the `-l` and/or `-t` options.
 * Run as `selene.py -h` to see the full set of options available.
-The ASP Modules test suite is complete, and can also be run at the Command-Line:
+The ASP Modules test suite can also be run at the Command-Line:
 * Opening the script from Windows Explorer, or with no arguments, will begin a test of all modules in all locales, accessing the modules within the website, using Chrome.
 * To customise the suite of tests, run from the command line, (with `modules.py`) using the `-l`/`--locales` and `-m`/`--modules` options.
 * Use the `-h` option to get the list of possible values.
@@ -49,3 +49,5 @@ The selenium exceptions don't give a huge amount of information as to what went 
 When any module-related tests are running, refrain from moving the mouse pointer around in the active window.
 
 The Drag+Drop actions use mouse position, and moving the mouse around will interfere with that, likely breaking execution.
+
+There is currently some issue wherein running either test suite unattended for a long time causes some kind of error with webdriver. It is yet unknown whether, but suspected that, this may also randomly cause some tests to be failed.

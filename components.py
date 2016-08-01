@@ -642,7 +642,8 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
 		"""Overwrites the Email Address and Verify Email fields to have the given value. Blank default."""
 		self.email = value
 		# China does not have this email verification.
-		if not DR.CN_MODE: self.verifyemail = value
+		if not DR.CN_MODE:
+			self.verifyemail = value
 
 	def how_many_years(self) -> None:
 		"""Sets the value of the How Many Years Selling field."""

@@ -318,7 +318,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# The Country Code
 		langcode, localecode = DR.LOCALE.split('-')
 		# Username stuff, add the Environment prefix to identify the user.
-		environ = DR.BASE_URL.split('/')[2].split('.')[0][0:3]
+		environ = DR.current_url().split('/')[2].split('.')[0][0:3]
 		# Different zip codes in different countries.
 		zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345', \
 			'it': '12345', 'fr': '12345', 'de': '12345'}.get(localecode, '123456')
@@ -881,8 +881,7 @@ def main():
 		USERNAME = args.username[0]
 		USERID = USERNAME[-4:]	# The mail ID is the last four characters.
 	# If a url was given, make that the default.
-	envchanged = args.environment[0] != DR.BASE_URL
-	if envchanged:
+	if args.environment[0] != DR.BASE_URL:
 		DR.BASE_URL = args.environment[0]
 	else:
 		# China gets its own, if it wasn't already given.

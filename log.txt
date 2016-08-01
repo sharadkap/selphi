@@ -1,2 +1,0 @@
-[[0;32;49mv[0m] Posting REGR.tap to https://hiptest.net
-[[0;32;49mv[0m] 0 tests imported

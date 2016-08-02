@@ -248,8 +248,8 @@ class Email:
 			imap.select()
 			nums = wait_until(lambda _: self.email_loop(imap, really_get_new))
 			# The Latin Character Set emails have two parts, the second of which is the one you want.
-			got, ems = imap.fetch(nums, 'BODY[2]')
-			if got == 'NO':
+			got, ems = imap.fetch(nums, 'body[2]')
+			if got == 'NO':	# The others do not have two parts.
 				got, ems = imap.fetch(nums, 'body[1]')
 			for ema in ems[::2]:	# Yeah, the results come back wierd.
 				try:

@@ -1,11 +1,14 @@
 """Test execution goes in here, but no browser interaction implementation details."""
 
 import os
+import io
 import time
 import random
 import argparse
 import unittest
 from collections import OrderedDict
+from multiprocessing.pool import Pool
+import tap
 from tap import TAPTestRunner
 import drivery as DR
 import modules as MOD
@@ -317,8 +320,9 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		USERID = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
 		# The Country Code
 		langcode, localecode = DR.LOCALE.split('-')
+												# It's a property that resolves to a str, it's fine.
+		environ = DR.current_url().split('/')[2].split('.')[0][0:3]	# pylint: disable-msg=E1101
 		# Username stuff, add the Environment prefix to identify the user.
-		environ = DR.current_url().split('/')[2].split('.')[0][0:3]
 		# Different zip codes in different countries.
 		zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345', \
 			'it': '12345', 'fr': '12345', 'de': '12345'}.get(localecode, '123456')
@@ -888,13 +892,50 @@ def main():
 		if DR.CN_MODE:
 			DR.BASE_URL = DR.CN_BASE_URL
 
+	# Do a bunch of method overrides to get it to work properly.
+	perform_hacks()
+
+	# Get the output settings, the chosen test methods from the REGR suite.
+	outdir = os.path.split(__file__)[0]
+	names = [REGR(testnames[x]) for x in args.tests]
+
+	# Run them in each locale.
+	pool = Pool(5)
+	pool.map(launch_test, [(x, outdir, names) for x in args.locales])
+
+def launch_test(args) -> None:	# pylint: disable-msg=E1126
+	"""Do all the things needed to run a test suite. Put this in the target of a process."""
+	locale, outdir, names = args
 	# Create the test runner, choose the output path: right next to the test script file.
-	runner = TAPTestRunner()
-	# Method overrides, because how else do you set file encoding three libraries down?
+	buf = io.StringIO()
+	runner = TAPTestRunner(stream=buf)
+	runner.set_stream(buf)
+	runner.set_format('Result of: {method_name} - {short_description}')
+	tests = unittest.TestSuite(names)
+	# If China Mode, do it in China, otherwise set the locale for each loop
+	if DR.CN_MODE:
+		DR.LOCALE = DR.CN_LOCALE
+	else:
+		DR.LOCALE = DR.LOCALES[locale]
+	suite = unittest.TestSuite()
+	suite.addTests(tests)
+	runner.run(suite)
+	# Give a unique name to the output file so you don't overwrite it every time!
+	with open(os.path.join(outdir, 'REGR_{0}_{1}.tap'.format(locale, \
+		time.strftime('%Y%m%d_%H%M'))), mode='w') as newfil:
+			newfil.write(buf.getvalue())
+	print(buf.getvalue() or 'It was blank')
+	buf.close()
+
+def perform_hacks():
+	"""Because not everything works the way it SHOULD, have to override a few methods."""
+	# How else do you set file encoding three libraries down?
 	oldopen = __builtins__.open
 	def newopen(*args, **kwargs):
 		"""Overwrite the default open function to ensure utf encoding."""
-		kwargs['encoding'] = 'UTF-8'
+		if ('mode' not in kwargs.keys() or kwargs['mode'].find('b') == -1) \
+			and (len(args) < 2 or args[1].find('b') == -1):
+				kwargs['encoding'] = 'UTF-8'
 		return oldopen(*args, **kwargs)
 	__builtins__.open = newopen
 	# Another one, that menu sure does get in the way sometimes.
@@ -907,26 +948,14 @@ def main():
 			DR.scroll_element(args[0])
 			oldclick(*args, **kwargs)
 	DR.WebElement.click = newclick
-	outdir = os.path.split(__file__)[0]
-	runner.set_outdir(outdir)
-	runner.set_format('Result of: {method_name} - {short_description}')
-
-	# Get the chosen test methods from the REGR suite.
-	tests = unittest.TestSuite([REGR(testnames[x]) for x in args.tests])
-	# Run them in each locale.
-	for locale in args.locales:
-		# If China Mode, do it in China, otherwise set the locale for each loop
-		if DR.CN_MODE:
-			DR.LOCALE = DR.CN_LOCALE
-		else:
-			DR.LOCALE = DR.LOCALES[locale]
-		suite = unittest.TestSuite()
-		suite.addTests(tests)
-		runner.run(suite)
-	# And finally, give a unique name to the output file so you don't overwrite it every time!
-	olfil = os.path.join(outdir, 'REGR.tap')
-	newfil = os.path.join(outdir, 'REGR_{}.tap'.format(time.strftime('%Y%m%d_%H%M')))
-	os.rename(olfil, newfil)
+	# Because writing test results to a file was the only possible thing that anyone would want to do.
+	def newsetstream(self, stream):
+		"""Overwrite TAPTestRunner's output stream. Super hacksy."""
+		# aaaaaaaaa pylint: disable-msg=W0212
+		self.stream = unittest.runner._WritelnDecorator(open(os.devnull, 'w'))
+		tap.runner._tracker.streaming = True
+		tap.runner._tracker.stream = stream
+	tap.TAPTestRunner.set_stream = newsetstream
 
 if __name__ == '__main__':
 	main()

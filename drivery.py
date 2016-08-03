@@ -16,6 +16,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.common.exceptions import NoSuchElementException
 
 	###Some Magic Numbers, default values.###
+def reset_globals():
+	"""Call this to reset all of the globals that can get overwritten to their default values."""
+	# pylint: disable-msg=W0603
+	global LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE
+	LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE = \
+		30, 2, False, 'https://www.aussiespecialist.com', 'https://www.aussiespecialist.cn', \
+		'/en-gb', 'testeratta+{}@gmail.com', Chrome
 # """The default time, in seconds, to search the DOM before declaring an Element Not Found."""
 LONG_WAIT = 30
 # """Time in seconds to poll for something that should be absent or already here."""
@@ -27,11 +34,12 @@ BASE_URL = 'https://www.aussiespecialist.com'
 CN_BASE_URL = 'https://www.aussiespecialist.cn'
 # """The Language-Country Code of the locale to test.
 LOCALE = '/en-gb'
+CN_LOCALE = '/zh-cn'
 LOCALES = {'ca': '/en-ca', 'in': '/en-in', 'my': '/en-my', 'sg': '/en-sg', \
 'gb': '/en-gb', 'us': '/en-us', \
 'ehk': '/en-hk', 'zhk': '/zh-hk', 'id': '/id-id', 'jp': '/ja-jp', 'kr': '/ko-kr', \
-'br': '/pt-br', 'cl': '/es-cl', 'de': '/de-de', 'fr': '/fr-fr', 'it': '/it-it'}
-CN_LOCALE = '/zh-cn'
+'br': '/pt-br', 'cl': '/es-cl', 'de': '/de-de', 'fr': '/fr-fr', 'it': '/it-it', \
+'cn': CN_LOCALE}
 # """To aid in checking for Page Loaded Status, note the last link clicked.
 LAST_LINK = ''
 
@@ -63,11 +71,11 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 SCROLL_SCRIPT = 'window.parent.parent.parent.scrollTo(0,arguments[0].getBoundingClientRect().top\
 	+window.pageYOffset-window.innerHeight/2)'
 # """A JS script that applies the 'element-highlighted' animation."""
-BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;}\
-    50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}}\
-	</style>");for(a of arguments[0]){window.scrollTo(0,a.getBoundingClientRect()\
-	.top+window.pageYOffset-window.innerHeight/2),a.style.animationDuration="0.5s",\
-	a.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, a)}'
+BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;} \
+50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}} \
+</style>");b=arguments[0];for(a in b){if(a==="shuffle"){continue;}a=b[a]; window.scrollTo( \
+0,a.getBoundingClientRect().top+window.pageYOffset-window.innerHeight/2),a.style.animationDuration= \
+"0.5s",a.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, a)}'
 
 # """Type annotation, referring to either a WebElement, or a list of them."""
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126

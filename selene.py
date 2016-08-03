@@ -7,6 +7,7 @@ import random
 import argparse
 import unittest
 from collections import OrderedDict
+from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
 import tap
 from tap import TAPTestRunner
@@ -305,7 +306,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Contact Us page."""
 		DR.open_home_page()
 		# Navigate to About > Contact Us.
-		if DR.CN_MODE: CP.About().open().contact_us().click()
+		CP.About().open().contact_us().click()
 		# "Click the Contact Us link, Default email client should open, with the To field populated
 		#   with the relevant contact." Can't actually test that, so a 'mailto:' will have to do.
 		CP.ContactUs()
@@ -858,20 +859,19 @@ def main():
 	parser.add_argument('-e', '--environment', help='The Domain of the environment to test. \
 		Remember to include http(s). Default is %(default)s.', nargs=1, type=str, \
 		default=[DR.BASE_URL], metavar='')
-	group = parser.add_mutually_exclusive_group()
-	group.add_argument('-c', '--china', help='Use this option to run in China Mode.	\
-		China Mode will test /zh-cn only, cannot be used with the -l option, and, if no Environment \
-		is supplied, will also automatically set that to www.aussiespecialist.cn.', action='store_true')
-	group.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
+	parser.add_argument('-ce', '--chenvironment', help='The Domain of the China environment to test \
+		(if applicable). Remember to include the http(s). Default is %(default)s.', nargs=1, type=str, \
+		default=[DR.CN_BASE_URL], metavar='')
+	parser.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
 		Default is %(default)s.', nargs='+', type=str, \
 		choices=DR.LOCALES.keys(), default=['gb'], metavar='')
 	parser.add_argument('-b', '--browser', help='Which browser to use. One or more of [%(choices)s]. \
-		Default is %(default)s', nargs=1, default=['chrome'], choices=DR.BROWSERS.keys(), metavar='')
+		Default is %(default)s', nargs='+', default=['chrome'], choices=DR.BROWSERS.keys(), metavar='')
 	parser.add_argument('-u', '--username', help='The Username to use in testing. \
 		Due to the way the tests are structured, it will have to be a Test Account formatted user: \
 		last four characters the email subaddress code (testeratta+xxxx@gmail.com), \
-		password Welcome1. Only do this if your custom suite does not include Registration', \
-		default=[None], nargs=1, metavar='')
+		password Welcome1. Only do this if your custom suite does not include Registration. \
+		Don\'t expect this to work if you have multiple locales.', default=[None], nargs=1, metavar='')
 	parser.add_argument('-t', '--tests', help='Which tests to run. Will be run in the order supplied. \
 		Default is all, in the default testing order. Choices are [{}]'\
 			.format(', '.join(['\'{}\' for {}'.format(x, testnames[x]) for x in testnames])), nargs='+', \
@@ -879,18 +879,12 @@ def main():
 	args = parser.parse_args()
 
 	# Set the settings from the given arguments
-	DR.BROWSER_TYPE = DR.BROWSERS[args.browser[0]]
-	DR.CN_MODE = args.china
 	if args.username[0]:
 		USERNAME = args.username[0]
 		USERID = USERNAME[-4:]	# The mail ID is the last four characters.
 	# If a url was given, make that the default.
-	if args.environment[0] != DR.BASE_URL:
-		DR.BASE_URL = args.environment[0]
-	else:
-		# China gets its own, if it wasn't already given.
-		if DR.CN_MODE:
-			DR.BASE_URL = DR.CN_BASE_URL
+	DR.BASE_URL = args.environment[0]
+	DR.CN_BASE_URL = args.chenvironment[0]
 
 	# Do a bunch of method overrides to get it to work properly.
 	perform_hacks()
@@ -900,29 +894,40 @@ def main():
 	names = [REGR(testnames[x]) for x in args.tests]
 
 	# Run them in each locale.
-	pool = Pool(5)
-	pool.map(launch_test, [(x, outdir, names) for x in args.locales])
+	pool = Pool(cpu_count() * 2)	# It's mostly waiting; we can afford to overload the cores, right?
+	pool.map(launch_test, [(loc, bro, outdir, names) for loc in args.locales for bro in args.browser])
 
 def launch_test(args) -> None:	# pylint: disable-msg=E1126
-	"""Do all the things needed to run a test suite. Put this in the target of a process."""
-	locale, outdir, names = args
-	# Create the test runner, choose the output path: right next to the test script file.
-	buf = io.StringIO()
-	runner = TAPTestRunner(stream=buf)
-	runner.set_stream(buf)
-	runner.set_format('Result of: {method_name} - {short_description}')
-	tests = unittest.TestSuite(names)
-	# If China Mode, do it in China, otherwise set the locale for each loop
-	if DR.CN_MODE:
+	"""Do all the things needed to run a test suite. Put this as the target call of a process.
+	It looks like this is messing with things on a Global level, but it's actually totally fine."""
+	locale, browser, outdir, names = args
+	# Processes don't share global state, but the processes get reused, so have to clean up anyway.
+	DR.reset_globals()
+	# Set up the run settings.
+	DR.BROWSER_TYPE = DR.BROWSERS[browser]
+	# If China Mode, do it in China, otherwise set the locale
+	if locale == 'cn':
+		DR.CN_MODE = True
 		DR.LOCALE = DR.CN_LOCALE
+		DR.BASE_URL = DR.CN_BASE_URL
 	else:
 		DR.LOCALE = DR.LOCALES[locale]
+
+	# Create the test runner, choose the output path: right next to the test script file.
+	buf = io.StringIO()
+	tap.runner._tracker = tap.tracker.Tracker()	# Reboot the test runner. pylint: disable-msg=W0212
+	runner = TAPTestRunner()
+	runner.set_format('Result of: {method_name} - {short_description}')
+	runner.set_stream(True)
+	tap.runner._tracker.stream = buf	# bit of a hack, but how else? pylint: disable-msg=W0212
+	tests = unittest.TestSuite(names)
 	suite = unittest.TestSuite()
 	suite.addTests(tests)
 	runner.run(suite)
+
 	# Give a unique name to the output file so you don't overwrite it every time!
-	with open(os.path.join(outdir, 'REGR_{0}_{1}.tap'.format(locale, \
-		time.strftime('%Y%m%d_%H%M'))), mode='w') as newfil:
+	with open(os.path.join(outdir, 'REGR_{0}_{1}_{2}.tap'.format(locale, browser, \
+		time.strftime('%Y%m%d_%H%M'))), mode='w', encoding='UTF-8') as newfil:
 			newfil.write(buf.getvalue())
 	print(buf.getvalue() or 'It was blank')
 	buf.close()
@@ -930,14 +935,14 @@ def launch_test(args) -> None:	# pylint: disable-msg=E1126
 def perform_hacks():
 	"""Because not everything works the way it SHOULD, have to override a few methods."""
 	# How else do you set file encoding three libraries down?
-	oldopen = __builtins__.open
-	def newopen(*args, **kwargs):
-		"""Overwrite the default open function to ensure utf encoding."""
-		if ('mode' not in kwargs.keys() or kwargs['mode'].find('b') == -1) \
-			and (len(args) < 2 or args[1].find('b') == -1):
-				kwargs['encoding'] = 'UTF-8'
-		return oldopen(*args, **kwargs)
-	__builtins__.open = newopen
+	# oldopen = __builtins__.open
+	# def newopen(*args, **kwargs):
+	# 	"""Overwrite the default open function to ensure utf encoding."""
+	# 	if ('mode' not in kwargs.keys() or kwargs['mode'].find('b') == -1) \
+	# 		and (len(args) < 2 or args[1].find('b') == -1):
+	# 			kwargs['encoding'] = 'UTF-8'
+	# 	return oldopen(*args, **kwargs)
+	# __builtins__.open = newopen
 	# Another one, that menu sure does get in the way sometimes.
 	oldclick = DR.WebElement.click
 	def newclick(*args, **kwargs):
@@ -948,14 +953,6 @@ def perform_hacks():
 			DR.scroll_element(args[0])
 			oldclick(*args, **kwargs)
 	DR.WebElement.click = newclick
-	# Because writing test results to a file was the only possible thing that anyone would want to do.
-	def newsetstream(self, stream):
-		"""Overwrite TAPTestRunner's output stream. Super hacksy."""
-		# aaaaaaaaa pylint: disable-msg=W0212
-		self.stream = unittest.runner._WritelnDecorator(open(os.devnull, 'w'))
-		tap.runner._tracker.streaming = True
-		tap.runner._tracker.stream = stream
-	tap.TAPTestRunner.set_stream = newsetstream
 
 if __name__ == '__main__':
 	main()

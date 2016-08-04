@@ -3,6 +3,8 @@ import os
 import time
 from typing import Union, List
 import argparse
+from multiprocessing import cpu_count
+from multiprocessing.pool import Pool
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
 from selenium.webdriver.remote.command import Command
@@ -27,41 +29,13 @@ def do_module(driver: WebDriver, module: str) -> None:
 	for elem in SCRIPTS[module]:
 		domo(elem)
 
-def main() -> None:
-	"""Run this if the modules suite is being executed as itself."""
+def parseargs():
+	"""Do this bit separately so it can be copied into the new processes."""
 	# pylint: disable-msg=W0601
-	global ARGS, IMPLICITLY_WAIT, TIME_FORMAT, DRIVER, MOD_STEM_D, MOD_STEM, \
+	global IMPLICITLY_WAIT, TIME_FORMAT, MOD_STEM_D, MOD_STEM, \
 		MOD_STEM_C, MOD_STEM_C_D, SCREENSHOT_DIR, RESULTS_FILE
-	# pylint: disable-msg=C0103
-	BROWSERS = {'chrome': Chrome, 'firefox': Firefox, 'ie': Ie, 'safari': Safari, \
-	'opera': Opera, 'edge': Edge}
-	PARSER = argparse.ArgumentParser()
-	PARSER.add_argument('-e', '--environment', help='Which environment to test in. \
-	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
-	nargs=1, type=str, default='prod.aussiespecialist.com', metavar='')
-	PARSER.add_argument('-ce', '--chenvironment', help='Which environment to test in if using China. \
-	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
-	nargs=1, type=str, default='www.aussiespecialist.cn', metavar='')
-	PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of [%(choices)s]. \
-	Default is all.', nargs='+', type=str, choices=MODULES.keys(), metavar='')
-	PARSER.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
-	Default is all.', nargs='+', type=str, choices=LANGS.keys(), metavar='')
-	PARSER.add_argument('-b', '--browser', help='Which browser to use. One or more of [%(choices)s]. \
-	Default is %(default)s', nargs=1, default=['chrome'], choices=BROWSERS.keys(), metavar='')
-	PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
-	action='store_true')
-	PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding \
-	an element is missing. Default is %(default)s', default=[20], type=int, nargs=1)
-	PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
-	See https://docs.python.org/3/library/time.html#time.strftime for full formatting info. \
-	Default is %(default)s', default=['%Y/%m/%d %H:%M'], nargs='+', type=str)
-	ARGS = PARSER.parse_args()
-
 	IMPLICITLY_WAIT = ARGS.wait[0]
 	TIME_FORMAT = ' '.join(ARGS.timeformat)
-	DRIVER = BROWSERS[ARGS.browser[0]]()
-	DRIVER.implicitly_wait(IMPLICITLY_WAIT)
-	DRIVER.maximize_window()
 	MOD_STEM_D = 'https://{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ARGS.environment)
 	MOD_STEM = 'https://{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ARGS.environment)
 	MOD_STEM_C_D = 'https://{0}/content/sites/asp-zh-cn/resources/en/{{0}}/\
@@ -70,14 +44,51 @@ def main() -> None:
 		content/sites/asp-zh-cn/resources/en/{{0}}'.format(ARGS.chenvironment)
 	SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
 	RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
+
+def main() -> None:
+	"""Run this if the modules suite is being executed as itself."""
+	# pylint: disable-msg=W0601
+	global ARGS, BROWSERS
+	BROWSERS = {'chrome': Chrome, 'firefox': Firefox, 'ie': Ie, 'safari': Safari, \
+		'opera': Opera, 'edge': Edge}
+	# pylint: disable-msg=C0103
+	PARSER = argparse.ArgumentParser()
+	PARSER.add_argument('-e', '--environment', help='Which environment to test in. \
+	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
+	nargs=1, type=str, default='prod.aussiespecialist.com', metavar='')
+	PARSER.add_argument('-ce', '--chenvironment', help='Which environment to test in if using China. \
+	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
+	nargs=1, type=str, default='www.aussiespecialist.cn', metavar='')
+	PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of [%(choices)s]. \
+	Default is all.', nargs='+', type=str, choices=MODULES.keys(), metavar='', default=MODULES.keys())
+	PARSER.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
+	Default is all.', nargs='+', type=str, choices=LANGS.keys(), metavar='', default=LANGS.keys())
+	PARSER.add_argument('-b', '--browsers', help='Which browser to use. One or more of [%(choices)s]. \
+	Default is %(default)s', nargs='+', default=['chrome'], choices=BROWSERS.keys(), metavar='')
+	PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
+	action='store_true')
+	PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding \
+	an element is missing. Default is %(default)s', default=[20], type=int, nargs=1)
+	PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
+	See https://docs.python.org/3/library/time.html#time.strftime for full formatting info. \
+	Default is %(default)s', default=['%Y/%m/%d %H:%M'], nargs='+', type=str)
+	ARGS = PARSER.parse_args()
+	parseargs()
 	os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 	try:
-		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales)
-	except:	# Too general is the point, it's a Final Action. pylint: disable-msg=W0702
-		write_footer_entry(crash=True)
-	# Do remember to do this.
-	DRIVER.quit()
+		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales, brows=ARGS.browsers)
+	except Exception as ex:	# Too general is the point, it's a Final Action. pylint: disable-msg=W0703
+		print(ex)
+		with open(RESULTS_FILE, mode='a') as log:
+				log.write('\n"Well, something went wrong. A manual exit, hopefully."')
+
+def restart_driver(br):
+	"""Restarts the DRIVER."""
+	global DRIVER
+	DRIVER = br()
+	DRIVER.implicitly_wait(IMPLICITLY_WAIT)
+	DRIVER.maximize_window()
 
 def new_drag_drop(source: str, target: str) -> None:
 	"""Like the ActionChains drag and drop,
@@ -124,8 +135,7 @@ def click_surely(ele: WebElement) -> None:
 			getBoundingClientRect().top+window.pageYOffset-window.innerHeight/2)', ele)
 			ele.click()
 		except WebDriverException:
-			DRIVER.execute(Command.MOVE_TO, {'element': ele.id, \
-				'xoffset': ele.size['width']/4, 'yoffset': ele.size['height']/4})
+			DRIVER.execute(Command.MOVE_TO , {'element': ele.id})
 			DRIVER.execute(Command.CLICK)
 
 def pick_from_possibilities(locator: str) -> WebElement:
@@ -136,7 +146,7 @@ def pick_from_possibilities(locator: str) -> WebElement:
 		raise WebDriverException("Didn't find {0}".format(locator))
 	return eles[0]
 
-def full_languages_modules_run(langfilter: LIST_STR=None, modfilter: LIST_STR=None) -> None:
+def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows: LIST_STR) -> None:
 	"""Run the selected set of modules and locales, logging results,
 	and saving a screenshot in case of failure.	By default, will run all of them."""
 	if ARGS.direct:
@@ -149,32 +159,44 @@ def full_languages_modules_run(langfilter: LIST_STR=None, modfilter: LIST_STR=No
 		stem = MOD_STEM
 		mods = MODULES
 		langs = LANGS
-	write_header_row(modfilter or mods)
-	for lang in langfilter or langs.keys():
-		# China is different, of course, of course, watch out for these checks below.
-		cnmode = lang == 'cn'
-		# New line in the results.
-		write_new_row(lang)
-		# Logout between locales. Turns out, you can't delete PROD cookies while on WWW
-		if not ARGS.direct:
-			DRIVER.get((ctem if cnmode else stem).split('{0}')[0])
-			DRIVER.delete_all_cookies()
-		for mod in modfilter or (MODULES_C if cnmode else mods).keys():
-			try:
-				# Try to do the module
-				if cnmode:	# Scorm den.
-					DRIVER.get(ctem.format(MODULES_C[mod][0], MODULES_C[mod][1]))
-				else:
-					DRIVER.get(stem.format(langs[lang], mods[mod]))
-				log_in_first(lang, cnmode)
-				for elem in SCRIPTS[mod]:
-					domo(elem)
-				write_success()
-			# Something goes wrong, document it and go to the next module.
-			except WebDriverException as ex:
-				write_failure(ex)
-				draw_failure(lang, mod)
-	write_footer_entry()
+	output = '\n"START: {0}, {1}"\n'.format(get_time(), ','.join(modfilter).upper())	# header row.
+	pool = Pool(cpu_count() * 2)
+	results = pool.map(do_locale, [(x, langs, ctem, stem, mods, modfilter, b, \
+		BROWSERS[b], ARGS) for x in langfilter for b in brows])
+	output += '\n'.join(results)	# Each locale's row.
+	output += '\n"FINISH: {0}"\n\n'.format(get_time())	# Footer row.
+	with open(RESULTS_FILE, mode='a') as log:
+		log.write(output)
+
+def do_locale(args):
+	"""The target of a process, go do all the modules in a locale."""
+	global ARGS
+	# Unpack arguments
+	lang, langs, ctem, stem, mods, modfilter, brname, browser, ARGS = args
+	parseargs()
+	# Reset the driver between rounds
+	restart_driver(browser)
+	# Start recording results.
+	result = '_'.join([lang.upper(), brname.upper()])
+	# China is different, of course, of course, watch out for these checks below.
+	cnmode = lang == 'cn'
+	for mod in modfilter:
+		try:
+			# Try to do the module
+			if cnmode:	# Scorm den.
+				DRIVER.get(ctem.format(MODULES_C[mod][0], MODULES_C[mod][1]))
+			else:
+				DRIVER.get(stem.format(langs[lang], mods[mod]))
+			log_in_first(lang, cnmode)
+			for elem in SCRIPTS[mod]:
+				domo(elem)
+			result += ',"{0}: PASS"'.format(get_time())
+		# Something goes wrong, document it and go to the next module.
+		except WebDriverException as ex:
+			result += ',"{0}: FAIL: {1}"'.format(get_time(), ex.msg.replace('"', '""'))
+			draw_failure(lang, mod)
+	DRIVER.quit()
+	return result
 
 def log_in_first(lang: str, cnmode: bool=False) -> None:
 	"""If testing with login, first, have to go and log in and everything.
@@ -214,34 +236,6 @@ def log_in_first(lang: str, cnmode: bool=False) -> None:
 def get_time() -> str:
 	"""Get the time, and formatted as well."""
 	return time.strftime(TIME_FORMAT)
-
-def write_header_row(mods: LIST_STR) -> None:
-	"""Adds the header row to the output file. Columns are for mods."""
-	with open(RESULTS_FILE, mode='a') as log:
-		log.write('\n"START: {0}",'.format(get_time()))	# Header corner.
-		log.write(','.join(mods).upper())
-
-def write_new_row(lang: str) -> None:
-	"""Adds a new line to the csv output file. Lines are for langs."""
-	with open(RESULTS_FILE, mode='a') as log:
-		log.write('\n' + lang.upper())
-
-def write_success() -> None:
-	"""Writes a successful outcome to the results."""
-	with open(RESULTS_FILE, mode='a') as log:
-		log.write(',"{0}: PASS"'.format(get_time()))
-
-def write_failure(ex: Exception) -> None:
-	"""Writes a failed outcome to the results."""
-	with open(RESULTS_FILE, mode='a') as log:
-		log.write(',"{0}: FAIL: {1}"'.format(get_time(), ex.msg.replace('"', '""')))
-
-def write_footer_entry(crash: bool=False) -> None:
-	"""Adds a bunch of newlines to the end of the file. Easier to read multiple runs."""
-	with open(RESULTS_FILE, mode='a') as log:
-		if crash:
-			log.write('\n"Well, something went wrong. A manual exit, hopefully."')
-		log.write('\n"FINISH: {0}"\n\n'.format(get_time()))
 
 def draw_failure(lang: str, mod: str) -> None:
 	"""Take a screenshot, save it to the screenshot folder."""

@@ -12,8 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.common.by import By
-# from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 	###Some Magic Numbers, default values.###
 def reset_globals():
@@ -73,9 +72,9 @@ SCROLL_SCRIPT = 'window.parent.parent.parent.scrollTo(0,arguments[0].getBounding
 # """A JS script that applies the 'element-highlighted' animation."""
 BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;} \
 50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}} \
-</style>");b=arguments[0];for(a in b){if(a==="shuffle"){continue;}a=b[a]; window.scrollTo( \
-0,a.getBoundingClientRect().top+window.pageYOffset-window.innerHeight/2),a.style.animationDuration= \
-"0.5s",a.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, a)}'
+</style>");b=arguments[0];for(var a=0;a<b.length;a++){var c=b[a]; window.scrollTo(0, \
+c.getBoundingClientRect().top+window.pageYOffset-window.innerHeight/2),c.style.animationDuration= \
+"0.5s",c.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, c)}'
 
 # """Type annotation, referring to either a WebElement, or a list of them."""
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
@@ -127,27 +126,39 @@ def wait_for_page() -> None:
 	"""Holds up execution until the current page's url contains the Last Link value
 	and its	document.readyState is 'complete'. A decent approximation?"""
 	script = 'return document.readyState === "complete";'
-	WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: LAST_LINK in d.current_url)
-	WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: d.execute_script(script))
+	try:
+		WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: LAST_LINK in d.current_url)
+		WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: d.execute_script(script))
+	except TimeoutException:
+		raise TimeoutException('Timed out waiting for {0} to load.'.format(LAST_LINK))
 
 def wait_until_present(selector: str) -> WebElement:
 	"""Holds up execution until the selectored elment is visibly present.
 	Use this instead of quietly_find if the target is in the DOM, but hidden."""
-	return WebDriverWait(DRIVER, LONG_WAIT).until(\
-		EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+	try:
+		return WebDriverWait(DRIVER, LONG_WAIT).until(\
+			EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+	except TimeoutException:
+		raise TimeoutException('Timed out waiting for {0} to appear.'.format(selector))
 
 def wait_until_gone(selector: str) -> WebElement:
 	"""Holds up execution until the selectored element is not visibly present.
 	EC doesn't seem to support local searches, so be sure the selector is page-unique."""
-	DRIVER.implicitly_wait(0.5)	# The poll_freq value is not, in fact, the wait-til-fail time.
-	ret = WebDriverWait(DRIVER, LONG_WAIT).until(\
-		EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
-	DRIVER.implicitly_wait(LONG_WAIT)
-	return ret
+	try:
+		DRIVER.implicitly_wait(0.5)	# The poll_freq value is not, in fact, the wait-til-fail time.
+		ret = WebDriverWait(DRIVER, LONG_WAIT).until(\
+			EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
+		DRIVER.implicitly_wait(LONG_WAIT)
+		return ret
+	except TimeoutException:
+		raise TimeoutException('Timed out waiting for {0} to disappear.'.format(selector))
 
 def wait_until(condition: FunctionType) -> Any:
 	"""Holds up execution, repeatedly calling the given function until it returns truthy."""
-	return WebDriverWait(DRIVER, LONG_WAIT).until(condition)
+	try:
+		return WebDriverWait(DRIVER, LONG_WAIT).until(condition)
+	except TimeoutException:
+		raise TimeoutException('Timed out waiting for method {0} to be true.'.format(condition))
 
 def switch_to_window(window: int) -> None:
 	"""Switch WebDriver's focus to the second open tab or window."""
@@ -188,21 +199,36 @@ def execute_mouse_over(element: WebElement) -> None:
 	"""Simulates the mouse moving into an element."""
 	ActionChains(DRIVER).move_to_element(element).perform()
 
+def find_error_improver(func):
+	"""A decorator to get the NoSuchElementException to actually tell you what the problem is."""
+	def actually_helpful(selector, within=None):
+		"""Does a thing, and if it didn't work, tells you what was missing from where."""
+		try:
+			return func(selector, within)
+		except NoSuchElementException:
+			raise NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(selector, \
+				current_url()))
+	return actually_helpful
+
+@find_error_improver
 def quietly_find_element(selector: str, within: WebElement=None) -> WebElement:
 	"""Finds a single element matching a CSS selector, optionally within a given element."""
 	within = within or DRIVER
 	return within.find_element_by_css_selector(selector)
 
+@find_error_improver
 def quietly_find_elements(selector: str, within: WebElement=None) -> ELEMENT_LIST:
 	"""Finds multiple elements that match a CSS selector, optionally within a given element."""
 	within = within or DRIVER
 	return to_list(within.find_elements_by_css_selector(selector))
 
+@find_error_improver
 def flashy_find_element(selector: str, within: WebElement=None) -> WebElement:
 	"""Finds a single element matching a CSS selector, highlights it as well."""
 	within = within or DRIVER
 	return blip_element(within.find_element_by_css_selector(selector))
 
+@find_error_improver
 def flashy_find_elements(selector: str, within: WebElement=None) -> ELEMENT_LIST:
 	"""Finds multiple elements that match a CSS selector, highlights them as well.
 

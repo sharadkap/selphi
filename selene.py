@@ -934,15 +934,6 @@ def launch_test(args) -> None:	# pylint: disable-msg=E1126
 
 def perform_hacks():
 	"""Because not everything works the way it SHOULD, have to override a few methods."""
-	# How else do you set file encoding three libraries down?
-	# oldopen = __builtins__.open
-	# def newopen(*args, **kwargs):
-	# 	"""Overwrite the default open function to ensure utf encoding."""
-	# 	if ('mode' not in kwargs.keys() or kwargs['mode'].find('b') == -1) \
-	# 		and (len(args) < 2 or args[1].find('b') == -1):
-	# 			kwargs['encoding'] = 'UTF-8'
-	# 	return oldopen(*args, **kwargs)
-	# __builtins__.open = newopen
 	# Another one, that menu sure does get in the way sometimes.
 	oldclick = DR.WebElement.click
 	def newclick(*args, **kwargs):

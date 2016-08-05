@@ -67,14 +67,15 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 	"/pt-br.html", "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html", \
 	"https://www.aussiespecialist.cn/zh-cn"}
 # A script to scroll a single element into view proper, just in case. Parent chain handles modules.
-SCROLL_SCRIPT = 'window.parent.parent.parent.scrollTo(0,arguments[0].getBoundingClientRect().top\
-	+window.pageYOffset-window.innerHeight/2)'
+SCROLL_SCRIPT = 'wp=window.parent.parent.parent;wp.scrollTo(0,\
+	arguments[0].getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2)'
 # """A JS script that applies the 'element-highlighted' animation."""
 BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;} \
 50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}} \
-</style>");b=arguments[0];for(var a=0;a<b.length;a++){var c=b[a]; window.scrollTo(0, \
-c.getBoundingClientRect().top+window.pageYOffset-window.innerHeight/2),c.style.animationDuration= \
-"0.5s",c.style.animationName="",setTimeout(function(e){e.style.animationName="selhian"}, 10, c)}'
+</style>");wp=window.parent.parent.parent;b=arguments[0];for(var a=0;a<b.length;a++) \
+{var c=b[a];wp.scrollTo(0,c.getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2), \
+c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(function(e) \
+{e.style.animationName="selhian"}, 10, c)}'
 
 # """Type annotation, referring to either a WebElement, or a list of them."""
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126

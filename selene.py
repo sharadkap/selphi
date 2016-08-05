@@ -882,9 +882,6 @@ def main():
 	if args.username[0]:
 		USERNAME = args.username[0]
 		USERID = USERNAME[-4:]	# The mail ID is the last four characters.
-	# If a url was given, make that the default.
-	DR.BASE_URL = args.environment[0]
-	DR.CN_BASE_URL = args.chenvironment[0]
 
 	# Do a bunch of method overrides to get it to work properly.
 	perform_hacks()
@@ -895,14 +892,17 @@ def main():
 
 	# Run them in each locale.
 	pool = Pool(cpu_count() * 2)	# It's mostly waiting; we can afford to overload the cores, right?
-	pool.map(launch_test, [(loc, bro, outdir, names) for loc in args.locales for bro in args.browser])
+	pool.map(launch_test, [(loc, bro, outdir, names, [args.environment[0], args.chenvironment[0]]) for loc in args.locales for bro in args.browser])
 
 def launch_test(args) -> None:	# pylint: disable-msg=E1126
 	"""Do all the things needed to run a test suite. Put this as the target call of a process.
 	It looks like this is messing with things on a Global level, but it's actually totally fine."""
-	locale, browser, outdir, names = args
+	locale, browser, outdir, names, env = args
 	# Processes don't share global state, but the processes get reused, so have to clean up anyway.
 	DR.reset_globals()
+	# If a url was given, make that the default.
+	DR.BASE_URL = env[0]
+	DR.CN_BASE_URL = env[1]
 	# Set up the run settings.
 	DR.BROWSER_TYPE = DR.BROWSERS[browser]
 	# If China Mode, do it in China, otherwise set the locale

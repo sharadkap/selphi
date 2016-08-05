@@ -97,16 +97,20 @@ def new_drag_drop(source: str, target: str) -> None:
 	def getid(loc):
 		"""Interpret whether input is a locator or a series or alternate locators."""
 		if isinstance(loc, str):
-			return DRIVER.find_element_by_id(loc).id
+			return DRIVER.find_element_by_id(loc)
 		elif isinstance(loc, list):
-			return pick_from_possibilities(loc).id
+			return pick_from_possibilities(loc)
 		else:
 			raise TypeError('You broke it. String, or List only.')
+	# IE WHY.
 	source,	target = getid(source), getid(target)
-	DRIVER.execute(Command.MOVE_TO, {'element': source})
+	DRIVER.execute_script('wp=window.parent.parent.parent;wp.scrollTo(0, \
+		((arguments[0].getBoundingClientRect().top+arguments[1].getBoundingClientRect().top) \
+		/2)+wp.pageYOffset-wp.innerHeight/2)', source, target)
+	DRIVER.execute(Command.MOVE_TO, {'element': source.id})
 	DRIVER.execute(Command.MOUSE_DOWN, {})
 	DRIVER.execute(Command.MOVE_TO, {'xoffset': int(1), 'yoffset': int(1)})
-	DRIVER.execute(Command.MOVE_TO, {'element': target})
+	DRIVER.execute(Command.MOVE_TO, {'element': target.id})
 	DRIVER.execute(Command.MOUSE_UP, {})
 	time.sleep(MINIWAIT)
 
@@ -125,18 +129,15 @@ def domo(locator: Union[str, tuple, list]) -> None:
 		raise TypeError('You broke it. String, List, or Tuple only.')
 
 def click_surely(ele: WebElement) -> None:
-	"""Click on an element. If that doesn't work, move it onscreen and click it again.
+	"""When clicking on an element, move it onscreen first. BECAUSE IE.
 	If that doesn't work, manual override, it was probably just behind a blank textbox."""
 	try:
+		DRIVER.execute_script('wp=window.parent.parent.parent;wp.scrollTo(0,arguments[0].\
+		getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2)', ele)
 		ele.click()
 	except WebDriverException:
-		try:
-			DRIVER.execute_script('window.parent.parent.parent.scrollTo(0,arguments[0].\
-			getBoundingClientRect().top+window.pageYOffset-window.innerHeight/2)', ele)
-			ele.click()
-		except WebDriverException:
-			DRIVER.execute(Command.MOVE_TO , {'element': ele.id})
-			DRIVER.execute(Command.CLICK)
+		DRIVER.execute(Command.MOVE_TO , {'element': ele.id})
+		DRIVER.execute(Command.CLICK)
 
 def pick_from_possibilities(locator: str) -> WebElement:
 	"""Deal with alternate ids. Use a css selector to get any proposed elements."""
@@ -159,7 +160,7 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
 		stem = MOD_STEM
 		mods = MODULES
 		langs = LANGS
-	output = '\n"START: {0}, {1}"\n'.format(get_time(), ','.join(modfilter).upper())	# header row.
+	output = '\n"START: {0}", {1}\n'.format(get_time(), ','.join(modfilter).upper())	# header row.
 	pool = Pool(cpu_count() * 2)
 	results = pool.map(do_locale, [(x, langs, ctem, stem, mods, modfilter, b, \
 		BROWSERS[b], ARGS) for x in langfilter for b in brows])
@@ -193,7 +194,7 @@ def do_locale(args):
 			result += ',"{0}: PASS"'.format(get_time())
 		# Something goes wrong, document it and go to the next module.
 		except WebDriverException as ex:
-			result += ',"{0}: FAIL: {1}"'.format(get_time(), ex.msg.replace('"', '""'))
+			result += ',"{0}: FAIL: {1}"'.format(get_time(), str(ex).replace('"', '""'))
 			draw_failure(lang, mod)
 	DRIVER.quit()
 	return result

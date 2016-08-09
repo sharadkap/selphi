@@ -60,9 +60,11 @@ def main() -> None:
 	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
 	nargs=1, type=str, default='www.aussiespecialist.cn', metavar='')
 	PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of [%(choices)s]. \
-	Default is all.', nargs='+', type=str, choices=MODULES.keys(), metavar='', default=MODULES.keys())
+	Default is all.', nargs='+', type=str, choices=MODULES.keys(), metavar='', \
+	default=list(MODULES.keys()))
 	PARSER.add_argument('-l', '--locales', help='Which locales to test. One or more of [%(choices)s]. \
-	Default is all.', nargs='+', type=str, choices=LANGS.keys(), metavar='', default=LANGS.keys())
+	Default is all.', nargs='+', type=str, choices=LANGS.keys(), metavar='', \
+	default=list(LANGS.keys()))
 	PARSER.add_argument('-b', '--browsers', help='Which browser to use. One or more of [%(choices)s]. \
 	Default is %(default)s', nargs='+', default=['chrome'], choices=BROWSERS.keys(), metavar='')
 	PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.', \
@@ -80,7 +82,7 @@ def main() -> None:
 		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales, brows=ARGS.browsers)
 	except Exception as ex:	# Too general is the point, it's a Final Action. pylint: disable-msg=W0703
 		print(ex)
-		with open(RESULTS_FILE, mode='a') as log:
+		with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
 				log.write('\n"Well, something went wrong. A manual exit, hopefully."')
 
 def restart_driver(br):
@@ -104,9 +106,8 @@ def new_drag_drop(source: str, target: str) -> None:
 			raise TypeError('You broke it. String, or List only.')
 	# IE WHY.
 	source,	target = getid(source), getid(target)
-	DRIVER.execute_script('wp=window.parent.parent.parent;wp.scrollTo(0, \
-		((arguments[0].getBoundingClientRect().top+arguments[1].getBoundingClientRect().top) \
-		/2)+wp.pageYOffset-wp.innerHeight/2)', source, target)
+	DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return x.getBoundingClientRect() \
+		.top;}),wp=window.parent.parent;wp.scrollTo(0, (h[0]+h[1])/2 - wp.innerHeight/2)', source, target)
 	DRIVER.execute(Command.MOVE_TO, {'element': source.id})
 	DRIVER.execute(Command.MOUSE_DOWN, {})
 	DRIVER.execute(Command.MOVE_TO, {'xoffset': int(1), 'yoffset': int(1)})
@@ -133,10 +134,10 @@ def click_surely(ele: WebElement) -> None:
 	If that doesn't work, manual override, it was probably just behind a blank textbox."""
 	try:
 		DRIVER.execute_script('wp=window.parent.parent.parent;wp.scrollTo(0,arguments[0].\
-		getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2)', ele)
+		getBoundingClientRect().top - wp.innerHeight/2)', ele)
 		ele.click()
 	except WebDriverException:
-		DRIVER.execute(Command.MOVE_TO , {'element': ele.id})
+		DRIVER.execute(Command.MOVE_TO, {'element': ele.id})
 		DRIVER.execute(Command.CLICK)
 
 def pick_from_possibilities(locator: str) -> WebElement:
@@ -166,7 +167,7 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
 		BROWSERS[b], ARGS) for x in langfilter for b in brows])
 	output += '\n'.join(results)	# Each locale's row.
 	output += '\n"FINISH: {0}"\n\n'.format(get_time())	# Footer row.
-	with open(RESULTS_FILE, mode='a') as log:
+	with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
 		log.write(output)
 
 def do_locale(args):

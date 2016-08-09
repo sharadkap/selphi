@@ -2,6 +2,7 @@
 
 import os
 import io
+import sys
 import time
 import random
 import argparse
@@ -920,6 +921,7 @@ def launch_test(args) -> None:	# pylint: disable-msg=E1126
 	runner.set_format('Result of: {method_name} - {short_description}')
 	runner.set_stream(True)
 	tap.runner._tracker.stream = buf	# bit of a hack, but how else? pylint: disable-msg=W0212
+	runner.stream.stream = sys.stdout	# why.
 	tests = unittest.TestSuite(names)
 	suite = unittest.TestSuite()
 	suite.addTests(tests)

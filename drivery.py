@@ -340,3 +340,17 @@ class Email:
 			ustd = self.email.find('td', string=re.compile(self.userid))
 			# Get the Username cell, then wander through the tree a bit.
 			return ustd.parent.next_sibling.next_sibling.contents[3].string
+
+class Backup:
+	"""A context handler, put this around a step that could fail, and which counts as a fail, \
+	but whose failure does not actually prevent further testing if you know what you're doing. \
+	The onfail argument is what you know that you're doing."""
+	def __init__(self, onfail: FunctionType) -> None:
+		self.onfail = onfail
+
+	def __enter__(self) -> None:
+		pass
+
+	def __exit__(self, extype, exinst, extrace) -> Any:
+		self.onfail()
+		return True

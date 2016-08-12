@@ -39,6 +39,15 @@ class MinorElement(WrappedElement):
 	def __init__(self, selector: str, within: WrappedElement) -> None:
 		self.element = DR.flashy_find_element(selector, within)
 
+class Fauxlement(WrappedElement):
+	"""This is a backup, used in the error handler: Pretends to be a link."""
+	def __init__(self, href: str) -> None:
+		self.href = href
+
+	def click(self) -> None:
+		"""'Clicks' on the 'element'. Actually just opens the url directly."""
+		DR.get(self.href)
+
 class SplashSelect(WrappedElement):
 	"""Represents the Language Selector on the Splash Page."""
 	def __init__(self):

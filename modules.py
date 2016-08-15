@@ -36,12 +36,12 @@ def parseargs():
 		MOD_STEM_C, MOD_STEM_C_D, SCREENSHOT_DIR, RESULTS_FILE
 	IMPLICITLY_WAIT = ARGS.wait[0]
 	TIME_FORMAT = ' '.join(ARGS.timeformat)
-	MOD_STEM_D = 'https://{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ARGS.environment)
-	MOD_STEM = 'https://{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ARGS.environment)
-	MOD_STEM_C_D = 'https://{0}/content/sites/asp-zh-cn/resources/en/{{0}}/\
-		assets/asset/zh_cn_{{1}}.zip/output/index_SCORM.html'.format(ARGS.chenvironment)
-	MOD_STEM_C = 'https://{0}/content/sites/asp-zh-cn/en/assignments.resource.html/\
-		content/sites/asp-zh-cn/resources/en/{{0}}'.format(ARGS.chenvironment)
+	MOD_STEM_D = 'https://{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ARGS.environment[0])
+	MOD_STEM = 'https://{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ARGS.environment[0])
+	MOD_STEM_C_D = 'https://{0}/content/sites/asp-{{0}}/resources/en/{{1}}/\
+		assets/asset/{{3}}_{{2}}.zip/output/index_SCORM.html'.format(ARGS.chenvironment[0])
+	MOD_STEM_C = 'https://{0}/content/sites/asp-{{0}}/en/assignments.resource.html/\
+		content/sites/asp-{{0}}/resources/en/{{1}}'.format(ARGS.chenvironment[0])
 	SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
 	RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
 
@@ -55,10 +55,10 @@ def main() -> None:
 	PARSER = argparse.ArgumentParser()
 	PARSER.add_argument('-e', '--environment', help='Which environment to test in. \
 	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
-	nargs=1, type=str, default='prod.aussiespecialist.com', metavar='')
+	nargs=1, type=str, default=['prod.aussiespecialist.com'], metavar='')
 	PARSER.add_argument('-ce', '--chenvironment', help='Which environment to test in if using China. \
 	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
-	nargs=1, type=str, default='www.aussiespecialist.cn', metavar='')
+	nargs=1, type=str, default=['www.aussiespecialist.cn'], metavar='')
 	PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of [%(choices)s]. \
 	Default is all.', nargs='+', type=str, choices=MODULES.keys(), metavar='', \
 	default=list(MODULES.keys()))
@@ -74,6 +74,8 @@ def main() -> None:
 	PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. \
 	See https://docs.python.org/3/library/time.html#time.strftime for full formatting info. \
 	Default is %(default)s', default=['%Y/%m/%d %H:%M'], nargs='+', type=str)
+	PARSER.add_argument('-s', '--scorm', help='Force SCORM MODE. Causes the url scheme to use \
+	the complex scform, even for non China locales.', action='store_true')
 	ARGS = PARSER.parse_args()
 	parseargs()
 	os.makedirs(SCREENSHOT_DIR, exist_ok=True)
@@ -81,9 +83,9 @@ def main() -> None:
 	try:
 		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales, brows=ARGS.browsers)
 	except Exception as ex:	# Too general is the point, it's a Final Action. pylint: disable-msg=W0703
-		print(ex)
 		with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
 				log.write('\n"Well, something went wrong. A manual exit, hopefully."')
+		raise ex
 
 def restart_driver(br):
 	"""Restarts the DRIVER."""
@@ -181,15 +183,16 @@ def do_locale(args):
 	# Start recording results.
 	result = '_'.join([lang.upper(), brname.upper()])
 	# China is different, of course, of course, watch out for these checks below.
-	cnmode = lang == 'cn'
+	scorm = (lang == 'cn' or ARGS.scorm)
 	for mod in modfilter:
 		try:
 			# Try to do the module
-			if cnmode:	# Scorm den.
-				DRIVER.get(ctem.format(MODULES_C[mod][0], MODULES_C[mod][1]))
+			if scorm:	# Scorm den.
+				DRIVER.get(ctem.format(langs[lang].replace('_', '-'), MODULES_C[mod][0], MODULES_C[mod][1], \
+					langs[lang]))
 			else:
 				DRIVER.get(stem.format(langs[lang], mods[mod]))
-			log_in_first(lang, cnmode)
+			log_in_first(lang, scorm)
 			for elem in SCRIPTS[mod]:
 				domo(elem)
 			result += ',"{0}: PASS"'.format(get_time())

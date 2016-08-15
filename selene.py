@@ -265,21 +265,20 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		self.assertEqual(fomlink, panel.view_highlights())
 		# Click the Photos
 		imgnum = panel.count_photos()
-		# China doesn't do this bit.
-		if not DR.CN_MODE:
-			photos = panel.open_photos()
-			# The Photo Viewer should appear, can be scrolled through, displays different images.
-			# But if there was only one image available, skip this scrolling bit.
-			if not imgnum == 1:
-				imgone = photos.current_image_source()
-				photos.next()
-				imgtwo = photos.current_image_source()
-				self.assertNotEqual(imgone, imgtwo)
-				photos.next()
-				imgone = photos.current_image_source()
-				self.assertNotEqual(imgtwo, imgone)
-			# Close the Photo Viewer
-			photos.close()
+		# Open the Photo viewer.
+		photos = panel.open_photos()
+		# The Photo Viewer should appear, can be scrolled through, displays different images.
+		# But if there was only one image available, skip this scrolling bit.
+		if not imgnum == 1:
+			imgone = photos.current_image_source()
+			photos.next()
+			imgtwo = photos.current_image_source()
+			self.assertNotEqual(imgone, imgtwo)
+			photos.next()
+			imgone = photos.current_image_source()
+			self.assertNotEqual(imgtwo, imgone)
+		# Close the Photo Viewer
+		photos.close()
 		# Click on one of the Itinerary Suggestion links
 		itiname = panel.random_itinerary()
 		# If there were no Itinerary links, skip this bit.
@@ -288,18 +287,16 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			panel = CP.InteractiveMap.Controls.InfoPanel()
 			# The selected Itinerary should open.
 			self.assertEqual(itiname, panel.get_title())
-			# China's map doesn't show the Route Highlights.
-			if not DR.CN_MODE:
-				# Its route should appear and gain focus on the map, but zoom out a bit first,
-				# the pins will sometimes pop up behind the menu panel.
-				CP.InteractiveMap.ZoomTools().zoom_out()
-				pins = CP.InteractiveMap.MapArea.MapPins()
-				# The Find Out More link should link to the relevant Itinerary Page.
-				self.assertIn(DR.LOCALE, panel.find_out_more())
-				# Click on one of the Route Pins
-				pins.pick_random()
-				# An info box should appear at the pin.
-				CP.InteractiveMap.MapArea.InfoPopup()
+			# Its route should appear and gain focus on the map, but zoom out a bit first,
+			# the pins will sometimes pop up behind the menu panel.
+			CP.InteractiveMap.ZoomTools().zoom_out()
+			pins = CP.InteractiveMap.MapArea.MapPins()
+			# The Find Out More link should link to the relevant Itinerary Page.
+			self.assertIn(DR.LOCALE, panel.find_out_more())
+			# Click on one of the Route Pins
+			pins.pick_random()
+			# An info box should appear at the pin.
+			CP.InteractiveMap.MapArea.InfoPopup()
 		# Click the Back To Menu Button, the panel should spin back to the Main Map Menu
 		panel.back_to_menu()
 

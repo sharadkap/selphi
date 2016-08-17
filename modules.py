@@ -36,11 +36,12 @@ def parseargs():
 		MOD_STEM_C, MOD_STEM_C_D, SCREENSHOT_DIR, RESULTS_FILE
 	IMPLICITLY_WAIT = ARGS.wait[0]
 	TIME_FORMAT = ' '.join(ARGS.timeformat)
-	MOD_STEM_D = 'https://{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ARGS.environment[0])
-	MOD_STEM = 'https://{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ARGS.environment[0])
-	MOD_STEM_C_D = 'https://{0}/content/sites/asp-{{0}}/resources/en/{{1}}/\
+	MOD_STEM_D = '{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ARGS.environment[0])
+	MOD_STEM = '{0}/{{0}}/secure/training/training-summary/{{1}}.html' \
+		.format(ARGS.environment[0])
+	MOD_STEM_C_D = '{0}/content/sites/asp-{{0}}/resources/en/{{1}}/\
 		assets/asset/{{3}}_{{2}}.zip/output/index_SCORM.html'.format(ARGS.chenvironment[0])
-	MOD_STEM_C = 'https://{0}/content/sites/asp-{{0}}/en/assignments.resource.html/\
+	MOD_STEM_C = '{0}/content/sites/asp-{{0}}/en/assignments.resource.html/\
 		content/sites/asp-{{0}}/resources/en/{{1}}'.format(ARGS.chenvironment[0])
 	SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
 	RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
@@ -54,11 +55,12 @@ def main() -> None:
 	# pylint: disable-msg=C0103
 	PARSER = argparse.ArgumentParser()
 	PARSER.add_argument('-e', '--environment', help='Which environment to test in. \
-	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
-	nargs=1, type=str, default=['prod.aussiespecialist.com'], metavar='')
+	Format: the website domain and protocol code (https thing). If the server requires authentication \
+	, include it like "https://username:password@server.domain.com". Default is %(default)s.', \
+	nargs=1, type=str, default=['https://prod.aussiespecialist.com'], metavar='')
 	PARSER.add_argument('-ce', '--chenvironment', help='Which environment to test in if using China. \
-	Format: the bare website domain without protocol code (https thing). Default is %(default)s.', \
-	nargs=1, type=str, default=['www.aussiespecialist.cn'], metavar='')
+	Format: the website domain and protocol code (https thing). Default is %(default)s.', \
+	nargs=1, type=str, default=['https://www.aussiespecialist.cn'], metavar='')
 	PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of [%(choices)s]. \
 	Default is all.', nargs='+', type=str, choices=MODULES.keys(), metavar='', \
 	default=list(MODULES.keys()))

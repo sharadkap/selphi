@@ -81,6 +81,9 @@ c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(function(e)
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
 ELEMENT_LIST = List[WebElement] # pylint: disable-msg=E1126
 
+# Hold onto a list of exceptions, use this for nonfatal exceptions.
+verificationErrors = []
+
 def to_list(item) -> list:
 	"""Wraps the input into a list if it wasn't already one."""
 	return item if isinstance(item, list) else [item]
@@ -200,15 +203,19 @@ def execute_mouse_over(element: WebElement) -> None:
 	"""Simulates the mouse moving into an element."""
 	ActionChains(DRIVER).move_to_element(element).perform()
 
+def add_error(error: Exception) -> None:
+	"""Appends an exception to the errors list. Bit of a shortcut."""
+	verificationErrors.append(error)
+
 def find_error_improver(func):
 	"""A decorator to get the NoSuchElementException to actually tell you what the problem is."""
 	def actually_helpful(selector, within=None):
 		"""Does a thing, and if it didn't work, tells you what was missing from where."""
 		try:
 			return func(selector, within)
-		except NoSuchElementException:
-			raise NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(selector, \
-				current_url()))
+		except NoSuchElementException as ex:
+			ex.msg = ("Couldn't find selector '{0}' on page {1}".format(selector, current_url()))
+			raise ex
 	return actually_helpful
 
 @find_error_improver
@@ -340,17 +347,3 @@ class Email:
 			ustd = self.email.find('td', string=re.compile(self.userid))
 			# Get the Username cell, then wander through the tree a bit.
 			return ustd.parent.next_sibling.next_sibling.contents[3].string
-
-class Backup:
-	"""A context handler, put this around a step that could fail, and which counts as a fail, \
-	but whose failure does not actually prevent further testing if you know what you're doing. \
-	The onfail argument is what you know that you're doing."""
-	def __init__(self, onfail: FunctionType) -> None:
-		self.onfail = onfail
-
-	def __enter__(self) -> None:
-		pass
-
-	def __exit__(self, extype, exinst, extrace) -> Any:
-		self.onfail()
-		return True

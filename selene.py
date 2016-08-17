@@ -1,4 +1,5 @@
-"""Test execution goes in here, but no browser interaction implementation details."""
+"""Test execution goes in here, but no browser interaction implementation details.
+Nonfatal Assertions are a bit of a mess, but whatever, can't really refactor control flow."""
 
 import os
 import io
@@ -10,8 +11,8 @@ import unittest
 from collections import OrderedDict
 from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
+from selenium.common.exceptions import NoSuchElementException
 import tap
-from tap import TAPTestRunner
 import drivery as DR
 import modules as MOD
 import components as CP
@@ -42,8 +43,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.splash_page()
 		# Concerning the Languages Selector
 		langsel = CP.SplashSelect()
-		# The list should contain all locales.
-		self.assertSetEqual(DR.LOCALE_SET, langsel.get_values())
+		# The list should contain all locales. But don't crash if it doesn't.
+		try:
+			self.assertSetEqual(DR.LOCALE_SET, langsel.get_values())
+		except AssertionError as ex:
+			DR.add_error(ex)
 		# Select the country from the dropdown.
 		langsel.choose_locale()
 		# Page should redirect to its respective locale.
@@ -53,18 +57,31 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 	def test_Homepage(self) -> None:
 		"""Tests the Welcome Page content."""
 		DR.open_home_page()
-		# Video should be present.
-		video = CP.WelcomeVideo()
+		# Video should be present. But its absence isn't worth aborting the test over.
+		try:
+			video = CP.WelcomeVideo()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		else:
+			# Play the video.
+			video.play()
+			# Video loads and plays. Again, there are still other things to test.
+			try:
+				self.assertTrue(video.is_playing())
+			except AssertionError as ex:
+				DR.add_error(ex)
 		# Login and Register buttons should be present in the body content.
-		CP.BodyLoginButton()
-		CP.BodyRegisterButton()
+		try:
+			CP.BodyLoginButton()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		try:
+			CP.BodyRegisterButton()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# The What You Can See Mosaic is displayed, contains five tiles.
 		mosaic = CP.WhatYouCanSeeMosaic()
 		self.assertEqual(mosaic.tile_count(), 5)
-		# Play the video.
-		video.play()
-		# Video loads and plays.
-		self.assertTrue(video.is_playing())
 
 	def test_Navigation(self) -> None:
 		"""Checks that the contents of the Signed Out Nav Menu are correct."""
@@ -916,7 +933,7 @@ def launch_test(args) -> None:	# pylint: disable-msg=E1126
 	# Create the test runner, choose the output path: right next to the test script file.
 	buf = io.StringIO()
 	tap.runner._tracker = tap.tracker.Tracker()	# Reboot the test runner. pylint: disable-msg=W0212
-	runner = TAPTestRunner()
+	runner = tap.TAPTestRunner()
 	runner.set_format('Result of: {method_name} - {short_description}')
 	runner.set_stream(True)
 	tap.runner._tracker.stream = buf	# bit of a hack, but how else? pylint: disable-msg=W0212

@@ -39,15 +39,6 @@ class MinorElement(WrappedElement):
 	def __init__(self, selector: str, within: WrappedElement) -> None:
 		self.element = DR.flashy_find_element(selector, within)
 
-class Fauxlement(WrappedElement):
-	"""This is a backup, used in the error handler: Pretends to be a link."""
-	def __init__(self, href: str) -> None:
-		self.href = href
-
-	def click(self) -> None:
-		"""'Clicks' on the 'element'. Actually just opens the url directly."""
-		DR.get(self.href)
-
 class SplashSelect(WrappedElement):
 	"""Represents the Language Selector on the Splash Page."""
 	def __init__(self):
@@ -1173,3 +1164,48 @@ class AussieStore(WrappedElement):
 				count -= 1
 				self.element = DR.quietly_find_element('.shoppingcart')
 				DR.wait_until(lambda _: self.count() == count)
+
+
+class BackupHrefs:
+	"""Call on this if an important component is missing, it has links to the pages.
+	Don't instantiate this though, it's just a function namespace"""
+	# IT'S FINE. I KNOW WHAT I'M DOING. pylint: disable-msg=E0211
+	def sitemap():
+		"""Opens the Sitemap page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/sitemap.html')
+
+	def itineraries():
+		"""Opens the Itineraries Search page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/sales-resources/itineraries-search-and-feature.html')
+
+	def factsheets():
+		"""Opens The Fact Sheet Search page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/sales-resources/fact-sheets-overview.html')
+
+	def map():
+		"""Opens the Interactive Map page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/sales-resources/interactive-map.html')
+
+	def contact():
+		"""Opens the Contact Us page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/about/contact-us.html')
+
+	def register():
+		"""Opens the Registration Form page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + 'about/registration-form.html')
+
+	def about():
+		"""Opens the About Landing Page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/about.html')
+
+	def events():
+		"""Opens the Events page"""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/sales-resources/events.html')
+
+	def favourites():
+		"""Opens the My Sales Tools page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/secure/sales-resources/my-sales-tools.html')
+
+	def profile():
+		"""Opens the Profile page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/secure/profile.html')

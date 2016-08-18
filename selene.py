@@ -73,9 +73,6 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Login and Register buttons should be present in the body content.
 		try:
 			CP.BodyLoginButton()
-		except NoSuchElementException as ex:
-			DR.add_error(ex)
-		try:
 			CP.BodyRegisterButton()
 		except NoSuchElementException as ex:
 			DR.add_error(ex)
@@ -87,43 +84,58 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks that the contents of the Signed Out Nav Menu are correct."""
 		DR.open_home_page()
 		# Click on 'About' in the Mega Menu.
-		about = CP.About().open()
-		# The About section should have: About, Why Register,
-		# Program FAQ, Site Usage, Contact Us
-		about.about()
-		about.benefits()
-		about.how_to_use_the_site()
-		about.program_faq()
-		about.contact_us()
+		try:
+			about = CP.About().open()
+			# The About section should have: About, Why Register,
+			# Program FAQ, Site Usage, Contact Us
+			about.about()
+			about.benefits()
+			about.how_to_use_the_site()
+			about.program_faq()
+			about.contact_us()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 
 		# Click on 'Sales Resources' in the Mega Menu.
-		sales = CP.SalesResources().open()
-		# The Sales section should have: Sales Resources (Landing), Interactive Map,
-		# Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
-		# Itinerary Search, Australian Events, Destination FAQ
-		sales.sales_resources()
-		sales.interactive_map()
-		sales.itineraries_search_and_feature()
-		sales.fact_sheets_overview()
-		sales.events()
-		sales.useful_sites()
-		sales.destination_faq()
-		sales.image_and_video_galleries()
+		try:
+			sales = CP.SalesResources().open()
+			# The Sales section should have: Sales Resources (Landing), Interactive Map,
+			# Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
+			# Itinerary Search, Australian Events, Destination FAQ
+			sales.sales_resources()
+			sales.interactive_map()
+			sales.itineraries_search_and_feature()
+			sales.fact_sheets_overview()
+			sales.events()
+			sales.useful_sites()
+			sales.destination_faq()
+			sales.image_and_video_galleries()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 
 		# Click on 'Training' in the Mega Menu.
-		train = CP.Training().open()
-		# The Training section should have: *Training (Landing page only)
-		train.training()
+		try:
+			train = CP.Training().open()
+			# The Training section should have: *Training (Landing page only)
+			train.training()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 
 		# Click on 'News & Products' in the Mega Menu.
-		news = CP.NewsAndProducts().open()
-		# The News section should have: *News and Product Updates (Landing page only)
-		news.news_and_product_updates()
+		try:
+			news = CP.NewsAndProducts().open()
+			# The News section should have: *News and Product Updates (Landing page only)
+			news.news_and_product_updates()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 
 		# Click on 'Aussie Specialist Club' in the Mega Menu.
-		club = CP.AussieSpecialistClub().open()
-		# The Club section should have: *Aussie Specialist Club (Landing page only)
-		club.aussie_specialist_club()
+		try:
+			club = CP.AussieSpecialistClub().open()
+			# The Club section should have: *Aussie Specialist Club (Landing page only)
+			club.aussie_specialist_club()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 
 	def test_Footer(self) -> None:
 		"""Checks the content of the Footer."""
@@ -131,25 +143,37 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		footer = CP.Footer()
 		if DR.CN_MODE:
 			# China is different, of course.
-			footer.wechat()
+			try:
+				footer.wechat()
+			except NoSuchElementException as ex:
+				DR.add_error(ex)
 		else:
 			# The Footer should have: Find us on: Social icons and links.
-			footer.facebook()
-			footer.twitter()
-			footer.plus_google()
-			footer.instagram()
-			footer.youtube()
+			try:
+				footer.facebook()
+				footer.twitter()
+				footer.plus_google()
+				footer.instagram()
+				footer.youtube()
+			except NoSuchElementException as ex:
+				DR.add_error(ex)
 		# About this site: links through to relevant pages
-		footer.sitemap()
-		footer.privacy_policy()
-		footer.terms_and_conditions()
-		footer.terms_of_use()
-		footer.contact_us()
+		try:
+			footer.sitemap()
+			footer.privacy_policy()
+			footer.terms_and_conditions()
+			footer.terms_of_use()
+			footer.contact_us()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Other sites: Links through to Aus.com, Corporate site and Business Events.
-		footer.australia()
-		if not DR.CN_MODE:	# China doesn't have this one.
-			footer.tourism_australia()
-		footer.businessevents_australia()
+		try:
+			footer.australia()
+			footer.businessevents_australia()
+			if not DR.CN_MODE:	# China doesn't have this one.
+				footer.tourism_australia()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Click the Change Your Country link.
 		footer.splash().click()
 		# Should link back to the Splash page.
@@ -160,27 +184,41 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Sitemap page links."""
 		DR.open_home_page()
 		# Click the Sitemap link in the Footer.
-		CP.Footer().sitemap().click()
-		# Should link to the Sitemap page."
-		DR.wait_for_page()
-		self.assertIn('/sitemap.html', DR.current_url())
+		try:
+			CP.Footer().sitemap().click()
+			# Should link to the Sitemap page."
+			DR.wait_for_page()
+			self.assertIn('/sitemap.html', DR.current_url())
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.sitemap()
+			DR.add_error(ex)
 		# Sitemap page should have links to each of the pages in the Nav Menu
 		sitemap = CP.Sitemap()
-		nav_links = CP.NavMenu().get_all_links()
-		sitemap_links = sitemap.get_all_links()
-		self.assertTrue(nav_links.issubset(sitemap_links))
-		# And should also have Change Password, Unsubscribe, and Coming Soon links.
-		# But China doesn't.
-		if not DR.CN_MODE:
-			sitemap.change()
-			sitemap.newsletter_unsubscribe()
-			sitemap.coming_soon()
+		try:
+			nav_links = CP.NavMenu().get_all_links()
+			sitemap_links = sitemap.get_all_links()
+			self.assertTrue(nav_links.issubset(sitemap_links))
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		try:
+			# And should also have Change Password, Unsubscribe, and Coming Soon links.
+			# But China doesn't.
+			if not DR.CN_MODE:
+				sitemap.change()
+				sitemap.newsletter_unsubscribe()
+				sitemap.coming_soon()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 
 	def test_Filtered_Search__Itineraries(self) -> None:
 		"""Checks the Itineraries Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Itinerary Suggestions.
-		CP.SalesResources().open().itineraries_search_and_feature().click()
+		try:
+			CP.SalesResources().open().itineraries_search_and_feature().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.itineraries()
+			DR.add_error(ex)
 		# Do a random search and validate the results.
 		search = CP.FilteredSearch()
 		search.random_search()
@@ -190,11 +228,18 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Tests the Fact Sheet Search."""
 		DR.open_home_page()
 		# Navigate to Sales Resources > Fact Sheets.
-		CP.SalesResources().open().fact_sheets_overview().click()
+		try:
+			CP.SalesResources().open().fact_sheets_overview().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.factsheets()
+			DR.add_error(ex)
 		# Do a random search. (In Fact Sheet +PDFs Mode) Then validate the results.
 		search = CP.FilteredSearch(fact_sheet_mode=True)
 		search.random_search()
-		self.look_at_search_results(search)
+		try:
+			self.look_at_search_results(search)
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Alright, done there back up.
 		DR.back()
 		# Because the page was reloaded, have to refresh the references.
@@ -231,97 +276,136 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		"""Checks the Interactive Map page."""
 		# Navigate to Sales Resources > Interactive Map
 		DR.open_home_page()
-		CP.HeaderMapIcon().click()
+		try:
+			CP.HeaderMapIcon().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.map()
+			DR.add_error(ex)
 		# (Switches into the Map Iframe.)
 		imap = CP.InteractiveMap()
 		# Map Menu should have: Cities, Iconic Destinaions, Itineraries, and Flight Times.
 		controls = imap.Controls()
-		cities = controls.Cities()
-		icons = controls.IconicDestinations()
-		controls.Itineraries()
-		flights = controls.FlyingTimes()
-		# Open the Cities menu, the Cities list should be shown.
-		cities.open_menu()
-		# The Map should be populated with Map Pins.
-		# Click a pinned City, remember which one it was.
-		pin = imap.MapArea.MapPins().pick_random()
-		# That City's Info Panel should be shown. Go examine it.
-		self.map_info_panel(pin)
-		# Open the Iconic Destinations menu
-		icons.open_menu()
-		# The Icons list should be shown, and the Map should be populated with Destination Pins.
-		# Click a random pinned Destination.
-		pin = imap.MapArea.MapPins().pick_random()
-		# That Icon's Info Panel should be shown, verify all that.
-		self.map_info_panel(pin)
-		# Open the Flying Times section, the Flying Times device appears.
-		flights.open_menu()
-		# Select a city in each of the From and To drop menus.
-		ffrom = flights.choose_from()
-		fto = flights.choose_to()
-		# The selected cities' Pins appear on the map,
-		#   connected by a flight path, traversed by a plane icon.
-		pins = imap.MapArea.MapPins()
-		self.assertEqual(pins.count(), 2)
-		names = pins.get_names()
-		self.assertIn(ffrom, names)
-		self.assertIn(fto, names)
-		# The flying Times panel shows the approximate flight time and distance.
-		flights.flight_time()
-		flights.flight_distance()
+		try:
+			cities = controls.Cities()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		else:
+			try:
+				# Open the Cities menu, the Cities list should be shown.
+				cities.open_menu()
+				# The Map should be populated with Map Pins.
+				# Click a pinned City, remember which one it was.
+				pin = imap.MapArea.MapPins().pick_random()
+				# That City's Info Panel should be shown. Go examine it.
+				self.map_info_panel(pin)
+			except NoSuchElementException as ex:
+				DR.add_error(ex)
+		try:
+			icons = controls.IconicDestinations()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		else:
+			try:
+				# Open the Iconic Destinations menu
+				icons.open_menu()
+				# The Icons list should be shown, and the Map should be populated with Destination Pins.
+				# Click a random pinned Destination.
+				pin = imap.MapArea.MapPins().pick_random()
+				# That Icon's Info Panel should be shown, verify all that.
+				self.map_info_panel(pin)
+			except NoSuchElementException as ex:
+				DR.add_error(ex)
+		try:
+			controls.Itineraries()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		try:
+			flights = controls.FlyingTimes()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		else:
+			# Open the Flying Times section, the Flying Times device appears.
+			flights.open_menu()
+			# Select a city in each of the From and To drop menus.
+			ffrom = flights.choose_from()
+			fto = flights.choose_to()
+			# The selected cities' Pins appear on the map,
+			#   connected by a flight path, traversed by a plane icon.
+			pins = imap.MapArea.MapPins()
+			self.assertEqual(pins.count(), 2)
+			names = pins.get_names()
+			self.assertIn(ffrom, names)
+			self.assertIn(fto, names)
+			# The flying Times panel shows the approximate flight time and distance.
+			flights.flight_time()
+			flights.flight_distance()
 
 	def map_info_panel(self, name: str) -> None:
 		"""Look at a Map Location Info Pane. Checks the various links and images."""
 		# The right Info panel should be open.
 		panel = CP.InteractiveMap.Controls.InfoPanel()
-		self.assertEqual(name, panel.get_title())
-		# The Find Out More and View Highlights buttons should link
-		#   to a relevant Fact Sheet/Itinerary Plan.
-		fomlink = panel.find_out_more()
-		self.assertIn(DR.LOCALE, fomlink)
-		self.assertEqual(fomlink, panel.view_highlights())
+		try:
+			self.assertEqual(name, panel.get_title())
+			# The Find Out More and View Highlights buttons should link
+			#   to a relevant Fact Sheet/Itinerary Plan.
+			fomlink = panel.find_out_more()
+			self.assertIn(DR.LOCALE, fomlink)
+			self.assertEqual(fomlink, panel.view_highlights())
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Click the Photos
-		imgnum = panel.count_photos()
-		# Open the Photo viewer.
-		photos = panel.open_photos()
-		# The Photo Viewer should appear, can be scrolled through, displays different images.
-		# But if there was only one image available, skip this scrolling bit.
-		if not imgnum == 1:
-			imgone = photos.current_image_source()
-			photos.next()
-			imgtwo = photos.current_image_source()
-			self.assertNotEqual(imgone, imgtwo)
-			photos.next()
-			imgone = photos.current_image_source()
-			self.assertNotEqual(imgtwo, imgone)
-		# Close the Photo Viewer
-		photos.close()
+		try:
+			imgnum = panel.count_photos()
+			# Open the Photo viewer.
+			photos = panel.open_photos()
+			# The Photo Viewer should appear, can be scrolled through, displays different images.
+			# But if there was only one image available, skip this scrolling bit.
+			if not imgnum == 1:
+				imgone = photos.current_image_source()
+				photos.next()
+				imgtwo = photos.current_image_source()
+				self.assertNotEqual(imgone, imgtwo)
+				photos.next()
+				imgone = photos.current_image_source()
+				self.assertNotEqual(imgtwo, imgone)
+			# Close the Photo Viewer
+			photos.close()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Click on one of the Itinerary Suggestion links
-		itiname = panel.random_itinerary()
-		# If there were no Itinerary links, skip this bit.
-		if itiname != '':
-			# New panel, renew the selector.
-			panel = CP.InteractiveMap.Controls.InfoPanel()
-			# The selected Itinerary should open.
-			self.assertEqual(itiname, panel.get_title())
-			# Its route should appear and gain focus on the map, but zoom out a bit first,
-			# the pins will sometimes pop up behind the menu panel.
-			CP.InteractiveMap.ZoomTools().zoom_out()
-			pins = CP.InteractiveMap.MapArea.MapPins()
-			# The Find Out More link should link to the relevant Itinerary Page.
-			self.assertIn(DR.LOCALE, panel.find_out_more())
-			# Click on one of the Route Pins
-			pins.pick_random()
-			# An info box should appear at the pin.
-			CP.InteractiveMap.MapArea.InfoPopup()
-		# Click the Back To Menu Button, the panel should spin back to the Main Map Menu
-		panel.back_to_menu()
+		try:
+			itiname = panel.random_itinerary()
+			# If there were no Itinerary links, skip this bit.
+			if itiname != '':
+				# New panel, renew the selector.
+				panel = CP.InteractiveMap.Controls.InfoPanel()
+				# The selected Itinerary should open.
+				self.assertEqual(itiname, panel.get_title())
+				# Its route should appear and gain focus on the map, but zoom out a bit first,
+				# the pins will sometimes pop up behind the menu panel.
+				CP.InteractiveMap.ZoomTools().zoom_out()
+				pins = CP.InteractiveMap.MapArea.MapPins()
+				# The Find Out More link should link to the relevant Itinerary Page.
+				self.assertIn(DR.LOCALE, panel.find_out_more())
+				# Click on one of the Route Pins
+				pins.pick_random()
+				# An info box should appear at the pin.
+				CP.InteractiveMap.MapArea.InfoPopup()
+			# Click the Back To Menu Button, the panel should spin back to the Main Map Menu
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
+		finally:
+			panel.back_to_menu()
 
 	def test_Contact_Us(self) -> None:
 		"""Checks the Contact Us page."""
 		DR.open_home_page()
 		# Navigate to About > Contact Us.
-		CP.About().open().contact_us().click()
+		try:
+			CP.About().open().contact_us().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.contact()
+			DR.add_error(ex)
 		# "Click the Contact Us link, Default email client should open, with the To field populated
 		#   with the relevant contact." Can't actually test that, so a 'mailto:' will have to do.
 		CP.ContactUs()
@@ -331,7 +415,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		global USERID, USERNAME	# I'm sure it's fine. pylint: disable-msg=W0601
 		DR.open_home_page()
 		# Navigate to the Registration Page
-		CP.BodyRegisterButton().click()
+		try:
+			CP.BodyRegisterButton().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.register()
+			DR.add_error(ex)
 		# Random letters to make a unique username.
 		USERID = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
 		# The Country Code
@@ -385,19 +473,31 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Should proceed to the Secure welcome page.
-		self.assertIn(DR.LOCALE + '/secure.html', DR.current_url())
+		try:
+			self.assertIn(DR.LOCALE + '/secure.html', DR.current_url())
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Check the Nav Menu
 		# The Sales section should now have the My Sales Tools link
-		CP.SalesResources().open().my_sales_tools()
+		try:
+			CP.SalesResources().open().my_sales_tools()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# The Training Section should now have the Training Summary and Webinars links.
-		train = CP.Training().open()
-		train.webinars()
-		train.training_summary()
+		try:
+			train = CP.Training().open()
+			train.webinars()
+			train.training_summary()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# The News & Updates section should have the Latest News Link
 		# The News section should now  have the Product Updates link.
-		news = CP.NewsAndProducts().open()
-		news.latest_news()
-		news.product_videos()
+		try:
+			news = CP.NewsAndProducts().open()
+			news.latest_news()
+			news.product_videos()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# China shows most of its ASC stuff to unqualified users, yes.
 		if DR.CN_MODE:
 			club = CP.AussieSpecialistClub().open()
@@ -414,17 +514,20 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			"""Opens a mosaic, checks it, and adds it to sales tools"""
 			nonlocal favtitles
 			# Click on some of the Mosaic panels.
-			for tile in CP.WhatYouCanSeeMosaic().random_selection(num):
-				tile.open()
-				# The Panels should unfold, showing a description, More Info link, and heart button.
-				# They aren't too well labelled though, so be sure to actually watch the playback.
-				self.assertTrue(tile.get_description().is_displayed())
-				self.assertTrue(tile.get_link().is_displayed())
-				# Click on the Heart buttons of those mosaics.
-				tile.add_to_favourites()
-				favtitles.add(tile.get_title())
-				# The Heart Icon in the header should pulse and have a number incremented.
-				self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
+			try:
+				for tile in CP.WhatYouCanSeeMosaic().random_selection(num):
+					tile.open()
+					# The Panels should unfold, showing a description, More Info link, and heart button.
+					# They aren't too well labelled though, so you might want to watch the playback.
+					self.assertTrue(tile.get_description().is_displayed())
+					self.assertTrue(tile.get_link().is_displayed())
+					# Click on the Heart buttons of those mosaics.
+					tile.add_to_favourites()
+					favtitles.add(tile.get_title())
+					# The Heart Icon in the header should pulse and have a number incremented.
+					self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
+			except NoSuchElementException as ex:
+				DR.add_error(ex)
 
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
@@ -435,35 +538,60 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			for x in CP.MySalesTools().get_favourites():
 				x.close()
 		# Navigate to the About page.
-		CP.About().open().about().click()
+		try:
+			CP.About().open().about().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.about()
+			DR.add_error(ex)
 		# Add some of the mosaics to Sales Tools
 		mosaicad(3)
 		# Navigate to Sales Resources > Australian Events.
-		CP.SalesResources().open().events().click()
+		try:
+			CP.SalesResources().open().events().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.events()
+			DR.add_error(ex)
 		# Click the Add To Sales Tools buttons of some of the Event Mosaics.
 		mosaicad(6)
 		# Navigate to Sales Resources > Fact Sheets.
-		CP.SalesResources().open().fact_sheets_overview().click()
+		try:
+			CP.SalesResources().open().fact_sheets_overview().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.factsheets()
+			DR.add_error(ex)
 		# Click the Add To Sales Tools buttons on a few of the results.
-		search = CP.FilteredSearch(fact_sheet_mode=True)
-		for result in search.get_all_results():
-			result.add_to_favourites()
-			favtitles.add(result.get_title())
-			self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
+		try:
+			search = CP.FilteredSearch(fact_sheet_mode=True)
+			for result in search.get_all_results():
+				result.add_to_favourites()
+				favtitles.add(result.get_title())
+				self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Click the Heart Icon in the header, the My Sales Tools page should be displayed.
-		CP.HeaderHeartIcon().click()
+		try:
+			CP.HeaderHeartIcon().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.favourites()
+			DR.add_error(ex)
 		# The My Sales Tools page should have an entry for each of the pages added previously.
 		tools = CP.MySalesTools()
 		faves = tools.get_favourites()
 		favpagetitles = {x.get_title() for x in faves}
-		self.assertTrue(favtitles.issubset(favpagetitles))
+		try:
+			self.assertTrue(favtitles.issubset(favpagetitles))
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Entries should have an X button, a Title, a Description, and a More Info link.
-		for fave in faves:
-			fave.get_title()
-			fave.get_description()
-			fave.get_link()
-			# Click several of the listed items' X buttons.
-			fave.close()
+		try:
+			for fave in faves:
+				fave.get_title()
+				fave.get_description()
+				fave.get_link()
+				# Click several of the listed items' X buttons.
+				fave.close()
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# There will now be a set of buttons present instead of the favourites list.
 		tools.home_search()
 		# The entries should be removed from the list.
@@ -475,7 +603,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.open_home_page()
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Navigate to the Profile page.
-		CP.NavMenu().profile().click()
+		try:
+			CP.NavMenu().profile().click()
+		except NoSuchElementException as ex:
+			CP.BackupHrefs.profile()
+			DR.add_error(ex)
 		profile = CP.Profile()
 		# Modify the values of several of the fields, but leave TEST in the names.
 		words = "A Series Of Random Words To Use For Sampling Or Some Such Thing".split()
@@ -484,10 +616,13 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			return [random.choice(words) for x in range(num)]
 		bio = ' '.join(pick_words(10))
 		lastname = ' TEST '.join(pick_words(2))
-		state = profile.set_state()
-		if DR.CN_MODE: partner = profile.set_partner()
-		profile.bio = bio
-		profile.lname = lastname
+		try:
+			state = profile.set_state()
+			if DR.CN_MODE: partner = profile.set_partner()
+			profile.bio = bio
+			profile.lname = lastname
+		except NoSuchElementException as ex:
+			DR.add_error(ex)
 		# Click the Save Changes button, a panel confirming changes saved should appear.
 		profile.save_changes()
 		# Refresh the page.

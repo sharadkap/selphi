@@ -111,7 +111,7 @@ def new_drag_drop(source: str, target: str) -> None:
 	# IE WHY.
 	source,	target = getid(source), getid(target)
 	DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return x.getBoundingClientRect() \
-		.top;}),wp=window.parent.parent;wp.scrollTo(0, (h[0]+h[1])/2 - wp.innerHeight/2)', source, target)
+		.top;}),wp=window.top;wp.scrollTo(0, (h[0]+h[1])/2 - wp.innerHeight/2)', source, target)
 	DRIVER.execute(Command.MOVE_TO, {'element': source.id})
 	DRIVER.execute(Command.MOUSE_DOWN, {})
 	DRIVER.execute(Command.MOVE_TO, {'xoffset': int(1), 'yoffset': int(1)})
@@ -137,7 +137,7 @@ def click_surely(ele: WebElement) -> None:
 	"""When clicking on an element, move it onscreen first. BECAUSE IE.
 	If that doesn't work, manual override, it was probably just behind a blank textbox."""
 	try:
-		DRIVER.execute_script('wp=window.parent.parent.parent;wp.scrollTo(0,arguments[0].\
+		DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].\
 		getBoundingClientRect().top - wp.innerHeight/2)', ele)
 		ele.click()
 	except WebDriverException:

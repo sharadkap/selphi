@@ -174,7 +174,10 @@ class Training(NavSection):
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-3')
 		attach_link(self, 'training')
-		attach_link(self, 'training-summary')
+		if DR.CN_MODE:	# Maybe this works well enough to justify misleading name?
+			attach_link(self, 'training-summary', '[href*="assignments.html"]')
+		else:
+			attach_link(self, 'training-summary')
 		attach_link(self, 'webinars')
 
 class NewsAndProducts(NavSection):
@@ -1209,3 +1212,36 @@ class BackupHrefs:
 	def profile():
 		"""Opens the Profile page."""
 		DR.get(DR.BASE_URL + DR.LOCALE + '/secure/profile.html')
+
+	def training():
+		"""Opens the Training Summary page. Should change depending on the CN_MODE."""
+		DR.get(DR.BASE_URL + ('/content/sites/asp-' + DR.LOCALE + '/en/assignments.html' if DR.CN_MODE \
+			else DR.LOCALE + '/secure/training/training-summary.html'))
+
+	def travel():
+		"""Opens the Travel Club page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/secure/aussie-specialist-club/travel-club.html')
+
+	def famils():
+		"""Opens the Famils page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/secure/aussie-specialist-club/famils.html')
+
+	def photos():
+		"""Opens the Aussie Specialist Photos page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/secure/aussiespecialist-club/aussie-specialist-photos.html')
+
+	def store():
+		"""Opens the Aussie Store page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/secure/aussie-specialist-club/aussie-store.html')
+
+	def username():
+		"""Opens the Forgotten Username page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/forgotten-username.html')
+
+	def password():
+		"""Opens the Forgotten Password page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/forgotten-password.html')
+
+	def change():
+		"""Opens the Change Password page."""
+		DR.get(DR.BASE_URL + DR.LOCALE + '/change.html')

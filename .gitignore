@@ -5,3 +5,4 @@ geckodriver.log
 debug.log
 __pycache__/
 *.tap
+.cache/

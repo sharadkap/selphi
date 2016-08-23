@@ -1,6 +1,7 @@
 """This is where all the specific Webdriver implementation details go."""
 
 import re
+import sys
 import quopri
 import imaplib
 from types import FunctionType
@@ -66,13 +67,13 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
 	"/en-hk.html", "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", \
 	"/pt-br.html", "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html", \
 	"https://www.aussiespecialist.cn/zh-cn"}
-# A script to scroll a single element into view proper, just in case. Parent chain handles modules.
-SCROLL_SCRIPT = 'wp=window.parent.parent.parent;wp.scrollTo(0,\
+# A script to scroll a single element into view proper, just in case.
+SCROLL_SCRIPT = 'wp=window.top;wp.scrollTo(0,\
 	arguments[0].getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2)'
 # """A JS script that applies the 'element-highlighted' animation."""
 BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;} \
 50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}} \
-</style>");wp=window.parent.parent.parent;b=arguments[0];for(var a=0;a<b.length;a++) \
+</style>");wp=window.top;b=arguments[0];for(var a=0;a<b.length;a++) \
 {var c=b[a];wp.scrollTo(0,c.getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2), \
 c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(function(e) \
 {e.style.animationName="selhian"}, 10, c)}'
@@ -213,9 +214,9 @@ def find_error_improver(func):
 		"""Does a thing, and if it didn't work, tells you what was missing from where."""
 		try:
 			return func(selector, within)
-		except NoSuchElementException as ex:
-			ex.msg = ("Couldn't find selector '{0}' on page {1}".format(selector, current_url()))
-			raise ex
+		except NoSuchElementException:
+			ex = NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(selector, current_url()))
+			raise ex from None
 	return actually_helpful
 
 @find_error_improver

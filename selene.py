@@ -1185,8 +1185,8 @@ def perform_hacks():
 		"""Converts a sys.exc_info()-style tuple of values into a string."""
 		import traceback
 		exctype, value, tb = err
-		# Skip test runner traceback levels
-		tb_e = traceback.TracebackException(exctype, value, tb, limit=0, capture_locals=self.tb_locals)
+		# Strip the traceback down to the innermost call.
+		tb_e = traceback.TracebackException(exctype, value, tb, limit=-1, capture_locals=self.tb_locals)
 		msgLines = list(tb_e.format())
 
 		if self.buffer:

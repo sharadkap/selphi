@@ -1117,9 +1117,6 @@ def main():
 	else:
 		USERNAME, USERID = None, None
 
-	# Do a bunch of method overrides to get it to work properly.
-	perform_hacks()
-
 	# Get the output settings, the chosen test methods from the REGR suite.
 	outdir = os.path.split(__file__)[0]
 	names = [REGR(testnames[x]) for x in args.tests]
@@ -1135,6 +1132,8 @@ def launch_test(args) -> None:	# pylint: disable-msg=E1126
 	locale, browser, outdir, names, USERNAME, USERID, env = args
 	# Processes don't share global state, but the processes get reused, so have to clean up anyway.
 	DR.reset_globals()
+	# Do a bunch of method overrides to get it to work properly.
+	perform_hacks()
 	# If a url was given, make that the default.
 	DR.BASE_URL = env[0]
 	DR.CN_BASE_URL = env[1]
@@ -1181,16 +1180,30 @@ def perform_hacks():
 			oldclick(*args, **kwargs)
 	DR.WebElement.click = newclick
 
-	# # This one really is a bit of a mess. Trim the stacktrace from error reports, I know where they are.
-	# oldex = unittest.case._Outcome.testPartExecutor
-	# @contextlib.contextmanager
-	# def newex(self, test_case, isTest=False):
-	# 	print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-	# 	o = oldex(self, test_case, isTest)
-	# 	print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-	# 	return o
-	# unittest.case._Outcome.testPartExecutor = newex
-	# print(unittest.case._Outcome.testPartExecutor)
+	# This one really is a bit of a mess. Had to copy the method verbatim to make the required changes.
+	def newex(self, err, test):
+		"""Converts a sys.exc_info()-style tuple of values into a string."""
+		import traceback
+		exctype, value, tb = err
+		# Skip test runner traceback levels
+		tb_e = traceback.TracebackException(exctype, value, tb, limit=0, capture_locals=self.tb_locals)
+		msgLines = list(tb_e.format())
+
+		if self.buffer:
+			output = sys.stdout.getvalue()
+			error = sys.stderr.getvalue()
+			if output:
+				if not output.endswith('\n'):
+					output += '\n'
+				msgLines.append('\nStdout:\n%s' % output)
+			if error:
+				if not error.endswith('\n'):
+					error += '\n'
+				msgLines.append('\nStderr:\n%s' % error)
+		return ''.join(msgLines)
+	# And, override the existing method.
+	unittest.result.TestResult._exc_info_to_string = newex
+	tap.runner.TAPTestResult._exc_info_to_string = newex
 
 if __name__ == '__main__':
 	main()

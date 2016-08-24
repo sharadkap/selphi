@@ -135,7 +135,7 @@ def wait_for_page() -> None:
 		WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: LAST_LINK in d.current_url)
 		WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: d.execute_script(script))
 	except TimeoutException:
-		raise TimeoutException('Timed out waiting for {0} to load.'.format(LAST_LINK))
+		raise TimeoutException('Timed out waiting for {0} to load.'.format(LAST_LINK)) from None
 
 def wait_until_present(selector: str) -> WebElement:
 	"""Holds up execution until the selectored elment is visibly present.
@@ -144,7 +144,7 @@ def wait_until_present(selector: str) -> WebElement:
 		return WebDriverWait(DRIVER, LONG_WAIT).until(\
 			EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
 	except TimeoutException:
-		raise TimeoutException('Timed out waiting for {0} to appear.'.format(selector))
+		raise TimeoutException('Timed out waiting for {0} to appear.'.format(selector)) from None
 
 def wait_until_gone(selector: str) -> WebElement:
 	"""Holds up execution until the selectored element is not visibly present.
@@ -156,14 +156,14 @@ def wait_until_gone(selector: str) -> WebElement:
 		DRIVER.implicitly_wait(LONG_WAIT)
 		return ret
 	except TimeoutException:
-		raise TimeoutException('Timed out waiting for {0} to disappear.'.format(selector))
+		raise TimeoutException('Timed out waiting for {0} to disappear.'.format(selector)) from None
 
 def wait_until(condition: FunctionType) -> Any:
 	"""Holds up execution, repeatedly calling the given function until it returns truthy."""
 	try:
 		return WebDriverWait(DRIVER, LONG_WAIT).until(condition)
 	except TimeoutException:
-		raise TimeoutException('Timed out waiting for method {0} to be true.'.format(condition))
+		raise TimeoutException('Timed out waiting for method {0} to be true.'.format(condition)) from None
 
 def switch_to_window(window: int) -> None:
 	"""Switch WebDriver's focus to the second open tab or window."""
@@ -215,8 +215,8 @@ def find_error_improver(func):
 		try:
 			return func(selector, within)
 		except NoSuchElementException:
-			ex = NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(selector, current_url()))
-			raise ex from None
+			raise NoSuchElementException("Couldn't find selector '{0}' on page {1}" \
+				.format(selector, current_url())) from None
 	return actually_helpful
 
 @find_error_improver

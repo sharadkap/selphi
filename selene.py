@@ -35,7 +35,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 	def tearDown(self) -> None:
 		"""Called after finishing each test, closes the browser and counts up the errors."""
 		DR.close()
-		self.assertEqual([], DR.verificationErrors)
+		self.assertEqual([], DR.verificationErrors, 'This will fail if there were any nonlethal assertions. Hopefully the custom messages are helpful enough.')
 
 	# Tests start here.
 	def test_Splash_Page(self) -> None:
@@ -44,16 +44,15 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.splash_page()
 		# Concerning the Languages Selector
 		langsel = CP.SplashSelect()
-		# The list should contain all locales. But don't crash if it doesn't.
 		try:
-			self.assertSetEqual(DR.LOCALE_SET, langsel.get_values())
+			self.assertSetEqual(DR.LOCALE_SET, langsel.get_values(), 'The language selector should contain all locales.')
 		except Exception as ex:
 			DR.add_error(ex)
 		# Select the country from the dropdown.
 		langsel.choose_locale()
 		# Page should redirect to its respective locale.
 		DR.wait_for_page()
-		self.assertIn(DR.LOCALE, DR.current_url())
+		self.assertIn(DR.LOCALE, DR.current_url(), 'The selected locale should link to that locale.')
 
 	def test_Homepage(self) -> None:
 		"""Tests the Welcome Page content."""
@@ -68,7 +67,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			video.play()
 			# Video loads and plays. Again, there are still other things to test.
 			try:
-				self.assertTrue(video.is_playing())
+				self.assertTrue(video.is_playing(), 'After clicking the Play button, the video should be playing.')
 			except Exception as ex:
 				DR.add_error(ex)
 		# Login and Register buttons should be present in the body content.
@@ -79,7 +78,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			DR.add_error(ex)
 		# The What You Can See Mosaic is displayed, contains five tiles.
 		mosaic = CP.WhatYouCanSeeMosaic()
-		self.assertEqual(mosaic.tile_count(), 5)
+		self.assertEqual(mosaic.tile_count(), 5, 'There should be five mosaic tiles on the homepage.')
 
 	def test_Navigation(self) -> None:
 		"""Checks that the contents of the Signed Out Nav Menu are correct."""
@@ -179,7 +178,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		footer.splash().click()
 		# Should link back to the Splash page.
 		DR.wait_for_page()
-		self.assertIn('/splash.html', DR.current_url())
+		self.assertIn('/splash.html', DR.current_url(), 'The Splash link should lead to the Splash page, of course.')
 
 	def test_Sitemap(self) -> None:
 		"""Checks the Sitemap page links."""
@@ -189,7 +188,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			CP.Footer().sitemap().click()
 			# Should link to the Sitemap page."
 			DR.wait_for_page()
-			self.assertIn('/sitemap.html', DR.current_url())
+			self.assertIn('/sitemap.html', DR.current_url(), 'The Sitemap link should link to the Sitemap page.')
 		except Exception as ex:
 			CP.BackupHrefs.sitemap()
 			DR.add_error(ex)
@@ -198,7 +197,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		try:
 			nav_links = CP.NavMenu().get_all_links()
 			sitemap_links = sitemap.get_all_links()
-			self.assertTrue(nav_links.issubset(sitemap_links))
+			self.assertTrue(nav_links.issubset(sitemap_links), 'The sitemap should contain each of the links in the Nav Menu.')
 		except Exception as ex:
 			DR.add_error(ex)
 		try:
@@ -258,20 +257,20 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		count = searcher.read_results_counter()
 		if count is not None:
 			firstcount = searcher.count_results()
-			self.assertEqual(count[0], firstcount)
+			self.assertEqual(count[0], firstcount, 'The counter should initially show the number of reseults visible.')
 			# Now see if it updates upon Loading More Results.
 			searcher.load_more()
 			secondcount = searcher.count_results()
 			count = searcher.read_results_counter()
 			# At most five more results should be displayed, up to the maximum matching amount.
-			self.assertEqual(secondcount, min(firstcount + 5, count[1]))
+			self.assertEqual(secondcount, min(firstcount + 5, count[1]), 'The counter should show the new number of reseults visible.')
 			# Check a random result, make sure it links to the right page.
 			result = searcher.get_random_result()
 			name = result.get_title().casefold()
 			# Click on the result's More Info link.
 			result.view_more_information()
 			# Should link to that result's More Info page.
-			self.assertEqual(result.SearchResultPage().get_title().casefold(), name)
+			self.assertEqual(result.SearchResultPage().get_title().casefold(), name, 'The result\'s link should go to the relevant page.')
 
 	def test_Interactive_Map(self) -> None:
 		"""Checks the Interactive Map page."""
@@ -333,10 +332,10 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			# The selected cities' Pins appear on the map,
 			#   connected by a flight path, traversed by a plane icon.
 			pins = imap.MapArea.MapPins()
-			self.assertEqual(pins.count(), 2)
+			self.assertEqual(pins.count(), 2, 'A flight path should have two pins.')
 			names = pins.get_names()
-			self.assertIn(ffrom, names)
-			self.assertIn(fto, names)
+			self.assertIn(ffrom, names, 'The flight path should have the From pin.')
+			self.assertIn(fto, names, 'The flight path should have the To pin.')
 			# The flying Times panel shows the approximate flight time and distance.
 			flights.flight_time()
 			flights.flight_distance()
@@ -346,12 +345,12 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# The right Info panel should be open.
 		panel = CP.InteractiveMap.Controls.InfoPanel()
 		try:
-			self.assertEqual(name, panel.get_title())
+			self.assertEqual(name, panel.get_title(), 'The link should open the City of the same name.')
 			# The Find Out More and View Highlights buttons should link
 			#   to a relevant Fact Sheet/Itinerary Plan.
 			fomlink = panel.find_out_more()
-			self.assertIn(DR.LOCALE, fomlink)
-			self.assertEqual(fomlink, panel.view_highlights())
+			self.assertIn(DR.LOCALE, fomlink, 'The More Info link should remain within the same locale.')
+			self.assertEqual(fomlink, panel.view_highlights(), 'Both of the More Info Links should go to the same page.')
 		except Exception as ex:
 			DR.add_error(ex)
 		# Click the Photos
@@ -365,10 +364,10 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				imgone = photos.current_image_source()
 				photos.next()
 				imgtwo = photos.current_image_source()
-				self.assertNotEqual(imgone, imgtwo)
+				self.assertNotEqual(imgone, imgtwo, 'One image should be distinct from the next.')
 				photos.next()
 				imgone = photos.current_image_source()
-				self.assertNotEqual(imgtwo, imgone)
+				self.assertNotEqual(imgtwo, imgone, 'Two image should also be distinct from the nexter.')
 			# Close the Photo Viewer
 			photos.close()
 		except Exception as ex:
@@ -381,13 +380,13 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				# New panel, renew the selector.
 				panel = CP.InteractiveMap.Controls.InfoPanel()
 				# The selected Itinerary should open.
-				self.assertEqual(itiname, panel.get_title())
+				self.assertEqual(itiname, panel.get_title(), 'The link should open the Itinerary of the same name.')
 				# Its route should appear and gain focus on the map, but zoom out a bit first,
 				# the pins will sometimes pop up behind the menu panel.
 				CP.InteractiveMap.ZoomTools().zoom_out()
 				pins = CP.InteractiveMap.MapArea.MapPins()
 				# The Find Out More link should link to the relevant Itinerary Page.
-				self.assertIn(DR.LOCALE, panel.find_out_more())
+				self.assertIn(DR.LOCALE, panel.find_out_more(), 'The More Info link should remain within the same locale.')
 				# Click on one of the Route Pins
 				pins.pick_random()
 				# An info box should appear at the pin.
@@ -475,7 +474,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
 		# Should proceed to the Secure welcome page.
 		try:
-			self.assertIn(DR.LOCALE + '/secure.html', DR.current_url())
+			self.assertIn(DR.LOCALE + '/secure.html', DR.current_url(), 'After logging in, should redirect to a/the secure page.')
 		except Exception as ex:
 			DR.add_error(ex)
 		# Check the Nav Menu
@@ -506,7 +505,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			club.aussie_specialist_photos()
 		else:
 			# The Club section should not be present. (Don't instantiate it, it isn't there)
-			self.assertTrue(CP.AussieSpecialistClub.not_present())
+			self.assertTrue(CP.AussieSpecialistClub.not_present(), 'A trainee should not have access to the Aussie Specialist Club.')
 
 	def test_Favourites(self):
 		"""Tests the Sales Tools functionality."""
@@ -520,13 +519,13 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 					tile.open()
 					# The Panels should unfold, showing a description, More Info link, and heart button.
 					# They aren't too well labelled though, so you might want to watch the playback.
-					self.assertTrue(tile.get_description().is_displayed())
-					self.assertTrue(tile.get_link().is_displayed())
+					self.assertTrue(tile.get_description().is_displayed(), 'Open Mosaic tiles should have a description visible.')
+					self.assertTrue(tile.get_link().is_displayed(), 'Open Mosaic tiles should have a More Info link.')
 					# Click on the Heart buttons of those mosaics.
 					tile.add_to_favourites()
 					favtitles.add(tile.get_title())
 					# The Heart Icon in the header should pulse and have a number incremented.
-					self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
+					self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count(), 'Adding to favourites should increment favourites count.')
 			except Exception as ex:
 				DR.add_error(ex)
 
@@ -566,7 +565,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			for result in search.get_all_results():
 				result.add_to_favourites()
 				favtitles.add(result.get_title())
-				self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count())
+				self.assertEqual(len(favtitles), CP.HeaderHeartIcon().favourites_count(), 'Adding to favourites should increment favourites count.')
 		except Exception as ex:
 			DR.add_error(ex)
 		# Click the Heart Icon in the header, the My Sales Tools page should be displayed.
@@ -580,7 +579,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		faves = tools.get_favourites()
 		favpagetitles = {x.get_title() for x in faves}
 		try:
-			self.assertTrue(favtitles.issubset(favpagetitles))
+			self.assertTrue(favtitles.issubset(favpagetitles), 'The Sales Tools should contain every item previously added.')
 		except Exception as ex:
 			DR.add_error(ex)
 		# Entries should have an X button, a Title, a Description, and a More Info link.
@@ -596,7 +595,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# There will now be a set of buttons present instead of the favourites list.
 		tools.home_search()
 		# The entries should be removed from the list.
-		self.assertEqual(0, len(tools.get_favourites()))
+		self.assertEqual(0, len(tools.get_favourites()), 'Favourites list should be empty after removing all of them.')
 
 	def test_My_Profile(self):
 		"""Tests the Profile page."""
@@ -630,11 +629,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.refresh()
 		# The changed field values should remain.
 		profile = CP.Profile()
-		self.assertEqual(profile.bio, bio)
-		self.assertEqual(profile.state, state)
-		if DR.CN_MODE: self.assertEqual(partner, profile.get_partner())
-		self.assertEqual(profile.lname, lastname)
-		self.assertIn(lastname.strip(), CP.NavMenu().user_names())
+		self.assertEqual(profile.bio, bio, 'Biography should reflect changes made.')
+		self.assertEqual(profile.state, state, 'State should reflect changes made.')
+		if DR.CN_MODE: self.assertEqual(partner, profile.get_partner(), 'Partner should reflect changes made.')
+		self.assertEqual(profile.lname, lastname, 'Name should reflect changes made.')
+		self.assertIn(lastname.strip(), CP.NavMenu().user_names(), 'Header Name Display should reflect changes made.')
 
 	def test_Training_Summary(self):
 		"""Checks the Training Summary page."""
@@ -648,7 +647,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				DR.execute_script('cpCmndGotoSlide=cpInfoSlideCount-{}'.format(offset))
 				DR.add_error(ex)
 			DR.back()
-			CP.Training().open().training_summary().click()
+			try:
+				CP.Training().open().training_summary().click()
+			except Exception as ex:
+				CP.BackupHrefs.training()
+				DR.add_error(ex)
 			modules = CP.TrainingSummary()
 		# Pre-condition: Should be signed in.
 		DR.open_home_page()
@@ -668,22 +671,22 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				modules.filter_optional_niche()
 				# The Optional Modules should be filtered.
 				newlist = modules.get_optional_titles()
-				self.assertNotEqual(oldlist, newlist)
+				self.assertNotEqual(oldlist, newlist, 'Filtering the optional modules should show a different list.')
 				modules.filter_optional_sto()
 				# Click the View More Modules button.
 				oldcount = modules.count_modules()
 				modules.load_more()
 				# Three more modules should be displayed, up to the total amount available.
 				newcount = modules.count_modules()
-				self.assertEqual(oldcount + 3, newcount)
+				self.assertEqual(oldcount + 3, newcount, 'Clicking View More should show more modules.')
 				oldcount = newcount
 				modules.load_more()
 				newcount = modules.count_modules()
-				self.assertEqual(oldcount + 2, newcount)
+				self.assertEqual(oldcount + 2, newcount, 'Clicking View More should show more modules, up to the maximum there are.')
 				oldcount = newcount
 				modules.load_more()
 				newcount = modules.count_modules()
-				self.assertEqual(oldcount, newcount)
+				self.assertEqual(oldcount, newcount, 'Clicking View More should not show more modules, as there are no more.')
 		except Exception as ex:
 			DR.add_error(ex)
 
@@ -707,6 +710,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			modules.module_vic()
 			DR.back()
 		except Exception as ex:
+			CP.BackupHrefs.training()
 			DR.add_error(ex)
 		modules = CP.TrainingSummary()
 		# Unstarted Modules should have a Let's Start button, and an (X) Incomplete label.
@@ -736,7 +740,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			DR.add_error(ex)
 		# The Modules' Completion Badges should be in the Recent Achievements list.
 		profile = CP.Profile()
-		self.assertSetEqual({'mod1', 'mod2', 'mod3', 'nsw', 'qld'}, profile.module_badges())
+		self.assertSetEqual({'mod1', 'mod2', 'mod3', 'nsw', 'qld'}, profile.module_badges(), 'The Profile should contain the badges of the five modules just completed.')
 
 	def test_Aussie_Specialist_Club(self):
 		"""Checks the Aussie Specialist Club nav menu links."""
@@ -836,7 +840,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		DR.flashy_find_element('.store-order-box-right a input').click()
 		# Should redirect to the Order Confirmation page
 		DR.quietly_find_element('.orderconfirmation')
-		self.assertIn('confirmation.html', DR.current_url())
+		self.assertIn('confirmation.html', DR.current_url(), 'Ordering should have redirected to the Confirmation page.')
 		# Confirmation Page should have notices of Order Placed,
 		DR.quietly_find_element('.store-order-confirmed-text')
 		# Should Receive Email (with the user's email address),
@@ -874,11 +878,11 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				prodname = grid.goto_iteree(prodnum)
 				# Should link to the Product's Page
 				product = CP.AussieStore.ProductPage()
-				self.assertEqual(prodname, product.name())
+				self.assertEqual(prodname, product.name(), 'A Product link should link to the same Product\'s page.')
 				# Product Page should have a unique Code, which also should not be N/A or null.
 				code = product.unique_code()
-				self.assertNotIn('N/A', code)
-				self.assertNotIn('null', code)
+				self.assertNotIn('N/A', code, 'It is important that the unique code not be \'N/A\'. That isn\'t actually unique.')
+				self.assertNotIn('null', code, 'It is important that the unique code not be \'null\'. That isn\'t actually unique.')
 				# Select a Quantity.
 				product.select_max_quantity()
 				# Click the Add To Cart button.
@@ -900,13 +904,13 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 				# Should redirect to the Cart page.
 				cart = CP.AussieStore.CartPage()
 				# Cart page should show a list of all of the products added thus far.
-				self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
+				self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()}, 'The Cart page should list all of the products previously added.')
 				# (do not do for all) Click the X beside one of the products.
 				if random.random() < 0.2:
 					productnames.remove(cart.remove_random())
 					productcount -= 1
 					# That product should be removed from the Cart.
-					self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()})
+					self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()}, 'The cart should no longer show a removed item.')
 				else: # If one was removed, it's not going to be overbooked.
 					# Go back to the Product Page,
 					DR.back()
@@ -914,7 +918,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 					product = CP.AussieStore.ProductPage()
 					product.select_max_quantity()
 					# A panel should pop up, notifying that Maximum Quantity was exceeded.
-					self.assertFalse(product.add_to_cart())
+					self.assertFalse(product.add_to_cart(), 'Adding beyond maximum quantity should not be permitted, show a popup.')
 				# Back to Category Page, try the next one.
 				CP.AussieStore.CategoriesMenu().goto_iteree(category)
 				grid = CP.AussieStore.ProductGrid()
@@ -966,7 +970,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			productname = CP.AussieStore.ProductGrid().random_product()
 			# Should redirect to that Product's page
 			product = CP.AussieStore.ProductPage()
-			self.assertEqual(product.name(), productname)
+			self.assertEqual(product.name(), productname, 'A Product link should link to that Product\'s page.')
 			# Click the Add To Cart button, should go to the Cart Page
 			product.add_to_cart()
 			cart = CP.AussieStore.CartPage()
@@ -974,8 +978,8 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			# as displayed in the Profile. Any Blank Profile fields should not show up as 'null'.
 			if gotprof:
 				cartcontact = cart.contact_details()
-				self.assertEqual(cartcontact, contactBlob)
-				self.assertNotIn('null', cartcontact)
+				self.assertEqual(cartcontact, contactBlob, 'The Cart contact details should match the user\'s Profile data.')
+				self.assertNotIn('null', cartcontact, 'The Cart contact details should contain no \'null\' values.')
 			# Tidy up the cart before going into the large test.
 			cart.remove_all()
 		except Exception as ex:
@@ -1004,7 +1008,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			DR.add_error(ex)
 		# The Status Badge area shows the Premier Aussie Specialist Icon.
 		profile = CP.Profile()
-		self.assertEqual(profile.user_level(), CP.Profile.PREMIER)
+		self.assertEqual(profile.user_level(), CP.Profile.PREMIER, 'The Profile page should show a Premier badge for a Premier. But this test usually fails when included in a Full Run.')
 
 	def test_Forgotten_Username(self):
 		"""Tests the Forgotten Username feature."""
@@ -1023,7 +1027,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		forgus.submit()
 		# An email should be received at the given address containing the Username.
 		usnaema = DR.Email.ForgottenUsernameEmail(USERID)
-		self.assertEqual(USERNAME, usnaema.get_username())
+		self.assertEqual(USERNAME, usnaema.get_username(), 'The Username provided in the email should match the user\'s username.')
 
 	def test_Forgotten_Password(self):
 		"""Tests the Forgotten Password feature."""
@@ -1043,7 +1047,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		forgpa.submit()
 		# An email should be received at the given address containing the Username and new Password
 		uspaema = DR.Email.ForgottenPasswordEmail(USERID)
-		self.assertEqual(USERNAME, uspaema.get_username())
+		self.assertEqual(USERNAME, uspaema.get_username(), 'The Username provided in the email should match the user\'s username.')
 		# Read that email and sign in with the new password.
 		TEMP_PASS = uspaema.get_password()
 
@@ -1070,7 +1074,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		# Pre-condition: User has registered, forgotten Username and
 		# Password, and has Qualified, and received emails for each of these five events.
 		# Links should point ot the correct pages in the correct locale.
-		self.assertEqual({DR.LOCALE[1:]}, DR.Email(USERID).get_all_locales())
+		self.assertEqual({DR.LOCALE[1:]}, DR.Email(USERID).get_all_locales(), 'The emails received should all link to the user\'s locale.')
 
 def main():
 	"""Read the arguments, run the tests."""
@@ -1186,7 +1190,7 @@ def perform_hacks():
 		import traceback
 		exctype, value, tb = err
 		# Strip the traceback down to the innermost call.
-		tb_e = traceback.TracebackException(exctype, value, tb, limit=-1, capture_locals=self.tb_locals)
+		tb_e = traceback.TracebackException(exctype, value, tb, limit=0, capture_locals=self.tb_locals)
 		msgLines = list(tb_e.format())
 
 		if self.buffer:

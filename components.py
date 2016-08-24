@@ -715,7 +715,10 @@ class SignIn(WrappedElement):
 		DR.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
 		DR.flashy_find_element('#usersignin', self.element).click()
 		DR.LAST_LINK = '/change.html' if new_password else '/secure'
-		DR.wait_for_page()
+		try:	# This bit really should go in the selene.py, but it's defined here, and I'm not putting fifteen identical trycatches around every invocation of this method.
+			DR.wait_for_page()
+		except Exception as ex:
+			DR.add_error(ex)
 
 class ForgottenForm(WrappedElement):
 	"""Represents the Forgotten Username/Password form. They are the same component."""
@@ -954,7 +957,7 @@ class TrainingSummary(WrappedElement):
 	def module_qld(self) -> None:
 		"""Opens the Second Optional Module."""
 		if DR.CN_MODE:
-			DR.blip_element(self.core).click()
+			DR.blip_element(self.optional).click()
 			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[1]).click()
 		else:
 			MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.optional).click()
@@ -964,7 +967,7 @@ class TrainingSummary(WrappedElement):
 	def module_vic(self) -> None:
 		"""Opens the Third Optional Module."""
 		if DR.CN_MODE:
-			DR.blip_element(self.core).click()
+			DR.blip_element(self.option).click()
 			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[2]).click()
 		else:
 			MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.optional).click()

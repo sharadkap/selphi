@@ -8,8 +8,9 @@ from multiprocessing.pool import Pool
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
 from selenium.webdriver.remote.command import Command
-from selenium.webdriver.remote.webdriver import WebDriverException
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.remote.webdriver import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -84,10 +85,10 @@ def main() -> None:
 
 	try:
 		full_languages_modules_run(modfilter=ARGS.modules, langfilter=ARGS.locales, brows=ARGS.browsers)
-	except Exception as ex:	# Too general is the point, it's a Final Action. pylint: disable-msg=W0703
+	except Exception:	# Too general is the point, it's a Final Action. pylint: disable-msg=W0703
 		with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
 				log.write('\n"Well, something went wrong. A manual exit, hopefully."')
-		raise ex
+		raise
 
 def restart_driver(br):
 	"""Restarts the DRIVER."""
@@ -103,7 +104,10 @@ def new_drag_drop(source: str, target: str) -> None:
 	def getid(loc):
 		"""Interpret whether input is a locator or a series or alternate locators."""
 		if isinstance(loc, str):
-			return DRIVER.find_element_by_id(loc)
+			try:
+				return DRIVER.find_element_by_id(loc)
+			except NoSuchElementException:
+				raise NoSuchElementException("Didn't find {0}".format(loc)) from None
 		elif isinstance(loc, list):
 			return pick_from_possibilities(loc)
 		else:
@@ -124,7 +128,10 @@ def domo(locator: Union[str, tuple, list]) -> None:
 	if locator is a tuple, drags the first element to the second one.
 	if a list, looks for each of the elements listed, clicks the first one that exists."""
 	if isinstance(locator, str):
-		ele = DRIVER.find_element_by_id(locator)
+		try:
+			ele = DRIVER.find_element_by_id(locator)
+		except NoSuchElementException:
+			raise NoSuchElementException("Didn't find {0}".format(locator)) from None
 		click_surely(ele)
 	elif isinstance(locator, tuple):
 		new_drag_drop(locator[0], locator[1])
@@ -149,7 +156,7 @@ def pick_from_possibilities(locator: str) -> WebElement:
 	eles = [e for e in DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))\
 	 	if e.is_displayed()]
 	if len(eles) == 0:
-		raise WebDriverException("Didn't find {0}".format(locator))
+		raise NoSuchElementException("Didn't find {0}".format(locator))
 	return eles[0]
 
 def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows: LIST_STR) -> None:
@@ -171,8 +178,18 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
 		BROWSERS[b], ARGS) for x in langfilter for b in brows])
 	output += '\n'.join(results)	# Each locale's row.
 	output += '\n"FINISH: {0}"\n\n'.format(get_time())	# Footer row.
-	with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
-		log.write(output)
+
+	while True:
+		try:
+			with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
+				log.write(output)
+			break
+		except PermissionError:
+			print('In future, be sure to not leave the log file open in Excel.')
+			print('That locks it, so now it cannot be written to.')
+			print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
+			print(output)
+
 
 def do_locale(args):
 	"""The target of a process, go do all the modules in a locale."""
@@ -210,32 +227,47 @@ def log_in_first(lang: str, cnmode: bool=False) -> None:
 	As it happens, restarting the module will also fix the Loading Forever bug."""
 	# There's an error in China if you view them directly.
 	if ARGS.direct and cnmode:
-		WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT).until(EC.alert_is_present())
-		DRIVER.switch_to.alert.dismiss()
+		try:
+			WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT).until(EC.alert_is_present())
+			DRIVER.switch_to.alert.dismiss()
+		except TimeoutError:
+			print('The Direct View error message didn\'t appear, guess they fixed it?')
 	if not ARGS.direct:
 		DRIVER.implicitly_wait(MINIWAIT)
 		if len(DRIVER.find_elements_by_id('link-logout')) == 0:
-			DRIVER.find_element_by_css_selector('.link-signin-text').click()
-			DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
-			DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
-			DRIVER.find_element_by_id('usersignin').click()
+			try:
+				DRIVER.find_element_by_css_selector('.link-signin-text').click()
+				DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
+				DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
+				DRIVER.find_element_by_id('usersignin').click()
+			except NoSuchElementException:
+				raise NoSuchElementException('Login failed, something was missing from the login panel.') from None
 		DRIVER.implicitly_wait(IMPLICITLY_WAIT)
-		if cnmode:	# Scorm's wrapper on the mdules needs to be opened first.
-			DRIVER.find_element_by_css_selector('.scf-play-button').click()
-		iframe = DRIVER.find_element_by_css_selector('iframe[src^="/content/"]')
-		DRIVER.switch_to.frame(iframe)
-		if cnmode:	# Scorm has TWO layers of framing.
-			iframe = DRIVER.find_element_by_css_selector('frame#ScormContent')
+		try:
+			if cnmode:	# Scorm's wrapper on the modules needs to be opened first.
+				DRIVER.find_element_by_css_selector('.scf-play-button').click()
+			iframe = DRIVER.find_element_by_css_selector('iframe[src^="/content/"]')
 			DRIVER.switch_to.frame(iframe)
+			if cnmode:	# Scorm has TWO layers of framing.
+				iframe = DRIVER.find_element_by_css_selector('frame#ScormContent')
+				DRIVER.switch_to.frame(iframe)
+		except NoSuchElementException:
+			raise NoSuchElementException('The module framing is missing something here, look into that.') from None
 	# Make sure the module is loaded first. Harder than it looks.
 	# First, make sure that something is in the DOM,
-	check = DRIVER.find_element_by_css_selector('[id^="Text_Caption_"]')
+	try:
+		check = DRIVER.find_element_by_css_selector('[id^="Text_Caption_"]')
+	except NoSuchElementException:
+		raise NoSuchElementException('Failed to locate initial element. Module may be entirely broken, may have just timed out.') from None
 	# Then, wait until it is actually drawn to the screen.
-	WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT)\
-		.until(EC.visibility_of(check))
-	# Then, wait until the loading overlay is gone.
-	WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT)\
-		.until_not(EC.visibility_of_element_located((By.ID, 'preloaderImage')))
+	try:
+		WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT)\
+			.until(EC.visibility_of(check))
+		# Then, wait until the loading overlay is gone.
+		WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT)\
+			.until_not(EC.visibility_of_element_located((By.ID, 'preloaderImage')))
+	except TimeoutError:
+		raise TimeoutError('Timed out waiting for the module to finish initial loading.') from None
 	# THEN, you can run the script that compensates for the loading screen breaking.
 	# Or a module being previously completed.
 	DRIVER.execute_script(RESET_MODULE)

@@ -145,7 +145,7 @@ def click_surely(ele: WebElement) -> None:
 	If that doesn't work, manual override, it was probably just behind a blank textbox."""
 	try:
 		DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].\
-		getBoundingClientRect().top - wp.innerHeight/2)', ele)
+		getBoundingClientRect().top + wp.innerHeight/2)', ele)
 		ele.click()
 	except WebDriverException:
 		DRIVER.execute(Command.MOVE_TO, {'element': ele.id})
@@ -179,16 +179,14 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
 	output += '\n'.join(results)	# Each locale's row.
 	output += '\n"FINISH: {0}"\n\n'.format(get_time())	# Footer row.
 
-	while True:
-		try:
-			with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
-				log.write(output)
-			break
-		except PermissionError:
-			print('In future, be sure to not leave the log file open in Excel.')
-			print('That locks it, so now it cannot be written to.')
-			print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
-			print(output)
+	try:
+		with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
+			log.write(output)
+	except PermissionError:
+		print('In future, be sure to not leave the log file open.')
+		print('That tends to lock it, so now it cannot be written to.')
+		print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
+		print(output)
 
 
 def do_locale(args):
@@ -222,6 +220,16 @@ def do_locale(args):
 	DRIVER.quit()
 	return result
 
+def switch_into_module(driver: WebDriver, cnmode: bool=False) -> None:
+	"""Extract the Enter Iframe function just so it can be better exported."""
+	if cnmode:	# Scorm's wrapper on the modules needs to be opened first.
+		driver.find_element_by_css_selector('.scf-play-button').click()
+	iframe = driver.find_element_by_css_selector('iframe[src^="/content/"]')
+	driver.switch_to.frame(iframe)
+	if cnmode:	# Scorm has TWO layers of framing.
+		iframe = driver.find_element_by_css_selector('frame#ScormContent')
+		driver.switch_to.frame(iframe)
+
 def log_in_first(lang: str, cnmode: bool=False) -> None:
 	"""If testing with login, first, have to go and log in and everything.
 	As it happens, restarting the module will also fix the Loading Forever bug."""
@@ -244,13 +252,7 @@ def log_in_first(lang: str, cnmode: bool=False) -> None:
 				raise NoSuchElementException('Login failed, something was missing from the login panel.') from None
 		DRIVER.implicitly_wait(IMPLICITLY_WAIT)
 		try:
-			if cnmode:	# Scorm's wrapper on the modules needs to be opened first.
-				DRIVER.find_element_by_css_selector('.scf-play-button').click()
-			iframe = DRIVER.find_element_by_css_selector('iframe[src^="/content/"]')
-			DRIVER.switch_to.frame(iframe)
-			if cnmode:	# Scorm has TWO layers of framing.
-				iframe = DRIVER.find_element_by_css_selector('frame#ScormContent')
-				DRIVER.switch_to.frame(iframe)
+			switch_into_module(DRIVER, cnmode)
 		except NoSuchElementException:
 			raise NoSuchElementException('The module framing is missing something here, look into that.') from None
 	# Make sure the module is loaded first. Harder than it looks.

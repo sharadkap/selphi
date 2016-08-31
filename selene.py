@@ -448,7 +448,7 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 		form = CP.RegistrationForm()
 		form.plain_text_fields('TEST')
 		form.web = 'www.TEST.com'
-		form.lname = 'TEST ' + localecode + environ
+		form.fname = 'TEST ' + localecode + environ
 		form.date_of_birth('12/12/1212')
 		form.pick_business_profile()
 		form.zip = zipcode

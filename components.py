@@ -174,10 +174,7 @@ class Training(NavSection):
 	def __init__(self):
 		self.element = DR.flashy_find_element('#nav-main-panel-3')
 		attach_link(self, 'training')
-		if DR.CN_MODE:	# Maybe this works well enough to justify misleading name?
-			attach_link(self, 'training-summary', '[href*="assignments.html"]')
-		else:
-			attach_link(self, 'training-summary')
+		attach_link(self, 'training-summary', '[href*="assignments.html"]') # ehhh, sure.
 		attach_link(self, 'webinars')
 
 class NewsAndProducts(NavSection):
@@ -857,56 +854,23 @@ class Profile(WrappedElement):
 			for x in DR.flashy_find_elements('.Achievements .profile-status img', self.element)}
 
 class TrainingSummary(WrappedElement):
-	"""Represents the two Training Summary modules list things."""
+	"""Represents the two Training Summary modules list things.
+	Only instantiate this on the root assignments page."""
 	def __init__(self):
-		if DR.CN_MODE:
-			lis = DR.flashy_find_elements('.scf-content-card')
-		else:
-			lis = DR.flashy_find_elements('.trainingModuleStatus')
+		lis = DR.flashy_find_elements('.scf-content-card')
 		self.core = lis[0]
 		self.optional = lis[1]
 
-	def filter_optional_niche(self) -> None:
-		"""Changes the filter on the Optional Modules, then clicks Refresh Results."""
-		sel = DR.flashy_find_element('[name="Optional"]', self.optional)
-		DR.quietly_find_element('[value="TrainingModule:Optional/Niche"]', sel).click()
-		DR.execute_script('for(a of arguments[0])a.remove();', \
-			DR.quietly_find_elements('.mosaic-grid-1', self.optional))
-		DR.flashy_find_element('#btn-id', self.optional).click()
-
-	def filter_optional_sto(self) -> None:
-		"""Changes the filter on the Optional Modules, then clicks Refresh Results."""
-		sel = DR.flashy_find_element('[name="Optional"]', self.optional)
-		DR.quietly_find_element('[value="TrainingModule:Optional/StateandTerritories"]', sel).click()
-		DR.execute_script('for(a of arguments[0])a.remove();', \
-			DR.quietly_find_elements('.mosaic-grid-1', self.optional))
-		DR.flashy_find_element('#btn-id', self.optional).click()
-
-	def count_modules(self) -> int:
-		"""Returns the number of Optional Modules displayed."""
-		return len(DR.flashy_find_elements('.mosaic-item', self.optional))
-
-	def get_optional_titles(self) -> List[str]: # pylint: disable-msg=E1126
-		"""Returns a list of the titles of the currently displayed Optional Modules"""
-		return [t.text for t in DR.flashy_find_elements('.line-through-container', self.optional)]
-
-	def load_more(self) -> None:
-		"""Clicks the View More Modules button."""
-		count = self.count_modules()
-		DR.flashy_find_element('.load-more', self.optional).click()
-		DR.wait_until(lambda _: self.count_modules() != count or \
-			DR.quietly_find_element('.load-more', self.optional).get_attribute('disabled') == 'true')
+	def optional_path(self):
+		"""Open the ptional Modules path."""
+		DR.blip_element(self.optional).click()
 
 	def wait_for_module(self) -> None:
 		"""Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly."""
-		if DR.CN_MODE:	# China is different, of course.
-			DR.flashy_find_element('.scf-play-button').click()
-			# Switch into the frame stack
-			DR.switch_to_frame('iframe[src^="/content/"]')
-			DR.switch_to_frame('frame#ScormContent')
-		else:
-			# Switch into the iframe,
-			DR.switch_to_frame('iframe[src^="/content/"]')
+		DR.flashy_find_element('.scf-play-button').click()
+		# Switch into the frame stack
+		DR.switch_to_frame('iframe[src^="/content/"]')
+		DR.switch_to_frame('frame#ScormContent')
 		# Then, wait until something is actually present
 		DR.wait_until_present('[id^="Text_Caption_"]')
 		# Then, wait until the loading overlay is gone.
@@ -916,75 +880,47 @@ class TrainingSummary(WrappedElement):
 
 	def module_one(self) -> None:
 		"""Opens the First Core Module."""
-		if DR.CN_MODE:
-			DR.blip_element(self.core).click()
-			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[0]).click()
-		else:
-			MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.core).click()
-			DR.wait_for_page()
+		DR.blip_element(self.core).click()
+		DR.blip_element(DR.quietly_find_elements('.scf-content-card')[0]).click()
 		self.wait_for_module()
 
 	def module_two(self) -> None:
 		"""Opens the Second Core Module."""
-		if DR.CN_MODE:
-			DR.blip_element(self.core).click()
-			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[1]).click()
-		else:
-			MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.core).click()
-			DR.wait_for_page()
+		DR.blip_element(self.core).click()
+		DR.blip_element(DR.quietly_find_elements('.scf-content-card')[1]).click()
 		self.wait_for_module()
 
 	def module_three(self) -> None:
 		"""Opens the First Core Module."""
-		if DR.CN_MODE:
-			DR.blip_element(self.core).click()
-			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[2]).click()
-		else:
-			MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.core).click()
-			DR.wait_for_page()
+		DR.blip_element(self.core).click()
+		DR.blip_element(DR.quietly_find_elements('.scf-content-card')[2]).click()
 		self.wait_for_module()
 
 	def module_nsw(self) -> None:
 		"""Opens the First Optional Module."""
-		if DR.CN_MODE:
-			DR.blip_element(self.optional).click()
-			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[0]).click()
-		else:
-			MinorElement('.mosaic-grid-1:nth-child(1) .btn-primary', self.optional).click()
-			DR.wait_for_page()
+		DR.blip_element(self.optional).click()
+		DR.blip_element(DR.quietly_find_elements('.scf-content-card')[0]).click()
 		self.wait_for_module()
 
 	def module_qld(self) -> None:
 		"""Opens the Second Optional Module."""
-		if DR.CN_MODE:
-			DR.blip_element(self.optional).click()
-			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[1]).click()
-		else:
-			MinorElement('.mosaic-grid-1:nth-child(2) .btn-primary', self.optional).click()
-			DR.wait_for_page()
+		DR.blip_element(self.optional).click()
+		DR.blip_element(DR.quietly_find_elements('.scf-content-card')[1]).click()
 		self.wait_for_module()
 
 	def module_vic(self) -> None:
 		"""Opens the Third Optional Module."""
-		if DR.CN_MODE:
-			DR.blip_element(self.option).click()
-			DR.blip_element(DR.quietly_find_elements('.scf-content-card')[2]).click()
-		else:
-			MinorElement('.mosaic-grid-1:nth-child(3) .btn-primary', self.optional).click()
-			DR.wait_for_page()
+		DR.blip_element(self.option).click()
+		DR.blip_element(DR.quietly_find_elements('.scf-content-card')[2]).click()
 		self.wait_for_module()
 
 	def completion_types(self) -> None:
 		"""Gets all of the Module entries, then checks how complete they are,
 		then matches that with a Progress Icon type. Kind of a mess."""
-		mods = DR.flashy_find_elements('.mosaic-item', self.core) + \
-			DR.flashy_find_elements('.mosaic-item', self.optional)
-		for mod in mods:
-			button = DR.flashy_find_element('.training-continue', mod)
-			if re.search('Resume-ASP|Start-ASP', button.get_attribute('data-ta-data-layer')):
-				DR.flashy_find_element('img[src*="icon-incomplete.png"]', mod)
-			else:
-				DR.flashy_find_element('img[src*="icon-complete.png"]', mod)
+		mods = DR.flashy_find_elements('.scf-content-card')
+		DR.flashy_find_element('.assignment-stats-completed', mods[0])
+		DR.flashy_find_element('.assignment-stats-inprogress', mods[2])
+		DR.flashy_find_element('.assignment-stats-new', mods[1])
 
 class Famils(WrappedElement):
 	"""Represents the content of the Famils page."""
@@ -1218,8 +1154,7 @@ class BackupHrefs:
 
 	def training():
 		"""Opens the Training Summary page. Should change depending on the CN_MODE."""
-		DR.get(DR.BASE_URL + ('/content/sites/asp-' + DR.LOCALE + '/en/assignments.html' if DR.CN_MODE \
-			else DR.LOCALE + '/secure/training/training-summary.html'))
+		DR.get(DR.BASE_URL + '/content/sites/asp-' + DR.LOCALE + '/en/assignments.html')
 
 	def travel():
 		"""Opens the Travel Club page."""

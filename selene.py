@@ -686,37 +686,6 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			CP.BackupHrefs.training()
 			DR.add_error(ex)
 		modules = CP.TrainingSummary()
-		#China does not have a filtering module display.
-		try:
-			if not DR.CN_MODE:
-				# Change the value of the Optional Modules Filter Form.
-				oldlist = modules.get_optional_titles()
-				modules.filter_optional_niche()
-				# The Optional Modules should be filtered.
-				newlist = modules.get_optional_titles()
-				self.assertNotEqual(oldlist, newlist, \
-					'Filtering the optional modules should show a different list.')
-				modules.filter_optional_sto()
-				# Click the View More Modules button.
-				oldcount = modules.count_modules()
-				modules.load_more()
-				# Three more modules should be displayed, up to the total amount available.
-				newcount = modules.count_modules()
-				self.assertEqual(oldcount + 3, newcount, \
-					'Clicking View More should show more modules.')
-				oldcount = newcount
-				modules.load_more()
-				newcount = modules.count_modules()
-				self.assertEqual(oldcount + 2, newcount, \
-					'Clicking View More should show more modules, up to the maximum there are.')
-				oldcount = newcount
-				modules.load_more()
-				newcount = modules.count_modules()
-				self.assertEqual(oldcount, newcount, \
-					'Clicking View More should not show more modules, as there are no more.')
-		except Exception as ex:
-			DR.add_error(ex)
-
 		# Go do a few of the modules.
 		# I did say that implementation details are to be done elsewhere.
 		# But error handling is to be done here, and that takes priority.
@@ -732,24 +701,28 @@ class REGR(unittest.TestCase): # pylint: disable-msg=R0904
 			DR.Email.LocalizedEmail(USERID)
 		except Exception as ex:
 			DR.add_error(ex)
+
+		modules.module_nsw()
+		do_mod_then_back('nsw', 4)
+
 		# Open this one, but don't finish it.
 		try:
 			modules.module_vic()
-			DR.back()
+			modules.wait_for_module()
+			CP.Training().open().training_summary().click()
 		except Exception as ex:
 			CP.BackupHrefs.training()
 			DR.add_error(ex)
+		# Unstarted Modules should have a New label
+		# Started-Not-Finished Modules should have an Incomplete label
+		# Completed Modules should have the Complete label.
 		modules = CP.TrainingSummary()
-		# Unstarted Modules should have a Let's Start button, and an (X) Incomplete label.
-		# Started-Not-Finished Modules should have an In Progress button and the Incomplete label.
-		# Completed Modules should have a Complete button and a (v/) Complete label.
 		try:
+			modules.optional_path()
 			modules.completion_types()
 		except Exception as ex:
 			DR.add_error(ex)
 
-		modules.module_nsw()
-		do_mod_then_back('nsw', 4)
 		modules.module_qld()
 		do_mod_then_back('qld', 4)
 
@@ -1161,6 +1134,7 @@ def main():
 	if args.username[0]:
 		USERNAME = args.username[0]
 		USERID = USERNAME[-4:]	# The mail ID is the last four characters.
+		DR.EMAIL = DR.EMAIL.format(USERID)
 	else:
 		USERNAME, USERID = None, None
 

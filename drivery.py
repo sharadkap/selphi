@@ -1,7 +1,6 @@
 """This is where all the specific Webdriver implementation details go."""
 
 import re
-import sys
 import quopri
 import imaplib
 from types import FunctionType
@@ -51,7 +50,7 @@ EMAIL = 'testeratta+{}@gmail.com'
 TEST_EMAIL_IMAP_SERVER = 'imap.gmail.com'
 TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
 TEST_EMAIL_PASSWORD = 'WelcomeTest'
-ASP_EMAIL = 'tourism-au@updates.tourism.australia.com'
+ASP_EMAIL = 'no-reply@p19.neolane.net'#'tourism-au@updates.tourism.australia.com'
 ASP_CN_EMAIL = 'asp-cn@tourism.australia.com'
 LATIN_EMAIL_ENCODING = 'windows-1252'
 

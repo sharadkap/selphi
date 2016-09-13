@@ -1,3 +1,8 @@
 [MESSAGES CONTROL]
-disable=W0312
-#W0312 is using tabs instead of spaces.
+disable=W0703,C0103,R0201,C0321,C0302,R0915
+# Disable warning on catching too general exception: There are way too many failure types that basically all mean 'the button is missing/didn't work', and that many tuples would be unmanageable.
+# Disable warning on method naming, the naming scheme is necessary for imports.
+# They can't be functions, that would defeat the entire purpose of the test suite.
+# Disable warning on inline if statements. Whatever.
+# Disable warning on too many lines in module. I already broke it up along functionality spacing into three. What else?
+# Disable warning on too many statements per method. They aren't repeats, there really is just a lot of work to do there.

@@ -19,9 +19,9 @@ def reset_globals():
     """Call this to reset all of the globals that can get overwritten to their default values."""
     # pylint: disable-msg=W0603
     global LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE
-    LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE = \
-        30, 2, False, 'https://www.aussiespecialist.com', 'https://www.aussiespecialist.cn', \
-        '/en-gb', 'testeratta+{}@gmail.com', Chrome
+    LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE = (
+        30, 2, False, 'https://www.aussiespecialist.com', 'https://www.aussiespecialist.cn',
+        '/en-gb', 'testeratta+{}@gmail.com', Chrome)
 # """The default time, in seconds, to search the DOM before declaring an Element Not Found."""
 LONG_WAIT = 30
 # """Time in seconds to poll for something that should be absent or already here."""
@@ -34,11 +34,10 @@ CN_BASE_URL = 'https://www.aussiespecialist.cn'
 # """The Language-Country Code of the locale to test.
 LOCALE = '/en-gb'
 CN_LOCALE = '/zh-cn'
-LOCALES = {'ca': '/en-ca', 'in': '/en-in', 'my': '/en-my', 'sg': '/en-sg', \
-'gb': '/en-gb', 'us': '/en-us', \
-'ehk': '/en-hk', 'zhk': '/zh-hk', 'id': '/id-id', 'jp': '/ja-jp', 'kr': '/ko-kr', \
-'br': '/pt-br', 'cl': '/es-cl', 'de': '/de-de', 'fr': '/fr-fr', 'it': '/it-it', \
-'cn': CN_LOCALE}
+LOCALES = {'ca': '/en-ca', 'in': '/en-in', 'my': '/en-my', 'sg': '/en-sg', 'gb': '/en-gb',
+           'us': '/en-us', 'ehk': '/en-hk', 'zhk': '/zh-hk', 'id': '/id-id', 'jp': '/ja-jp',
+           'kr': '/ko-kr', 'br': '/pt-br', 'cl': '/es-cl', 'de': '/de-de', 'fr': '/fr-fr',
+           'it': '/it-it', 'cn': CN_LOCALE}
 # """To aid in checking for Page Loaded Status, note the last link clicked.
 LAST_LINK = ''
 
@@ -56,27 +55,26 @@ LATIN_EMAIL_ENCODING = 'windows-1252'
 
 # """The main WebDriver runner reference."""
 BROWSER_TYPE = Chrome    # Not really a Class, just a reference to one. pylint: disable-msg=C0103
-BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox, \
-    'ie': Ie, 'opera': Opera, 'safari': Safari}
+BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox,
+            'ie': Ie, 'opera': Opera, 'safari': Safari}
 DRIVER = Chrome        # Global variable placeholder
 
 # """A Set of the full list of options that should be in the splash page language selector."""
-LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", \
-    "/en-my.html", "/en-sg.html", "/id-id.html", "/de-de.html", "/zh-hk.html", \
-    "/en-hk.html", "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", \
-    "/pt-br.html", "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html", \
-    "https://www.aussiespecialist.cn/zh-cn"}
+LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", "/en-my.html",
+              "/en-sg.html", "/id-id.html", "/de-de.html", "/zh-hk.html", "/en-hk.html",
+              "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", "/pt-br.html",
+              "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html",
+              "https://www.aussiespecialist.cn/zh-cn"}
 # A script to scroll a single element into view proper, just in case.
-SCROLL_SCRIPT = 'wp=window.top;wp.scrollTo(0,\
-    arguments[0].getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2)'
+SCROLL_SCRIPT = ('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect()'
+                 '.top+wp.pageYOffset-wp.innerHeight/2)')
 # """A JS script that applies the 'element-highlighted' animation."""
-BLIP_SCRIPT = '$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;} \
-50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}} \
-</style>");wp=window.top;b=arguments[0];for(var a=0;a<b.length;a++) \
-{var c=b[a];wp.scrollTo(0,c.getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/2), \
-c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(function(e) \
-{e.style.animationName="selhian"}, 10, c)}'
-
+BLIP_SCRIPT = ('$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;}50%'
+               '{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset tra'
+               'nsparent;}} </style>");wp=window.top;b=arguments[0];for(var a=0;a<b.length;a++) {va'
+               'r c=b[a];wp.scrollTo(0,c.getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/'
+               '2), c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(function(e'
+               ') {e.style.animationName="selhian"}, 10, c)}')
 # """Type annotation, referring to either a WebElement, or a list of them."""
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
 ELEMENT_LIST = List[WebElement] # pylint: disable-msg=E1126
@@ -140,7 +138,7 @@ def wait_until_present(selector: str) -> WebElement:
     """Holds up execution until the selectored elment is visibly present.
     Use this instead of quietly_find if the target is in the DOM, but hidden."""
     try:
-        return WebDriverWait(DRIVER, LONG_WAIT).until(\
+        return WebDriverWait(DRIVER, LONG_WAIT).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
     except TimeoutException:
         raise TimeoutException('Timed out waiting for {0} to appear.'.format(selector)) from None
@@ -149,8 +147,9 @@ def wait_until_gone(selector: str) -> WebElement:
     """Holds up execution until the selectored element is not visibly present.
     EC doesn't seem to support local searches, so be sure the selector is page-unique."""
     try:
-        DRIVER.implicitly_wait(0.5)    # The poll_freq value is not, in fact, the wait-til-fail time.
-        ret = WebDriverWait(DRIVER, LONG_WAIT).until(\
+        # The poll_freq value is not the wait-til-fail time. Apparently.
+        DRIVER.implicitly_wait(0.5)
+        ret = WebDriverWait(DRIVER, LONG_WAIT).until(
             EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
         DRIVER.implicitly_wait(LONG_WAIT)
         return ret
@@ -162,15 +161,17 @@ def wait_until(condition: FunctionType) -> Any:
     try:
         return WebDriverWait(DRIVER, LONG_WAIT).until(condition)
     except TimeoutException:
-        raise TimeoutException('Timed out waiting for method {0} to be true.'.format(condition)) from None
+        raise TimeoutException(
+            'Timed out waiting for method {0} to be true.'.format(condition)) from None
 
 def switch_to_window(window: int) -> None:
     """Switch WebDriver's focus to the second open tab or window."""
-    DRIVER.switch_to.window(DRIVER.window_handles[window])    # Yes it does. pylint: disable-msg=E1101
+    # Disable warning on missing property. Pylint just can't find it. pylint: disable-msg=E1101
+    DRIVER.switch_to.window(DRIVER.window_handles[window])
 
 def switch_to_frame(selector: str) -> None:
     """Switches WebDriver's focus into the given iframe."""
-    DRIVER.switch_to.frame(flashy_find_element(selector))    # Yes it does. pylint: disable-msg=E1101
+    DRIVER.switch_to.frame(flashy_find_element(selector))    # pylint: disable-msg=E1101
 
 def fix_url(url: str) -> str:
     """Use this to remove that /content/asp/ stuff from URLs."""
@@ -214,8 +215,8 @@ def find_error_improver(func):
         try:
             return func(selector, within)
         except NoSuchElementException:
-            raise NoSuchElementException("Couldn't find selector '{0}' on page {1}" \
-                .format(selector, current_url())) from None
+            raise NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(
+                selector, current_url())) from None
     return actually_helpful
 
 @find_error_improver
@@ -269,7 +270,8 @@ class Email:
         """Collects all of the emails received by this email subaddress,
         and returns a set of Locale codes representing each one found."""
         locs = set()
-        ems = [bs4.BeautifulSoup(x, 'html.parser') for x in self.get_new_messages(really_get_new=False)]
+        ems = [bs4.BeautifulSoup(x, 'html.parser')
+               for x in self.get_new_messages(really_get_new=False)]
         for ema in ems:
             if CN_MODE:    # China does not have locale-tagged links.
                 links = ema.select('a[href*="t.dpc.rimanggis.com"]')
@@ -289,7 +291,7 @@ class Email:
             imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
             imap.select()
             nums = wait_until(lambda _: self.email_loop(imap, really_get_new))
-            # The Latin Character Set emails have two parts, the second of which is the one you want.
+            # The Latin Character Set emails have two parts, the second of which is the html part.
             got, ems = imap.fetch(nums, 'body[2]')
             if got == 'NO':    # The others do not have two parts.
                 got, ems = imap.fetch(nums, 'body[1]')
@@ -306,7 +308,8 @@ class Email:
         # Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
         # Containing a single bytestring of space-separated return values.
         # And IMAP requires that imput values be comma separated.         Because why not.
-        return b','.join(imap.search(None, 'FROM', ASP_CN_EMAIL if CN_MODE else ASP_EMAIL, \
+        return b','.join(imap.search(
+            None, 'FROM', ASP_CN_EMAIL if CN_MODE else ASP_EMAIL,
             'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
     class LocalizedEmail():    # Oh, whatever. pylint: disable-msg=R0903

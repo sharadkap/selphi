@@ -519,7 +519,8 @@ class InteractiveMap(WrappedElement):
                 name = pin.text
                 pin.click()
                 panel = DR.quietly_find_element('#info-box')
-                DR.wait_until(lambda _: panel.is_displayed() and                     panel.get_attribute('style').find('rotateY(0deg)') != -1)
+                DR.wait_until(lambda _: panel.is_displayed() and
+                              panel.get_attribute('style').find('rotateY(0deg)') != -1)
                 return name
 
             def count(self) -> int:
@@ -544,7 +545,8 @@ class InteractiveMap(WrappedElement):
 
         def current_image_source(self) -> str:
             """Returns the image source of the image currently shown."""
-            return DR.flashy_find_element('#lightbox-inner-image', self.element).get_attribute('src')
+            return DR.flashy_find_element(
+                '#lightbox-inner-image', self.element).get_attribute('src')
 
         def next(self) -> None:
             """Clicks the > next button to show the next photo."""
@@ -582,7 +584,8 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
 
     def __getattr__(self, name):
         """If an unknown GET message is received, see if there's a field with that name."""
-        return DR.flashy_find_element('[name*="{}"]'.format(            name.replace('_', '-')), self.element).get_attribute('value')
+        return DR.flashy_find_element(
+            '[name*="{}"]'.format(name.replace('_', '-')), self.element).get_attribute('value')
 
     def __setattr__(self, name, value):
         """If an unknown SET message is received, see if there's a field with that name."""
@@ -641,7 +644,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
             DR.quietly_find_element('option:not([value=""])', sel).click()
 
     def email_address(self, value: str='') -> None:
-        """Overwrites the Email Address and Verify Email fields to have the given value. Blank default."""
+        """Sets the Email Address and Verify Email fields to the given value. Blank default."""
         self.email = value
         # China does not have this email verification.
         if not DR.CN_MODE:
@@ -693,7 +696,8 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
             return hashlib.md5(bits + str(get_time()).encode()).hexdigest()[1:6]
         # It's time sensitive, so refresh the captcha immediately beforehand.
         DR.flashy_find_element('a[onclick="captchaRefresh()"]', self.element).click()
-        self.captcha = do_it(DR.flashy_find_element('#cq_captchakey').get_attribute('value').encode())
+        self.captcha = do_it(DR.flashy_find_element('#cq_captchakey')
+                             .get_attribute('value').encode())
 
     def submit(self) -> None:
         """Clicks the Create My Account Button, and awaits confirmation."""
@@ -714,7 +718,9 @@ class SignIn(WrappedElement):
         DR.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
         DR.flashy_find_element('#usersignin', self.element).click()
         DR.LAST_LINK = '/change.html' if new_password else '/secure'
-        try:    # This bit really should go in the selene.py, but it's defined here, and I'm not putting fifteen identical trycatches around every invocation of this method.
+        # This bit should maybe go in the selene.py, but I'm not putting
+        # fifteen identical trycatches around every invocation of this method.
+        try:
             DR.wait_for_page()
         except Exception as ex:
             DR.add_error(ex)
@@ -782,7 +788,8 @@ class MySalesTools(WrappedElement):
 
     def get_favourites(self) -> List[WrappedElement]: # pylint: disable-msg=E1126
         """Gets all of the saved sales tools entries."""
-        return [self.SalesTool(x) for x in             DR.flashy_find_elements('.search-result-row-spacing', self.element)]
+        return [self.SalesTool(x) for x in
+                DR.flashy_find_elements('.search-result-row-spacing', self.element)]
 
     def home_search(self) -> WrappedElement:
         """Gets that Home button Search button pair that appears when the list is empty."""
@@ -796,7 +803,8 @@ class Profile(WrappedElement):
 
     def __getattr__(self, name):
         """If an unknown GET message is received, see if there's a field with that name."""
-        return DR.flashy_find_element('[name*="{}"]'.format(            name.replace('_', '-')), self.element).get_attribute('value')
+        return DR.flashy_find_element('[name*="{}"]'.format(
+            name.replace('_', '-')), self.element).get_attribute('value')
 
     def __setattr__(self, name, value):
         """If an unknown SET message is received, see if there's a field with that name."""
@@ -815,7 +823,8 @@ class Profile(WrappedElement):
 
     def set_partner(self) -> None:
         """Randomly sets the value of the Travel Partner field. Returns the chosen value."""
-        opt = random.choice(DR.flashy_find_element('[name="affiliationtype"]', self.element)            .find_elements_by_css_selector('option:not([value=""])'))
+        opt = random.choice(DR.flashy_find_element('[name="affiliationtype"]', self.element)
+                            .find_elements_by_css_selector('option:not([value=""])'))
         opt.click()
         return opt.text
 
@@ -826,7 +835,8 @@ class Profile(WrappedElement):
 
     def set_state(self) -> str:
         """Randomly sets the value of the State field. Returns the chosen value."""
-        opt = random.choice(DR.flashy_find_element('[name="state"]', self.element)            .find_elements_by_css_selector('option:not([value=""])'))
+        opt = random.choice(DR.flashy_find_element('[name="state"]', self.element)
+                            .find_elements_by_css_selector('option:not([value=""])'))
         opt.click()
         return opt.get_attribute('value')
 
@@ -841,13 +851,15 @@ class Profile(WrappedElement):
         """Checks the Status Badge area, returns a string of the User Level."""
         if DR.check_visible_quick('.profile-status img', self.element):
             img = DR.flashy_find_element('.profile-status img', self.element)
-            return {'2.png': self.QUALIFIED, '3.png': self.PREMIER}                .get(img.get_attribute('src')[-5:], self.TRAINEE)
+            return {'2.png': self.QUALIFIED, '3.png': self.PREMIER}.get(
+                img.get_attribute('src')[-5:], self.TRAINEE)
         else:
             return self.TRAINEE
 
     def module_badges(self) -> Set[str]:
         """Checks the Recent Achievements section, returns a set of the badges attained."""
-        return {x.get_attribute('alt').split('_')[-1]             for x in DR.flashy_find_elements('.Achievements .profile-status img', self.element)}
+        return {x.get_attribute('alt').split('_')[-1] for x in DR.flashy_find_elements(
+            '.Achievements .profile-status img', self.element)}
 
 class TrainingSummary(WrappedElement):
     """Represents the two Training Summary modules list things.
@@ -943,7 +955,8 @@ class AussieSpecialistPhotos(WrappedElement):
             """Clicks on the mosaic tile, opening it."""
             MinorElement('.flipper img[src*="image.adapt"]', self.element).point()
             DR.flashy_find_element('.flipper a', self.element).click()
-            self.contentpane = [x for x in DR.flashy_find_elements(                '.mosaic-item-detail-container.active') if x.is_displayed()][0]
+            self.contentpane = [x for x in DR.flashy_find_elements(
+                '.mosaic-item-detail-container.active') if x.is_displayed()][0]
 
         def get_description(self) -> MinorElement:
             """Returns the description text in a tile's pane. Has to be open."""
@@ -1083,7 +1096,7 @@ class AussieStore(WrappedElement):
             return len(DR.quietly_find_elements('.shoppingcart tr', self.element))
 
         def remove_random(self) -> str:
-            """Clicks the Remove Product button on a random Product. Returns the ex-product's name."""
+            """Clicks the Remove Product button on a random Product. Returns the product's name."""
             count = self.count() - 1
             rei = random.randint(0, self.count() - 1)
             rem = DR.blip_element(DR.quietly_find_elements('.cell-title', self.element)[rei])
@@ -1094,7 +1107,7 @@ class AussieStore(WrappedElement):
             return ren
 
         def remove_all(self) -> None:
-            """Removes all of the Products from the Cart. This may take a minute if there are a lot."""
+            """Removes all Products from the Cart. This may take a minute if there are a lot."""
             count = self.count()
             while count > 0:
                 DR.flashy_find_element('.product-remove').click()
@@ -1161,7 +1174,8 @@ class BackupHrefs:
 
     def photos():
         """Opens the Aussie Specialist Photos page."""
-        DR.get(DR.BASE_URL + DR.LOCALE + '/secure/aussiespecialist-club/aussie-specialist-photos.html')
+        DR.get(DR.BASE_URL + DR.LOCALE +
+               '/secure/aussiespecialist-club/aussie-specialist-photos.html')
 
     def store():
         """Opens the Aussie Store page."""

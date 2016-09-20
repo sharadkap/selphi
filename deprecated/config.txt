@@ -1,0 +1,5 @@
+token = '16920192607637051161691512825832787539990432379085907011'
+language = 'python'
+framework = 'unittest'
+output_directory = 'C:\Users\bzalakos\Documents\GitHub\selphi\'
+push_format = 'tap'

@@ -1115,7 +1115,6 @@ class AussieStore(WrappedElement):
                 self.element = DR.quietly_find_element('.shoppingcart')
                 DR.wait_until(lambda _: self.count() == count)
 
-
 class BackupHrefs:
     """Call on this if an important component is missing, it has links to the pages.
     Don't instantiate this though, it's just a function namespace"""

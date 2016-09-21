@@ -69,7 +69,7 @@ def main():
 def launch_test(args) -> None:
     """Do all the things needed to run a test suite. Put this as the target call of a process.
     It looks like this is messing with things on a Global level, but it's actually totally fine."""
-    # These have t obe here, otherwise the processes won't have access to it.
+    # These have to be here, otherwise the processes won't have access to it.
     # pylint: disable-msg=E1126, W0601
     global USERNAME, USERID
     locale, browser, outdir, names, USERNAME, USERID, env = args

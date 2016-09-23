@@ -127,15 +127,15 @@ class WhatYouCanSeeMosaic(WrappedElement):
         """Given a number, gets that many randomly selected tiles from the mosaic."""
         return [self.MosaicTile(tile) for tile in random.sample(self.tiles, num)]
 
-def attach_link(section: WrappedElement, name: str, selector: str='[href*="{}.html"]') -> None:
+def attach_links(menu: WrappedElement, names: List[str], selector: str='[href*="{}.html"]') -> None:
     """A function that attaches an attribute that can be called to create a simple link.
     The 'name' argument should be the bit that .formats into the selector"""
-    def link_maker():
-        """A function that can be called to create a simple link"""
-        return MinorElement(selector.format(name), section.element)
-    link_maker.__doc__ = 'Creates the {0}/{1} link representation'.format(
-        type(section), name.replace('-', ' ').replace('.', ' ').title())
-    section.__setattr__(name.replace('-', '_').replace('.', '_'), link_maker)
+    for name in names:
+        # Watch out for that closure.
+        def link_maker(n):
+            """A function that can be called to create a simple link"""
+            return lambda: MinorElement(selector.format(n), menu.element)
+        menu.__setattr__(name.replace('-', '_').replace('.', '_'), link_maker(name))
 
 class NavSection(WrappedElement):
     """Methods common to the five Nav Menu sections."""
@@ -146,74 +146,87 @@ class NavSection(WrappedElement):
             self.click()
         return self
 
-class About(NavSection):
-    """Represents the About menu in the main nav menu."""
-    def __init__(self):
-        self.element = DR.flashy_find_element('#nav-main-panel-1')
-        attach_link(self, 'about')
-        attach_link(self, 'benefits')
-        attach_link(self, 'how-to-use-the-site')
-        attach_link(self, 'program-faq')
-        attach_link(self, 'contact-us')
 
-class SalesResources(NavSection):
-    """Represents the Sales Resources menu in the main nav menu."""
+class NavMenu(WrappedElement):
+    """Represents the main Nav Menu."""
     def __init__(self):
-        self.element = DR.flashy_find_element('#nav-main-panel-2')
-        attach_link(self, 'sales-resources')
-        attach_link(self, 'my-sales-tools')
-        attach_link(self, 'interactive-map')
-        attach_link(self, 'itineraries-search-and-feature')
-        attach_link(self, 'fact-sheets-overview')
-        attach_link(self, 'events')
-        attach_link(self, 'useful-sites')
-        attach_link(self, 'destination-faq')
-        attach_link(self, 'image-and-video-galleries')
+        self.element = DR.flashy_find_element('.main-nav-wrap')
+        attach_links(self, ['profile', 'logout'], selector='#link-{}')
 
-class Training(NavSection):
-    """Represents the Training menu in the main nav menu."""
-    def __init__(self):
-        self.element = DR.flashy_find_element('#nav-main-panel-3')
-        attach_link(self, 'training')
-        attach_link(self, 'training-summary', '[href*="assignments.html"]') # ehhh, sure.
-        attach_link(self, 'webinars')
+    # ASP ones.
+    class About(NavSection):
+        """Represents the About menu in the main nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-1')
+            attach_links(self, ['about', 'benefits', 'how-to-use-the-site',
+                                'program-faq', 'contact-us'])
 
-class NewsAndProducts(NavSection):
-    """Represents the News And Products menu in the main nav menu."""
-    def __init__(self):
-        self.element = DR.flashy_find_element('#nav-main-panel-4')
-        attach_link(self, 'news-and-product-updates')
-        attach_link(self, 'latest-news')
-        attach_link(self, 'product-videos')
+    class SalesResources(NavSection):
+        """Represents the Sales Resources menu in the main nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-2')
+            attach_links(self, ['sales-resources', 'my-sales-tools', 'interactive-map',
+                                'itineraries-search-and-feature', 'fact-sheets-overview', 'events',
+                                'useful-sites', 'destination-faq', 'image-and-video-galleries'])
 
-class AussieSpecialistClub(NavSection):
-    """Represents the Aussie Specialist Club menu in the main nav menu."""
-    def __init__(self):
-        self.element = DR.flashy_find_element('#nav-main-panel-5')
-        attach_link(self, 'aussie-specialist-club')
-        attach_link(self, 'travel-club')
-        attach_link(self, 'famils')
-        attach_link(self, 'aussie-specialist-photos')
-        attach_link(self, 'asp-logo')
-        attach_link(self, 'aussie-store')
+    class Training(NavSection):
+        """Represents the Training menu in the main nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-3')
+            attach_links(self, ['training', 'webinars'])
+            attach_links(self, ['training-summary'], '[href*="assignments.html"]') # ehhh, sure.
+
+    class NewsAndProducts(NavSection):
+        """Represents the News And Products menu in the main nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-4')
+            attach_links(self, ['news-and-product-updates', 'latest-news', 'product-videos'])
+
+    class AussieSpecialistClub(NavSection):
+        """Represents the Aussie Specialist Club menu in the main nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-5')
+            attach_links(self, ['aussie-specialist-club', 'travel-club', 'famils',
+                                'aussie-specialist-photos', 'asp-logo', 'aussie-store'])
+
+    # AUS.com ones.
+    class PlacesToGo(NavSection):
+        """Represents the Places To Go section in the nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-1')
+            # This one is the thing that switched between the Cities and States submenus.
+            attach_links(self, ['cities', 'states'], selector='[aria-controls={}]')
+            attach_links(self, ['sydney', 'melbourne', 'brisbane', 'perth', 'adelaide',
+                                'alice-springs', 'broome', 'cairns', 'canberra', 'darwin',
+                                'gold-coast', 'hobart', 'regional-cities',
+
+                                'great-barrier-reef', 'red-centre', 'great-ocean-road',
+                                'kangaroo-island', 'blue-mountains', 'byron-bay', 'flinders-ranges',
+                                'fraser-island', 'freycinet', 'gippsland', 'kakadu',
+                                'namadgi-national-park', 'ningaloo', 'tasmanian-wilderness',
+                                'the-australian-alps', 'the-kimberley', 'margaret-river',
+
+                                'australian-capital-territory', 'new-south-wales',
+                                'northern-territory', 'queensland', 'south-australia',
+                                'tasmania', 'victoria', 'western-australia'])
+
+    class ThingsToDo(NavSection):
+        """Represents the Things To Do section in the nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-2')
+            attach_links(self, [])
+
+
+    class PlanYourTrip(NavSection):
+        """Represents the Plan Your Trip section in the nav menu."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-3')
 
     @staticmethod
     def not_present() -> bool:
         """Checks that the Aussie Specialist Club menu is not present.
         As such, does not attempt to locate it, and is a static method."""
         return not DR.check_visible_quick('#nav-main-panel-5')
-
-class NavMenu(WrappedElement):
-    """In case you need to refer to all of the nav menu elements collectively."""
-    about = About
-    sales_resources = SalesResources
-    training = Training
-    news_and_products = NewsAndProducts
-    aussie_specialist_club = AussieSpecialistClub
-    def __init__(self):
-        self.element = DR.flashy_find_element('.main-nav-wrap')
-        attach_link(self, 'profile', selector='#link-{}')
-        attach_link(self, 'logout', selector='#link-{}')
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.

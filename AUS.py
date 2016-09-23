@@ -1,13 +1,14 @@
-# -*- coding: utf-8 -*-
-# coding=utf-8
+"""Contains the Test Suite for the AUS.com regression and basically nothing else."""
 
 import os
 import unittest
-import tap
 from selenium import webdriver
+import tap
+import drivery as DR
 import components as CP
 
 class AUS(unittest.TestCase):
+    """The Test Suite for the AUS.com regression."""
     def setUp(self):
         self.driver = webdriver.Firefox()
         self.driver.implicitly_wait(30)
@@ -20,7 +21,6 @@ class AUS(unittest.TestCase):
         self.assertEqual([], self.verificationErrors)
 
     def test_social(self):
-        driver = self.driver
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)
         CP.PlanYourTrip().open().getting_around().click()
         # Click the Share icon
@@ -44,53 +44,71 @@ class AUS(unittest.TestCase):
         # Verify the Weibo page?
 
         # Click on the WeChat QR code/link in the footer
-        CP.Footer().wechat().click()
+        footer = CP.Footer()
+        footer.wechat().click()
         # A QR code should appear in an overlay
         qur = CP.QRCode()
         # TODO: Implement action: "Scan the QR code using your WeChat app"
         # TODO: Implement result: "The WeChat account belonging to TA China shows up"
-        driver.find_element_by_css_selector("a.fancybox-item.fancybox-close").click()
+        qur.close()
 
-        # TODO: Implement action: "Click on the Sina Weibo image/link (kangaroo picture)"
-        driver.find_element_by_xpath("//footer[@id='main-footer']/div/div/div[2]/div/div/ul/li/a/span").click()
+        # Click on the Sina Weibo image link
+        footer.weibo().click()
         # TODO: Implement result: "A new tab/window opens to TA's Sina Weibo account (login to Sina Weibo required)"
 
-        # TODO: Implement action: "Navigate to the aquatic page (http://www.australia.cn/zh-cn/things-to-do/aquatic.html)"
-        driver.find_element_by_link_text("探索坊计划行程").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-3']/ul/li/div/div/div/div/div/div/div/a/span[2]/span/span").click()
+        # Navigate to the Aquatics page
+        CP.ThingsToDo().open().aquatic().click()
         # TODO: Implement action: "Click the watch video button"
-        driver.find_element_by_css_selector("button.button.carouselcoastal-explore-btn").click()
-        # TODO: Implement action: "Click the start video button"
-        driver.find_element_by_id("start360VideoButtonDesktop").click()
+        pan = CP.PanoramicCarousel()
+        pan.watch_video()
+        # Click the other start video button
+        pan.once_off_start_video()
         # Open the Menu, might not need to do this if you are fast enough
-        driver.find_element_by_css_selector("span.icon-font-pie").click()
-        # TODO: Implement action: "Click the icon for WeChat (two chat balloon faces, third from the top in the sidebar)"
-        driver.find_element_by_css_selector("span.i.i-ico3").click()
-        # TODO: Implement result: "A QR code should appear"
+        pan.open_video_menu()
+        # Click the WeChat icon
+        pan.wechat()
+        # A QR code appears
+        qur = CP.QRCode()
         # TODO: Implement action: "Scan the QR code using the WeChat app on your phone"
         # TODO: Implement result: "The corresponding page opens in WeChat"
-        driver.find_element_by_css_selector("#myModalForVideo > div.modal-dialog > div.modal-content > div.modal-body > button.close").click()
+        qur.close()
 
-        # TODO: Implement action: "Click the icon for Weibo (eyeball thing, second from the top in the sidebar)"
-        driver.find_element_by_css_selector("span.i.i-ico2").click()
+        # Click the Weibo icon
+        pan.weibo()
         # TODO: Implement result: "A window should pop up linking to service.weibo.com"
         # TODO: Implement result: "The page should contain copy related to the page and images pulled from the page"
         # TODO: Implement result: "This data should be correct"
-        # Log in to Weibo maybe, verify the page.
 
     def test_kdp(self):
-        driver = self.driver
-        # TODO: Implement action: "Navigate to the KDP page (http://www.australia.cn/zh-cn/plan/kdp.html)"
-        driver.find_element_by_link_text("探索坊计划行程").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-3']/ul/li/div/div/div[3]/div/div/div/div/a/span[2]/span/span").click()
+        # Navigate to the KDP page
+        CP.PlanYourTrip().open().kdp().click()
         # Count results, assert all buttons lit.
-        # TODO: Implement action: "Scroll to the KDP ( travel package ) section that under the heading Explore Trip (杜索行程)"
-        # TODO: Implement result: "North China, South China, East China and West China icons should all be active (cyan with white lines) and all KDP products should appear."
-        # TODO: Implement action: "Click the South China button (first button on the left)"
-        driver.find_element_by_xpath("//div[@id='searchSectionValue']/div/div[2]/div[2]/div/div/div/div[2]/a/span/img[2]").click()
-        # TODO: Implement result: "The South China icon should remain cyan while the others turn white. Check if all items displayed are from the South China region."
-        # TODO: Implement action: "Perform steps 4 and 5 for the remaining three regions (North China, East China and West China)"
-        # TODO: Implement result: "If all KDP ( travel packages ) show correctly on four regions , the test is passed."
+        kdp = CP.KDPSearch()
+        # North China, South China, East China and West China icons should all be active
+        self.assertEqual(len(kdp.lit_icons()), 4)
+        total = kdp.total_results()
+        subtotal = 0
+        # Click the South China button
+        kdp.south()
+        # The South China icon should remain cyan while the others turn white.
+        self.assertEqual(kdp.lit_icons(), 's')
+        self.assertLessEqual(kdp.total_results(), total)
+        subtotal += kdp.total_results()
+        # Do that for the remaining three regions (North China, East China and West China)
+        kdp.east()
+        self.assertEqual(kdp.lit_icons(), 'e')
+        self.assertLessEqual(kdp.total_results(), total)
+        subtotal += kdp.total_results()
+        kdp.west()
+        self.assertEqual(kdp.lit_icons(), 'w')
+        self.assertLessEqual(kdp.total_results(), total)
+        subtotal += kdp.total_results()
+        kdp.north()
+        self.assertEqual(kdp.lit_icons(), 'n')
+        self.assertLessEqual(kdp.total_results(), total)
+        subtotal += kdp.total_results()
+        # And make sure that they all add to the total.
+        self.assertEqual(total, subtotal)
 
     def test_header(self):
         driver = self.driver

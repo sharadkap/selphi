@@ -129,7 +129,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
 
 def attach_links(menu: WrappedElement, names: List[str], selector: str='[href*="{}.html"]') -> None:
     """A function that attaches an attribute that can be called to create a simple link.
-    The 'name' argument should be the bit that .formats into the selector"""
+    The 'names' arguments should be the bits that .format into the selector"""
     for name in names:
         # Watch out for that closure.
         def link_maker(n):
@@ -139,6 +139,10 @@ def attach_links(menu: WrappedElement, names: List[str], selector: str='[href*="
 
 class NavSection(WrappedElement):
     """Methods common to the five Nav Menu sections."""
+    def __init__(self):
+        """Find and attach every link that is located within the menu."""
+        DR.quietly_find_element('a:not([href*="#"])').map((a,b)=>$(b).attr('href').match(/\w+?(?=.html)/))
+
     def open(self) -> WrappedElement:
         """Opens the menu, whether that be by clicking or by pointing."""
         self.point()
@@ -146,12 +150,14 @@ class NavSection(WrappedElement):
             self.click()
         return self
 
-
 class NavMenu(WrappedElement):
     """Represents the main Nav Menu."""
     def __init__(self):
         self.element = DR.flashy_find_element('.main-nav-wrap')
         attach_links(self, ['profile', 'logout'], selector='#link-{}')
+        attach_links(self, ['logo'], selector='.{}-masthead')
+        attach_links(self, ['holiday'], selector='.is-current a')
+        attach_links(self, ['business.events'], selector='[href*={}.com]')
 
     # ASP ones.
     class About(NavSection):
@@ -205,7 +211,7 @@ class NavMenu(WrappedElement):
                                 'fraser-island', 'freycinet', 'gippsland', 'kakadu',
                                 'namadgi-national-park', 'ningaloo', 'tasmanian-wilderness',
                                 'the-australian-alps', 'the-kimberley', 'margaret-river',
-
+                                'explore',
                                 'australian-capital-territory', 'new-south-wales',
                                 'northern-territory', 'queensland', 'south-australia',
                                 'tasmania', 'victoria', 'western-australia'])
@@ -243,33 +249,23 @@ class Footer(WrappedElement):
     """Represents the global Footer."""
     def __init__(self):
         self.element = DR.flashy_find_element('#main-footer')
-        attach_link(self, 'splash')
-        attach_link(self, 'facebook', selector='[href*="www.{}.com"]')
-        attach_link(self, 'plus.google', selector='[href*="{}.com"]')
-        attach_link(self, 'youtube', selector='[href*="www.{}.com"]')
-        attach_link(self, 'twitter', selector='[href*="{}.com"]')
-        attach_link(self, 'instagram', selector='[href*="{}.com"]')
-        attach_link(self, 'wechat', selector='[href*="#qr_image"]')
-        attach_link(self, 'sitemap')
-        attach_link(self, 'privacy-policy')
-        attach_link(self, 'terms-and-conditions')
-        attach_link(self, 'terms-of-use')
-        attach_link(self, 'contact-us')
+        attach_links(self, ['splash', 'sitemap', 'privacy-policy', 'terms-and-conditions',
+                            'terms-of-use', 'contact-us'])
+        attach_links(self, ['facebook', 'plus.google', 'youtube', 'twitter', 'instagram'],
+                     selector='[href*="{}.com"]')
+        attach_links(self, ['wechat'], selector='[href*="#qr_image"]')
         if DR.CN_MODE:
-            attach_link(self, 'australia', selector='[href*="www.{}.cn"]')
-            attach_link(self, 'businessevents.australia', selector='[href*="{}.cn"]')
+            attach_links(self, ['australia', 'businessevents.australia'],
+                         selector='[href*="www.{}.cn"]')
         else:
-            attach_link(self, 'australia', selector='[href*="www.{}.com"]')
-            attach_link(self, 'tourism.australia', selector='[href*="www.{}.com"]')
-            attach_link(self, 'businessevents.australia', selector='[href*="{}.com"]')
+            attach_links(self, ['australia', 'tourism.australia'], selector='[href*="www.{}.com"]')
+            attach_links(self, ['businessevents.australia'], selector='[href*="{}.com"]')
 
 class Sitemap(WrappedElement):
     """Represents the Sitemap link cloud."""
     def __init__(self):
         self.element = DR.flashy_find_element('.sitemap')
-        attach_link(self, 'change')
-        attach_link(self, 'newsletter-unsubscribe')
-        attach_link(self, 'coming-soon')
+        attach_links(self, ['change', 'newsletter-unsubscribe', 'coming-soon'])
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the Sitemap link section."""
@@ -722,8 +718,7 @@ class SignIn(WrappedElement):
     def __init__(self):
         DR.flashy_find_element('.link-signin-text').click()
         self.element = DR.flashy_find_element('.fancybox-wrap')
-        attach_link(self, 'forgotten-username')
-        attach_link(self, 'forgotten-password')
+        attach_links(self, ['forgotten-username', 'forgotten-password'])
 
     def sign_in(self, user: str, passw: str, new_password=False) -> None:
         """Logs in using the given Username and Password."""
@@ -812,7 +807,7 @@ class Profile(WrappedElement):
     """Represents the Profile page form."""
     def __init__(self):
         self.element = DR.flashy_find_element('#profile-form')
-        attach_link(self, 'change')
+        attach_links(self, ['change'])
 
     def __getattr__(self, name):
         """If an unknown GET message is received, see if there's a field with that name."""

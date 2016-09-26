@@ -165,7 +165,7 @@ def wait_until(condition: FunctionType) -> Any:
             'Timed out waiting for method {0} to be true.'.format(condition)) from None
 
 def switch_to_window(window: int) -> None:
-    """Switch WebDriver's focus to the second open tab or window."""
+    """Switch WebDriver's focus to the given open tab or window. Zero based indexing."""
     # Disable warning on missing property. Pylint just can't find it. pylint: disable-msg=E1101
     DRIVER.switch_to.window(DRIVER.window_handles[window])
 

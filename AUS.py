@@ -111,18 +111,22 @@ class AUS(unittest.TestCase):
         self.assertEqual(total, subtotal)
 
     def test_header(self):
-        driver = self.driver
         # Click the Australia.com logo in the header
-        driver.find_element_by_css_selector("div.header-masthead > a.logo-masthead").click()
+        CP.NavMenu().logo().click()
         # Should link to homepage
+        self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
 
         # Click the Holiday In Australia link in the header
-        driver.find_element_by_link_text("旅游度均").click()
+        CP.NavMenu().holiday().click()
         # Should link to homepage.
+        self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
 
         # Click the Business Events link in the header
-        driver.find_element_by_link_text("商务会奖").click()
-        # Should link to businessevents.australia.cn in new tab
+        CP.NavMenu().business_events().click()
+        # Should link to businessevents.australia.com/cn in new tab
+        DR.switch_to_window(1)
+        self.assertIn('businessevents.australia.c', DR.current_url())
+        DR.switch_to_window(0)
 
         # Open the Explore section in the header
         driver.find_element_by_link_text("探索坊计划行程").click()

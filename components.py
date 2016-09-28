@@ -139,10 +139,6 @@ def attach_links(menu: WrappedElement, names: List[str], selector: str='[href*="
 
 class NavSection(WrappedElement):
     """Methods common to the five Nav Menu sections."""
-    def __init__(self):
-        """Find and attach every link that is located within the menu."""
-        DR.quietly_find_element('a:not([href*="#"])').map((a,b)=>$(b).attr('href').match(/\w+?(?=.html)/))
-
     def open(self) -> WrappedElement:
         """Opens the menu, whether that be by clicking or by pointing."""
         self.point()
@@ -195,6 +191,12 @@ class NavMenu(WrappedElement):
             attach_links(self, ['aussie-specialist-club', 'travel-club', 'famils',
                                 'aussie-specialist-photos', 'asp-logo', 'aussie-store'])
 
+        @staticmethod
+        def not_present() -> bool:
+            """Checks that the Aussie Specialist Club menu is not present.
+            As such, does not attempt to locate it, and is a static method."""
+            return not DR.check_visible_quick('#nav-main-panel-5')
+
     # AUS.com ones.
     class PlacesToGo(NavSection):
         """Represents the Places To Go section in the nav menu."""
@@ -220,19 +222,56 @@ class NavMenu(WrappedElement):
         """Represents the Things To Do section in the nav menu."""
         def __init__(self):
             self.element = DR.flashy_find_element('#nav-main-panel-2')
-            attach_links(self, [])
+            attach_links(self, ["things-to-do", "aquatic", "nature-and-wildlife", "food-and-wine",
+                                "outback-australia", "top-things-to-do",
 
+                                "drive-australia", "coastal-journeys", "holiday-ideas",
+                                "city-journeys", "48-hours-itineraries", "walking-australia",
+                                "itineraries",
+
+                                "explore", "campaigns", "events", "news",
+                                "youthful-travellers", "aboriginal-australia"])
 
     class PlanYourTrip(NavSection):
         """Represents the Plan Your Trip section in the nav menu."""
         def __init__(self):
             self.element = DR.flashy_find_element('#nav-main-panel-3')
+            attach_links(self, ["facts", "weather", "australias-seasons", "time-zones-in-australia",
 
-    @staticmethod
-    def not_present() -> bool:
-        """Checks that the Aussie Specialist Club menu is not present.
-        As such, does not attempt to locate it, and is a static method."""
-        return not DR.check_visible_quick('#nav-main-panel-5')
+                                "planning-a-trip", "visa-information", "getting-around",
+                                "working-holiday-visa", "customs-quarantine",
+
+                                "find-travel-agent", "find-accommodation", "find-tours", "explore"])
+
+    # And, the AUS.cn last two are a bit different.
+    class PracticalInformation(NavSection):
+        """Represents the 实用信息 section in the nav menu. A combination of Facts and Planning?"""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-2')
+            attach_links(self, ["weather", "australias-seasons", "cities-states-territories",
+                                "australias-animals", "plants", "currency", "time-zones", "facts"
+
+                                "visa-information", "flight-information", "planning-a-trip",
+                                "getting-around", "useful-tips", "planning",
+
+                                "embassy", "work-study-abroad", "customs-quarantine",
+                                "healthy-safety"])
+
+    class ExploreAndPlan(NavSection):
+        """Represents the 探索及计划行程 section in the nav menu.
+        Things to do, Itineraries, Campaigns and some other miscellaniea."""
+        def __init__(self):
+            self.element = DR.flashy_find_element('#nav-main-panel-3')
+            attach_links(self, ["aquatic", "things-to-do", "food-and-wine", "nature-and-wildlife",
+                                "aboriginal-australia", "australian-sport", "art-music-culture",
+                                "outback-australia", "youthful-travellers",
+
+                                "city-journeys", "drive-australia", "coastal-journeys",
+                                "48-hours-itineraries", "walking-australia", "adventure-journeys",
+                                "outback-journeys", "aboriginal-discovery", "nature-discovery",
+
+                                "kdp", "specialoffers", "hertzselfdriving",
+                                "download", "follow-us"])
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.
@@ -1122,6 +1161,58 @@ class AussieStore(WrappedElement):
                 count -= 1
                 self.element = DR.quietly_find_element('.shoppingcart')
                 DR.wait_until(lambda _: self.count() == count)
+
+#start some AUS.com only components?
+class ShareThis(WrappedElement):
+    """Represents the ShareThis component, the Add and Share buttons."""
+    def __init__(self):
+        self.element = DR.flashy_find_element('div.shareThis')
+
+    def add_to_favourites(self):
+        """Adds the current page to Dream Trip by clicking the red heart Add button."""
+        DR.flashy_find_element('.favourite-main-container a', self.element).click()
+
+    def open_share(self):
+        """Opens the Share section. Whether this means creates the popup or
+        slides out the other two icons depends on the Gl/Cn environment."""
+        DR.flashy_find_element('.shareThisHolder,.shareicons-container>a>span',
+                               self.element).click()
+
+    def open_weibo(self):
+        """Opens the Weibo popup window, only do this in CN and after open_share.
+        And remember to DR.switch_to_window."""
+        DR.flashy_find_element('#weiboshare', self.element).click()
+
+    def open_wechat(self):
+        """Opens the WeChat QR Code panel, only do this in CN and after open_share."""
+        DR.flashy_find_element('#wechatshare', self.element).click()
+
+class QRCode(WrappedElement):
+    """Represents the various QR code popups that can appear in AUS.cn"""
+    def __init__(self):
+        self.element = DR.flashy_find_element('.modal-content:visible,.fancybox-skin:visible')
+
+    def close(self):
+        """Closes the popup, usually via the X button."""
+        DR.flashy_find_element('.fancybox-close,.close', self.element).click()
+
+    def decode(self) -> str:
+        """Decodes the QR code image, returns the string it evaluates to."""
+        raise NotImplementedError('I assume this must be possible, '
+                                  'but all the libraries are encode-only?')
+
+class PanoramicCarousel(WrappedElement):
+    """Represents the Panoramic Carousel and the 360 Video player."""
+    def __init__(self):
+        self.element = DR.flashy_find_element('#panoramicCarousel')
+
+    def watch_video(self) -> str:
+        """Selects a random video to watch. Returns the video's name."""
+        btn = random.choice(DR.flashy_find_elements('.carouselcoastal-explore-btn', self))
+        btname = DR.quietly_find_element('carouselcoastal-explore-title',
+                                         DR.get_parent_element(btn))
+        btn.click()
+        return btname
 
 class BackupHrefs:
     """Call on this if an important component is missing, it has links to the pages.

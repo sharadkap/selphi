@@ -2,10 +2,10 @@
 
 import random
 import unittest
+from collections import OrderedDict
 import drivery as DR
 import modules as MOD
 import components as CP
-from collections import OrderedDict
 
 # Sort the tests by declaration order, not alphabetical order.
 aspnames = OrderedDict(
@@ -88,7 +88,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         DR.open_home_page()
         # Click on 'About' in the Mega Menu.
         try:
-            about = CP.About().open()
+            about = CP.NavMenu.About().open()
             # The About section should have: About, Why Register,
             # Program FAQ, Site Usage, Contact Us
             about.about()
@@ -101,7 +101,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
         # Click on 'Sales Resources' in the Mega Menu.
         try:
-            sales = CP.SalesResources().open()
+            sales = CP.NavMenu.SalesResources().open()
             # The Sales section should have: Sales Resources (Landing), Interactive Map,
             # Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
             # Itinerary Search, Australian Events, Destination FAQ
@@ -118,7 +118,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
         # Click on 'Training' in the Mega Menu.
         try:
-            train = CP.Training().open()
+            train = CP.NavMenu.Training().open()
             # The Training section should have: *Training (Landing page only)
             train.training()
         except Exception as ex:
@@ -126,7 +126,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
         # Click on 'News & Products' in the Mega Menu.
         try:
-            news = CP.NewsAndProducts().open()
+            news = CP.NavMenu.NewsAndProducts().open()
             # The News section should have: *News and Product Updates (Landing page only)
             news.news_and_product_updates()
         except Exception as ex:
@@ -134,7 +134,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
         # Click on 'Aussie Specialist Club' in the Mega Menu.
         try:
-            club = CP.AussieSpecialistClub().open()
+            club = CP.NavMenu.AussieSpecialistClub().open()
             # The Club section should have: *Aussie Specialist Club (Landing page only)
             club.aussie_specialist_club()
         except Exception as ex:
@@ -221,7 +221,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         DR.open_home_page()
         # Navigate to Sales Resources > Itinerary Suggestions.
         try:
-            CP.SalesResources().open().itineraries_search_and_feature().click()
+            CP.NavMenu.SalesResources().open().itineraries_search_and_feature().click()
         except Exception as ex:
             CP.BackupHrefs.itineraries()
             DR.add_error(ex)
@@ -235,7 +235,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         DR.open_home_page()
         # Navigate to Sales Resources > Fact Sheets.
         try:
-            CP.SalesResources().open().fact_sheets_overview().click()
+            CP.NavMenu.SalesResources().open().fact_sheets_overview().click()
         except Exception as ex:
             CP.BackupHrefs.factsheets()
             DR.add_error(ex)
@@ -418,7 +418,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         DR.open_home_page()
         # Navigate to About > Contact Us.
         try:
-            CP.About().open().contact_us().click()
+            CP.NavMenu.About().open().contact_us().click()
         except Exception as ex:
             CP.BackupHrefs.contact()
             DR.add_error(ex)
@@ -497,12 +497,12 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Check the Nav Menu
         # The Sales section should now have the My Sales Tools link
         try:
-            CP.SalesResources().open().my_sales_tools()
+            CP.NavMenu.SalesResources().open().my_sales_tools()
         except Exception as ex:
             DR.add_error(ex)
         # The Training Section should now have the Training Summary and Webinars links.
         try:
-            train = CP.Training().open()
+            train = CP.NavMenu.Training().open()
             train.webinars()
             train.training_summary()
         except Exception as ex:
@@ -510,19 +510,19 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # The News & Updates section should have the Latest News Link
         # The News section should now  have the Product Updates link.
         try:
-            news = CP.NewsAndProducts().open()
+            news = CP.NavMenu.NewsAndProducts().open()
             news.latest_news()
             news.product_videos()
         except Exception as ex:
             DR.add_error(ex)
         # China shows most of its ASC stuff to unqualified users, yes.
         if DR.CN_MODE:
-            club = CP.AussieSpecialistClub().open()
+            club = CP.NavMenu.AussieSpecialistClub().open()
             club.famils()
             club.aussie_specialist_photos()
         else:
             # The Club section should not be present. (Don't instantiate it, it isn't there)
-            self.assertTrue(CP.AussieSpecialistClub.not_present(),
+            self.assertTrue(CP.NavMenu.AussieSpecialistClub.not_present(),
                             'A trainee should not have access to the Aussie Specialist Club.')
 
     def test_Favourites(self):
@@ -555,12 +555,12 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
         # If there are already favourites, that's a problem, remove them. Messes with the count.
         if CP.HeaderHeartIcon().favourites_count() != 0:
-            CP.SalesResources().open().my_sales_tools().click()
+            CP.NavMenu.SalesResources().open().my_sales_tools().click()
             for x in CP.MySalesTools().get_favourites():
                 x.close()
         # Navigate to the About page.
         try:
-            CP.About().open().about().click()
+            CP.NavMenu.About().open().about().click()
         except Exception as ex:
             CP.BackupHrefs.about()
             DR.add_error(ex)
@@ -568,7 +568,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         mosaicad(3)
         # Navigate to Sales Resources > Australian Events.
         try:
-            CP.SalesResources().open().events().click()
+            CP.NavMenu.SalesResources().open().events().click()
         except Exception as ex:
             CP.BackupHrefs.events()
             DR.add_error(ex)
@@ -576,7 +576,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         mosaicad(6)
         # Navigate to Sales Resources > Fact Sheets.
         try:
-            CP.SalesResources().open().fact_sheets_overview().click()
+            CP.NavMenu.SalesResources().open().fact_sheets_overview().click()
         except Exception as ex:
             CP.BackupHrefs.factsheets()
             DR.add_error(ex)
@@ -674,7 +674,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 DR.add_error(ex)
             DR.back()
             try:
-                CP.Training().open().training_summary().click()
+                CP.NavMenu.Training().open().training_summary().click()
             except Exception as ex:
                 CP.BackupHrefs.training()
                 DR.add_error(ex)
@@ -684,7 +684,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
         # Navigate to Training > Training Summary.
         try:
-            CP.Training().open().training_summary().click()
+            CP.NavMenu.Training().open().training_summary().click()
         except Exception as ex:
             CP.BackupHrefs.training()
             DR.add_error(ex)
@@ -712,7 +712,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         try:
             modules.module_vic()
             modules.wait_for_module()
-            CP.Training().open().training_summary().click()
+            CP.NavMenu.Training().open().training_summary().click()
         except Exception as ex:
             CP.BackupHrefs.training()
             DR.add_error(ex)
@@ -752,7 +752,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         DR.open_home_page()
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
         # Open the Aussie Specialist Club section in the Nav menu
-        club = CP.AussieSpecialistClub()
+        club = CP.NavMenu.AussieSpecialistClub()
         club.click()
         # Should now be populated with the full set of links:
         # Aussie Specialist Club (Landing Page), Travel Club, Aussie Specialist Photos
@@ -773,7 +773,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
         # Navigate to ASC > Travel Club
         try:
-            CP.AussieSpecialistClub().open().travel_club().click()
+            CP.NavMenu.AussieSpecialistClub().open().travel_club().click()
         except Exception as ex:
             CP.BackupHrefs.travel()
             DR.add_error(ex)
@@ -790,7 +790,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
         # Navigate to ASC > Famils
         try:
-            CP.AussieSpecialistClub().open().famils().click()
+            CP.NavMenu.AussieSpecialistClub().open().famils().click()
         except Exception as ex:
             CP.BackupHrefs.famils()
             DR.add_error(ex)
@@ -805,7 +805,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
         # Navigate to ASC > AS Photos
         try:
-            CP.AussieSpecialistClub().open().aussie_specialist_photos().click()
+            CP.NavMenu.AussieSpecialistClub().open().aussie_specialist_photos().click()
         except Exception as ex:
             CP.BackupHrefs.photos()
             DR.add_error(ex)
@@ -826,7 +826,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         DR.open_home_page()
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
         # Navigate to ASC > Download Qualification Badge
-        CP.AussieSpecialistClub().open().asp_logo().click()
+        CP.NavMenu.AussieSpecialistClub().open().asp_logo().click()
         # Click the Download Qualification Badge link.
         # Badge image should be downloaded/opened in a new tab.
         CP.SpecialistBadge()
@@ -962,7 +962,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             gotprof = True
         # Navigate to ASC > Aussie Store
         try:
-            CP.AussieSpecialistClub().open().aussie_store().click()
+            CP.NavMenu.AussieSpecialistClub().open().aussie_store().click()
         except Exception as ex:
             CP.BackupHrefs.store()
             DR.add_error(ex)

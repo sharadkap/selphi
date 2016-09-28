@@ -22,26 +22,30 @@ class AUS(unittest.TestCase):
 
     def test_social(self):
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)
-        CP.PlanYourTrip().open().getting_around().click()
+        CP.NavMenu.PlanYourTrip().open().getting_around().click()
         # Click the Share icon
-        share = CP.ShareThis().share()
-        share.open()
+        share = CP.ShareThis()
+        share.open_share()
         # Two icons should slide out from under it
         # Click the icon for WeChat (two chat balloon faces)
-        share.wechat()
+        share.wechat().click()
         qur = CP.QRCode()
         # A QR code should appear
         # TODO: Implement action: "Scan the QR code using the WeChat app on your phone"
+        DR.get(qur.decode())
         # TODO: Implement result: "The corresponding page opens in WeChat"
+        self.assertEqual(DR.current_url(), 'who even knows')
         # Close the QR code.
+        DR.back()
         qur.close()
 
         # Click the icon for Weibo (eyeball thing)
-        share.weibo()
-        # TODO: Implement result: "A window should pop up linking to service.weibo.com"
+        share.weibo().click()
+        # A window should pop up linking to service.weibo.com
+        DR.switch_to_window(1)
         # TODO: Implement result: "The page should contain copy related to the page and images pulled from the page"
         # TODO: Implement result: "This data should be correct"
-        # Verify the Weibo page?
+        DR.switch_to_window(0)
 
         # Click on the WeChat QR code/link in the footer
         footer = CP.Footer()
@@ -49,15 +53,21 @@ class AUS(unittest.TestCase):
         # A QR code should appear in an overlay
         qur = CP.QRCode()
         # TODO: Implement action: "Scan the QR code using your WeChat app"
+        DR.get(qur.decode())
         # TODO: Implement result: "The WeChat account belonging to TA China shows up"
+        self.assertEqual(DR.current_url(), 'who even knows')
+        DR.back()
         qur.close()
 
         # Click on the Sina Weibo image link
         footer.weibo().click()
         # TODO: Implement result: "A new tab/window opens to TA's Sina Weibo account (login to Sina Weibo required)"
+        DR.switch_to_window(2)
+        self.assertEqual(DR.current_url(), 'who even knows')
+        DR.switch_to_window(0)
 
         # Navigate to the Aquatics page
-        CP.ThingsToDo().open().aquatic().click()
+        CP.NavMenu.ThingsToDo().open().aquatic().click()
         # TODO: Implement action: "Click the watch video button"
         pan = CP.PanoramicCarousel()
         pan.watch_video()
@@ -81,7 +91,7 @@ class AUS(unittest.TestCase):
 
     def test_kdp(self):
         # Navigate to the KDP page
-        CP.PlanYourTrip().open().kdp().click()
+        CP.NavMenu.PlanYourTrip().open().kdp().click()
         # Count results, assert all buttons lit.
         kdp = CP.KDPSearch()
         # North China, South China, East China and West China icons should all be active
@@ -129,27 +139,47 @@ class AUS(unittest.TestCase):
         DR.switch_to_window(0)
 
         # Open the Explore section in the header
-        driver.find_element_by_link_text("探索坊计划行程").click()
-        # Verify existence of the three Explore+Planning sections.
+        if DR.CN_MODE:
+            eap = CP.NavMenu.ExploreAndPlan().open()
+            # Verify existence of the three Explore+Planning sections.
+            eap.aquatic()
+            eap.city_journeys()
+            eap.kpd()
+        else:
+            pass
+            # TODO: Read the AUS.com test, replicate here.
 
         # Open the Destinations section in the header
-        driver.find_element_by_link_text("必游胜地").click()
+        ptg = CP.NavMenu.PlacesToGo().open()
         # Confirm existence of Cities and Destinations sections and map thing.
+        ptg.sydney()
+        ptg.great_barrier_reef()
+        ptg.explore()
+
         # Click the States section switcher
-        driver.find_element_by_xpath("//div[@id='sites']/ul/li[2]/a/span").click()
+        ptg.states().click()
         # Confirm the States section appeared.
+        self.assertTrue(ptg.act().is_displayed())
+
 
     def test_favourites(self):
-        driver = self.driver
         # Go to the Australia's Animals page
-        driver.find_element_by_link_text("实用信杯").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-2']/ul/li/div/div/div/ul/li[3]/a/p").click()
+        if DR.CN_MODE:
+            CP.NavMenu.ExploreAndPlan().open().australias_animals().click()
+        else:
+            CP.NavMenu.PlanYourTrip().open().facts().click()
+            CP.WhatYouCanSeeMosaic().random_selection(1)[0].click()
         # Click the Add To Favourites button
-        driver.find_element_by_css_selector("img.btn-bubble-active").click()
+        favcount = CP.HeaderHeartIcon().favourites_count()
+        CP.ShareThis().add_to_favourites()
         # Wait for the animation to finish
         # confirm incremention
-
+        self.assertEqual(CP.HeaderHeartIcon().favourites_count(), favcount + 1)
         # Do that again with the Regional Cities page.
+        CP.NavMenu.PlacesToGo().open().regional_cities().click()
+        favcount = CP.HeaderHeartIcon().favourites_count()
+        CP.ShareThis().add_to_favourites()
+        self.assertEqual(CP.HeaderHeartIcon().favourites_count(), favcount + 1)
 
         # Go to favourites page
         driver.find_element_by_xpath("//li[@id='nav-heart-this-widget']/a/span/span[2]").click()

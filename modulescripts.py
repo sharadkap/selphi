@@ -46,7 +46,8 @@ MODULES_D = OrderedDict([('1', 'core_mod1'), ('2', 'core_mod2'), ('3', 'core_mod
     ('act', 'sto_act'), ('nsw', 'sto_nsw'), ('nt', 'sto_nt'), ('qld', 'sto_qld'), \
         ('sa', 'sto_sa'), ('tas', 'sto_tas'), ('vic', 'sto_vic'), ('wa', 'sto_wa'), \
     ('aboriginal', 'niche_aboriginal'), ('golf', 'niche_golf'), ('lodges', 'niche_lodges'), \
-        ('ra', 'niche_ra'), ('walks', 'niche_walks'), ('wine', 'niche_wine')])
+        ('ra', 'niche_ra'), ('walks', 'niche_walks'), ('wine', 'niche_wine'), \
+        ('aquatic', 'niche_aquatic')])
 
 # uuuuugggh
 MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
@@ -58,7 +59,7 @@ MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core
     ('aboriginal', ('niche_aboriginal', 'Aboriginal_Exp_HO_ali')), \
         ('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
         ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
-        ('wine', ('niche_wine', 'niche_wine_ali'))])
+        ('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_aquatic', 'niche_aquatic_ali'))])
 
 # So this happened.
 M = 'mandatory-modules/core-module'
@@ -69,7 +70,8 @@ MODULES = OrderedDict([('1', M + '1'), ('2', M + '2'), ('3', M + '3'), \
         ('act', S + 'act'), ('nsw', S + 'nsw'), ('nt', S + 'nt'), ('qld', S + 'qld'), \
         ('sa', S + 'sa'), ('tas', S + 'tas'), ('vic', S + 'vic'), ('wa', S + 'wa'), \
     ('aboriginal', N + 'aboriginal'), ('golf', N + 'golf'), ('lodges', N + 'lodges'), \
-        ('ra', N + 'ra'), ('walks', N + 'walks'), ('wine', N + 'winery')])
+        ('ra', N + 'ra'), ('walks', N + 'walks'), ('wine', N + 'winery'), \
+        ('aquatic', N + 'aquatic')])
 
 MOD_1_SCRIPT = ['Button_728', \
 ['Button_902', 'Button_903', 'Button_953', 'Button_918', \
@@ -844,8 +846,79 @@ WINE_SCRIPT = ['Button_33', \
 's38_tf2', 'Button_489', 'Button_484', \
 'Button_525']
 
+AQUATIC_SCRIPT = ['Button_5', \
+'Button_12', 'Button_13', 'Button_14', 'Button_9', \
+'Button_20', \
+'Button_215', 'Button_731', 'Button_282', 'Button_281', 'Button_212', \
+'Button_744', \
+'Button_771', 'Button_773', 'Button_770', 'Button_772', 'Button_768', \
+'Button_440', 'Button_441', 'Button_409', 'Button_410', 'Button_407', \
+'Button_448', 'Button_449', 'Button_415', 'Button_416', 'Button_413', \
+'Button_450', 'Button_451', 'Button_421', 'Button_422', 'Button_419', \
+'Button_452', 'Button_453', 'Button_433', 'Button_434', 'Button_431', \
+('Text_Caption_764', 'SmartShape_178'), ('Text_Caption_765', 'SmartShape_180'), \
+    ('Text_Caption_766', 'SmartShape_179'), 'Button_36', 'Button_435', \
+'Button_174', 'Button_736', 'Button_299', 'Button_300', 'Button_171', \
+'Button_778', \
+'Button_302', 'Button_303', 'Button_285', \
+'Button_308', 'Button_309', 'Button_306', \
+'Button_314', 'Button_315', 'Button_312', \
+'Button_320', 'Button_321', 'Button_318', \
+('Text_Caption_385', 'SmartShape_120'), ('Text_Caption_386', 'SmartShape_119'), \
+    ('Text_Caption_387', 'SmartShape_121'), 'Button_2', 'Button_322', \
+'Button_328', 'Button_331', 'Button_326', \
+'Button_782', 'Button_783', 'Button_163', 'Button_737', 'Button_337', 'Button_338', 'Button_160', \
+'Button_774', \
+'Button_343', 'Button_344', 'Button_341', \
+'Button_349', 'Button_350', 'Button_347', \
+'Button_355', 'Button_356', 'Button_353', \
+'Button_361', 'Button_362', 'Button_359', \
+('Text_Caption_523', 'SmartShape_149'), ('Text_Caption_524', 'SmartShape_150'), \
+    ('Text_Caption_525', 'SmartShape_148'), 'Button_4', 'Button_371', \
+'Button_367', 'Button_365', 'Button_363', \
+'Button_153', 'Button_738', 'Button_146', \
+'Button_502', \
+'Button_524', 'Button_525', 'Button_510', 'Button_511', 'Button_508', \
+'Button_526', 'Button_527', 'Button_469', 'Button_470', 'Button_467', \
+'Button_528', 'Button_529', 'Button_475', 'Button_476', 'Button_473', \
+'Button_530', 'Button_531', 'Button_522', 'Button_523', 'Button_520', \
+('Text_Caption_876', 'SmartShape_203'), ('Text_Caption_877', 'SmartShape_202'), \
+    ('Text_Caption_878', 'SmartShape_201'), 'Button_38', 'Button_489', \
+'Button_784', 'Button_785', 'Button_195', 'Button_739', 'Button_191', \
+'Button_756', \
+'Button_760', 'Button_761', 'Button_762', 'Button_763', 'Button_547', 'Button_548', 'Button_545', \
+'Button_764', 'Button_765', 'Button_583', 'Button_584', 'Button_581', \
+'Button_589', 'Button_590', 'Button_587', \
+'Button_595', 'Button_596', 'Button_593', \
+('Text_Caption_1063', 'SmartShape_232'), ('Text_Caption_1064', 'SmartShape_233'), \
+    ('Text_Caption_1065', 'SmartShape_234'), 'Button_40', 'Button_567', \
+'Button_786', 'Button_787', 'Button_184', 'Button_742', 'Button_670', 'Button_669', 'Button_181', \
+'Button_689', \
+'Button_717', 'Button_718', 'Button_634', 'Button_635', 'Button_632', \
+'Button_719', 'Button_720', 'Button_675', 'Button_676', 'Button_673', \
+'Button_721', 'Button_722', 'Button_681', 'Button_682', 'Button_679', \
+'Button_723', 'Button_724', 'Button_687', 'Button_688', 'Button_685', \
+('Text_Caption_1277', 'SmartShape_275'), ('Text_Caption_1278', 'SmartShape_274'), \
+    ('Text_Caption_1279', 'SmartShape_276'), 'Button_42', 'Button_654', \
+'Button_788', 'Button_789', 'Button_205', 'Button_741', 'Button_376', 'Button_375', 'Button_202', \
+'Button_748', \
+'Button_381', 'Button_382', 'Button_379', \
+'Button_391', 'Button_392', 'Button_389', \
+'Button_397', 'Button_398', 'Button_395', \
+'Button_403', 'Button_404', 'Button_401', \
+('Text_Caption_577', 'SmartShape_161'), ('Text_Caption_578', 'SmartShape_162'), \
+    ('Text_Caption_579', 'SmartShape_160'), 'Button_34', 'Button_383', \
+'Button_790', 'Button_791', 'Button_29', 'Button_743', 'Button_693', 'Button_694', 'Button_27', \
+'Button_752', \
+'Button_699', 'Button_700', 'Button_697', \
+'Button_727', 'Button_728', 'Button_705', 'Button_706', 'Button_703', \
+'Button_729', 'Button_730', 'Button_711', 'Button_712', 'Button_709', \
+('Text_Caption_1433', 'SmartShape_297'), ('Text_Caption_1434', 'SmartShape_299'), \
+    ('Text_Caption_1435', 'SmartShape_298'), 'Button_44', 'Button_713', \
+'Button_269']
+
 SCRIPTS = {'1': MOD_1_SCRIPT, '2': MOD_2_SCRIPT, '3': MOD_3_SCRIPT, \
 'act': ACT_SCRIPT, 'nsw': NSW_SCRIPT, 'nt': NT_SCRIPT, 'qld': QLD_SCRIPT, \
 'sa': SA_SCRIPT, 'tas': TAS_SCRIPT, 'vic': VIC_SCRIPT, 'wa': WA_SCRIPT, \
 'aboriginal': ABORIGINAL_SCRIPT, 'golf': GOLF_SCRIPT, 'lodges': LODGES_SCRIPT, \
-'ra': RA_SCRIPT, 'walks': WALKS_SCRIPT, 'wine': WINE_SCRIPT}
+'ra': RA_SCRIPT, 'walks': WALKS_SCRIPT, 'wine': WINE_SCRIPT, 'aquatic': AQUATIC_SCRIPT}

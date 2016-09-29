@@ -151,7 +151,7 @@ def click_surely(ele: WebElement) -> None:
     If that doesn't work, manual override, it was probably just behind a blank textbox."""
     try:
         DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
-                              ' + wp.innerHeight/2)', ele)
+                              '-wp.innerHeight/2)', ele)
         ele.click()
     except WebDriverException:
         DRIVER.execute(Command.MOVE_TO, {'element': ele.id})

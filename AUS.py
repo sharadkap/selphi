@@ -43,8 +43,8 @@ class AUS(unittest.TestCase):
         share.weibo().click()
         # A window should pop up linking to service.weibo.com
         DR.switch_to_window(1)
-        # TODO: Implement result: "The page should contain copy related to the page and images pulled from the page"
-        # TODO: Implement result: "This data should be correct"
+        # TODO: The page should contain copy related to the page and images pulled from the page
+        # TODO: This data should be correct
         DR.switch_to_window(0)
 
         # Click on the WeChat QR code/link in the footer
@@ -61,7 +61,7 @@ class AUS(unittest.TestCase):
 
         # Click on the Sina Weibo image link
         footer.weibo().click()
-        # TODO: Implement result: "A new tab/window opens to TA's Sina Weibo account (login to Sina Weibo required)"
+        # TODO: A new tab/window opens to TA's Sina Weibo account (login to Sina Weibo required)
         DR.switch_to_window(2)
         self.assertEqual(DR.current_url(), 'who even knows')
         DR.switch_to_window(0)
@@ -85,9 +85,9 @@ class AUS(unittest.TestCase):
 
         # Click the Weibo icon
         pan.weibo()
-        # TODO: Implement result: "A window should pop up linking to service.weibo.com"
-        # TODO: Implement result: "The page should contain copy related to the page and images pulled from the page"
-        # TODO: Implement result: "This data should be correct"
+        # TODO: A window should pop up linking to service.weibo.com
+        # TODO: The page should contain copy related to the page and images pulled from the page
+        # TODO: This data should be correct
 
     def test_kdp(self):
         # Navigate to the KDP page
@@ -182,8 +182,9 @@ class AUS(unittest.TestCase):
         self.assertEqual(CP.HeaderHeartIcon().favourites_count(), favcount + 1)
 
         # Go to favourites page
-        driver.find_element_by_xpath("//li[@id='nav-heart-this-widget']/a/span/span[2]").click()
+        CP.HeaderHeartIcon().click()
         # Remove a favourite
+        CP.MySalesTools()
         driver.find_element_by_xpath("//div[@id='main-content']/div/div/div[5]/div[2]/div/div/div[2]/div/div[2]/div/div[3]/a/span").click()
         # Confirm it was removed
 
@@ -291,7 +292,8 @@ if __name__ == "__main__":
     # Create the test runner, choose the output path: right next to the test script file.]
     runner = tap.TAPTestRunner()
     runner.set_format('Result of: {method_name} - {short_description}')
-    runner.set_outdir(os.path.join(os.path.split(__file__)[0], 'REGR_{0}_{1}_{2}.tap')) #.format(locale, browser, time.strftime('%Y%m%d_%H%M'))))
+    runner.set_outdir(os.path.join(os.path.split(__file__)[0], 'REGR_{0}_{1}_{2}.tap'))
+                      #.format(locale, browser, time.strftime('%Y%m%d_%H%M')))
     # tests = unittest.TestSuite([AUS('test_360')])
     # suite = unittest.TestSuite()
     suite = unittest.makeSuite(AUS)

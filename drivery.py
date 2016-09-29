@@ -49,7 +49,7 @@ EMAIL = 'testeratta+{}@gmail.com'
 TEST_EMAIL_IMAP_SERVER = 'imap.gmail.com'
 TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
 TEST_EMAIL_PASSWORD = 'WelcomeTest'
-ASP_EMAIL = 'no-reply@p19.neolane.net'#'tourism-au@updates.tourism.australia.com'
+ASP_EMAIL = {'no-reply@p19.neolane.net', 'tourism-au@updates.tourism.australia.com'}
 ASP_CN_EMAIL = 'asp-cn@tourism.australia.com'
 LATIN_EMAIL_ENCODING = 'windows-1252'
 
@@ -66,8 +66,8 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", "/en-m
               "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html",
               "https://www.aussiespecialist.cn/zh-cn"}
 # A script to scroll a single element into view proper, just in case.
-SCROLL_SCRIPT = ('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect()'
-                 '.top+wp.pageYOffset-wp.innerHeight/2)')
+SCROLL_SCRIPT = ('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
+                 '-wp.innerHeight/2)')
 # """A JS script that applies the 'element-highlighted' animation."""
 BLIP_SCRIPT = ('$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;}50%'
                '{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset tra'
@@ -309,7 +309,7 @@ class Email:
         # Containing a single bytestring of space-separated return values.
         # And IMAP requires that imput values be comma separated.         Because why not.
         return b','.join(imap.search(
-            None, 'FROM', ASP_CN_EMAIL if CN_MODE else ASP_EMAIL,
+            None, 'OR FROM', ASP_CN_EMAIL, *ASP_EMAIL,
             'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
     class LocalizedEmail():    # Oh, whatever. pylint: disable-msg=R0903

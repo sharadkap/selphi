@@ -22,7 +22,7 @@ aspnames = OrderedDict(
      ('CPW', 'test_Change_Password'), ('CMP', 'test_Campaign')])
 
 class ASP(unittest.TestCase): # pylint: disable-msg=R0904
-    """The main test suite, a regression run of ASP Global"""
+    """The main test suite, a regression run of ASP Global."""
     def setUp(self) -> None:
         """Called just before each test is run, sets up the browser and test records."""
         # Initialise the browser connection.

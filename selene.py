@@ -5,6 +5,7 @@ import os
 import io
 import sys
 import time
+import signal
 import argparse
 import unittest
 from multiprocessing import cpu_count
@@ -22,7 +23,7 @@ def main():
     parser = argparse.ArgumentParser()
     m = parser.add_mutually_exclusive_group()
     m.add_argument('--asp', help='Set this flag to run with the ASP regression test suite.',
-                        action='store_true')
+                   action='store_true')
     parser.add_argument('-e', '--environment', help='The Domain of the environment to test. \
                         Remember to include http(s). Default is %(default)s.', nargs=1, type=str,
                         default=[DR.BASE_URL], metavar='')
@@ -62,15 +63,26 @@ def main():
 
     # Run them in each locale.
     pool = Pool(cpu_count() * 2)  # It's mostly waiting; we can afford to overload the cores, right?
-    pool.map(launch_test, [(loc, bro, outdir, names, USERNAME, USERID,
-                            [args.environment[0], args.chenvironment[0]])
-                           for loc in args.locales for bro in args.browser])
+    # KeyboardInterrupts don't actually break out of blocking-waits, so do this the hard way.
+    try:
+        asy = pool.map_async(launch_test, [(loc, bro, outdir, names, USERNAME, USERID,
+                                      [args.environment[0], args.chenvironment[0]])
+                                     for loc in args.locales for bro in args.browser])
+        while True:
+            if asy.ready():
+                return
+            time.sleep(1)   # Alright! Busy-Waiting! That can't possibly go awry!
+
+    except KeyboardInterrupt:
+        pool.terminate()
+        raise
 
 def launch_test(args) -> None:
     """Do all the things needed to run a test suite. Put this as the target call of a process.
     It looks like this is messing with things on a Global level, but it's actually totally fine."""
     # These have to be here, otherwise the processes won't have access to it.
     # pylint: disable-msg=E1126, W0601
+    signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     global USERNAME, USERID
     locale, browser, outdir, names, USERNAME, USERID, env = args
     # Processes don't share global state, but the processes get reused, so have to clean up anyway.

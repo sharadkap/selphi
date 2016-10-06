@@ -49,8 +49,8 @@ EMAIL = 'testeratta+{}@gmail.com'
 TEST_EMAIL_IMAP_SERVER = 'imap.gmail.com'
 TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
 TEST_EMAIL_PASSWORD = 'WelcomeTest'
-ASP_EMAIL = {'no-reply@p19.neolane.net', 'tourism-au@updates.tourism.australia.com'}
-ASP_CN_EMAIL = 'asp-cn@tourism.australia.com'
+ASP_EMAILS = ['no-reply@p19.neolane.net', 'tourism-au@updates.tourism.australia.com',
+              'asp-cn@tourism.australia.com']
 LATIN_EMAIL_ENCODING = 'windows-1252'
 
 # """The main WebDriver runner reference."""
@@ -69,12 +69,12 @@ LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", "/en-m
 SCROLL_SCRIPT = ('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
                  '-wp.innerHeight/2)')
 # """A JS script that applies the 'element-highlighted' animation."""
-BLIP_SCRIPT = ('$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;}50%'
-               '{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset tra'
-               'nsparent;}} </style>");wp=window.top;b=arguments[0];for(var a=0;a<b.length;a++) {va'
-               'r c=b[a];wp.scrollTo(0,c.getBoundingClientRect().top+wp.pageYOffset-wp.innerHeight/'
-               '2), c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(function(e'
-               ') {e.style.animationName="selhian"}, 10, c)}')
+BLIP_SCRIPT = ('try{$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;'
+               '}50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset'
+               ' transparent;}} </style>");wp=window.top;b=arguments[0];for(var a=0;a<b.length;a++)'
+               ' {var c=b[a];wp.scrollTo(0,c.getBoundingClientRect().top+wp.pageYOffset-wp.innerHei'
+               'ght/2), c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(functi'
+               'on(e) {e.style.animationName="selhian"}, 10, c)}}catch(e){}')
 # """Type annotation, referring to either a WebElement, or a list of them."""
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
 ELEMENT_LIST = List[WebElement] # pylint: disable-msg=E1126
@@ -113,7 +113,7 @@ def current_url() -> str:
     return DRIVER.current_url
 
 def back() -> None:
-    """The rule is, only the drivery module is allowed to invoke DRIVER."""
+    """The rule is, only the drivery module is allowed to invoke DRIVER directly."""
     DRIVER.back()
 
 def refresh() -> None:
@@ -121,16 +121,31 @@ def refresh() -> None:
     DRIVER.refresh()
 
 def get(url: str) -> None:
-    """RULES."""
+    """The Rules."""
     DRIVER.get(url)
+
+def close_window() -> None:
+    """Closes the currently-focused window or tab. Try not to use this when only one is left."""
+    DRIVER.close()
+    switch_to_window(0)
+
+def close_other_windows() -> None:
+    """Closes all open tabs and windows except for the original one."""
+    while len(DRIVER.window_handles) != 1:
+        switch_to_window(1)
+        close_window()
+
+def current_scroll() -> int:
+    """Returns the window's vertical scroll position as stated by javascript's window.scrollY"""
+    return DRIVER.execute_script('return window.scrollY;')
 
 def wait_for_page() -> None:
     """Holds up execution until the current page's url contains the Last Link value
     and its    document.readyState is 'complete'. A decent approximation?"""
     script = 'return document.readyState === "complete";'
     try:
-        WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: LAST_LINK in d.current_url)
-        WebDriverWait(DRIVER, LONG_WAIT).until(lambda d: d.execute_script(script))
+        WebDriverWait(DRIVER, LONG_WAIT).until(lambda: LAST_LINK in current_url())
+        WebDriverWait(DRIVER, LONG_WAIT).until(lambda: DRIVER.execute_script(script))
     except TimeoutException:
         raise TimeoutException('Timed out waiting for {0} to load.'.format(LAST_LINK)) from None
 
@@ -157,9 +172,10 @@ def wait_until_gone(selector: str) -> WebElement:
         raise TimeoutException('Timed out waiting for {0} to disappear.'.format(selector)) from None
 
 def wait_until(condition: FunctionType) -> Any:
-    """Holds up execution, repeatedly calling the given function until it returns truthy."""
+    """Holds up execution, repeatedly calling the given function until it returns truthy.
+    The given condition lambda should have no inputs."""
     try:
-        return WebDriverWait(DRIVER, LONG_WAIT).until(condition)
+        return WebDriverWait(DRIVER, LONG_WAIT).until(lambda _: condition())
     except TimeoutException:
         raise TimeoutException(
             'Timed out waiting for method {0} to be true.'.format(condition)) from None
@@ -290,7 +306,7 @@ class Email:
         with imaplib.IMAP4_SSL(TEST_EMAIL_IMAP_SERVER) as imap:
             imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
             imap.select()
-            nums = wait_until(lambda _: self.email_loop(imap, really_get_new))
+            nums = wait_until(lambda: self.email_loop(imap, really_get_new))
             # The Latin Character Set emails have two parts, the second of which is the html part.
             got, ems = imap.fetch(nums, 'body[2]')
             if got == 'NO':    # The others do not have two parts.
@@ -308,8 +324,8 @@ class Email:
         # Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
         # Containing a single bytestring of space-separated return values.
         # And IMAP requires that imput values be comma separated.         Because why not.
-        return b','.join(imap.search(
-            None, 'OR FROM', ASP_CN_EMAIL, *ASP_EMAIL,
+        return b','.join(imap.search(      # Search from all addresses, it could be any of them.
+            None, ' OR FROM '.join(['', *ASP_EMAILS[:-1]]).strip(), 'FROM', ASP_EMAILS[-1],
             'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
     class LocalizedEmail():    # Oh, whatever. pylint: disable-msg=R0903

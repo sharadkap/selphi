@@ -47,7 +47,7 @@ MODULES_D = OrderedDict([('1', 'core_mod1'), ('2', 'core_mod2'), ('3', 'core_mod
         ('sa', 'sto_sa'), ('tas', 'sto_tas'), ('vic', 'sto_vic'), ('wa', 'sto_wa'), \
     ('aboriginal', 'niche_aboriginal'), ('golf', 'niche_golf'), ('lodges', 'niche_lodges'), \
         ('ra', 'niche_ra'), ('walks', 'niche_walks'), ('wine', 'niche_wine'), \
-        ('aquatic', 'niche_aquatic')])
+        ('aquatic', 'niche_coastal')])
 
 # uuuuugggh
 MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
@@ -59,7 +59,7 @@ MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core
     ('aboriginal', ('niche_aboriginal', 'Aboriginal_Exp_HO_ali')), \
         ('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
         ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
-        ('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_aquatic', 'niche_aquatic_ali'))])
+        ('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
 
 # So this happened.
 M = 'mandatory-modules/core-module'
@@ -71,7 +71,7 @@ MODULES = OrderedDict([('1', M + '1'), ('2', M + '2'), ('3', M + '3'), \
         ('sa', S + 'sa'), ('tas', S + 'tas'), ('vic', S + 'vic'), ('wa', S + 'wa'), \
     ('aboriginal', N + 'aboriginal'), ('golf', N + 'golf'), ('lodges', N + 'lodges'), \
         ('ra', N + 'ra'), ('walks', N + 'walks'), ('wine', N + 'winery'), \
-        ('aquatic', N + 'aquatic')])
+        ('aquatic', N + 'coastal')])
 
 MOD_1_SCRIPT = ['Button_728', \
 ['Button_902', 'Button_903', 'Button_953', 'Button_918', \

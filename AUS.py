@@ -1,97 +1,172 @@
 """Contains the Test Suite for the AUS.com regression and basically nothing else."""
 
-import os
+import random
 import unittest
-from selenium import webdriver
-import tap
+from collections import OrderedDict
 import drivery as DR
 import components as CP
+
+ausnames = OrderedDict(
+    [('SOC', 'test_social'), ('KDP', 'test_kdp'), ('HDR', 'test_header'),
+     ('FAV', 'test_favourites'), ('ITI', 'test_whitsundays'), ('360', 'test_360'),
+     ('SRC', 'test_search'), ('WYC', 'test_wycs'), ('OFF', 'test_special_offers'),
+     ('BRT', 'test_brightcove'), ('BVD', 'test_banner_video'), ('XPL', 'test_explore'), ])
 
 class AUS(unittest.TestCase):
     """The Test Suite for the AUS.com regression."""
     def setUp(self):
-        self.driver = webdriver.Firefox()
-        self.driver.implicitly_wait(30)
-        self.base_url = "http://www.australia.cn"
-        self.verificationErrors = []
-        self.driver.get(self.base_url + "/zh-cn")
+        """Called just before each test is run, sets up the browser and test records."""
+        DR.verificationErrors = []    # This might work. Keep a list of everything that went wrong.
+        self.accept_next_alert = True
+        DR.begin()
+        DR.CN_MODE = True
+        DR.BASE_URL = "http://www.australia.cn"
+        DR.LOCALE = '/zh-cn'
+        DR.open_home_page()
 
     def tearDown(self):
-        self.driver.quit()
-        self.assertEqual([], self.verificationErrors)
+        """Called after finishing each test, closes the browser and counts up the errors."""
+        DR.close()
+        self.maxDiff = None
+        self.assertEqual([], DR.verificationErrors, '\nThis will fail if there were any nonlethal \
+            assertions. Hopefully the custom messages are helpful enough.')
 
     def test_social(self):
+        """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.
+        Does not test the QR code links, can't seem to do that."""
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)
-        CP.NavMenu.PlanYourTrip().open().getting_around().click()
-        # Click the Share icon
-        share = CP.ShareThis()
-        share.open_share()
-        # Two icons should slide out from under it
-        # Click the icon for WeChat (two chat balloon faces)
-        share.wechat().click()
-        qur = CP.QRCode()
-        # A QR code should appear
-        # TODO: Implement action: "Scan the QR code using the WeChat app on your phone"
-        DR.get(qur.decode())
-        # TODO: Implement result: "The corresponding page opens in WeChat"
-        self.assertEqual(DR.current_url(), 'who even knows')
-        # Close the QR code.
-        DR.back()
-        qur.close()
+        try:
+            if DR.CN_MODE:
+                CP.NavMenu.PracticalInformation().open().getting_around().click()
+            else:
+                CP.NavMenu.PlanYourTrip().open().getting_around().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.getting_around()
+        # ShareThis compoent bit:
+        try:
+            # Click the Share icon
+            share = CP.ShareThis()
+            share.open_share()
+            if DR.CN_MODE:
+                # Two icons should slide out from under it
+                # Click the icon for WeChat (two chat balloon faces)
+                share.open_wechat()
+                qur = CP.QRCode()
+                # TODO: A QR code should appear, scan it.
+                # DR.get(qur.decode())
+                # TODO: Implement result: "The corresponding page opens in WeChat"
+                # self.assertEqual(DR.current_url(), 'who even knows')
+                # DR.back()
+                # Close the QR code.
+                qur.close()
 
-        # Click the icon for Weibo (eyeball thing)
-        share.weibo().click()
-        # A window should pop up linking to service.weibo.com
-        DR.switch_to_window(1)
-        # TODO: The page should contain copy related to the page and images pulled from the page
-        # TODO: This data should be correct
-        DR.switch_to_window(0)
+                # Take some notes on the page for later comparison.
+                desc = share.page_description()
+                img = share.page_image()
+                url = DR.current_url()
+                # Click the icon for Weibo (eyeball thing)
+                share.open_weibo()
+                # A window should pop up linking to service.weibo.com
+                DR.switch_to_window(1)
+                # It should contain the description of, images pulled from,
+                # and a minified link to, the page
+                weibo = CP.WeiboShare()
+                self.assertEqual(desc, weibo.page_description(), 'The Weibo message should default'
+                                 ' to the page description.')
+                self.assertEqual(img, weibo.page_image(), "The page's Hero image should be listed.")
+                DR.get(weibo.miniurl())
+                self.assertEqual(url, DR.current_url(), "The Weibo mini-url should resolve to the "
+                                 "page's url.")
+                DR.close_window()
+            else:
+                # TODO: Global Share Icon behaviour.
+                self.skipTest('Haven\'t done global share component yet.')
+        except Exception as ex:
+            DR.add_error(ex)
+            DR.close_other_windows()
 
-        # Click on the WeChat QR code/link in the footer
-        footer = CP.Footer()
-        footer.wechat().click()
-        # A QR code should appear in an overlay
-        qur = CP.QRCode()
-        # TODO: Implement action: "Scan the QR code using your WeChat app"
-        DR.get(qur.decode())
-        # TODO: Implement result: "The WeChat account belonging to TA China shows up"
-        self.assertEqual(DR.current_url(), 'who even knows')
-        DR.back()
-        qur.close()
+        # Footer bit:
+        try:
+            if DR.CN_MODE:
+                # Click on the WeChat QR code/link in the footer
+                footer = CP.Footer()
+                footer.wechat().click()
+                # A QR code should appear in an overlay
+                qur = CP.QRCode()
+                # TODO: Implement action: "Scan the QR code using your WeChat app"
+                # DR.get(qur.decode())
+                # TODO: Implement result: "The WeChat account belonging to TA China shows up"
+                # self.assertEqual(DR.current_url(), 'who even knows')
+                # DR.back()
+                qur.close()
 
-        # Click on the Sina Weibo image link
-        footer.weibo().click()
-        # TODO: A new tab/window opens to TA's Sina Weibo account (login to Sina Weibo required)
-        DR.switch_to_window(2)
-        self.assertEqual(DR.current_url(), 'who even knows')
-        DR.switch_to_window(0)
+                # Click on the Sina Weibo image link
+                footer.weibo().click()
+                # A new tab/window opens to TA's Sina Weibo account (login to Sina Weibo required)
+                DR.switch_to_window(1)
+                # TODO: Maybe set up a weibo account and log in properly?
+                self.assertRegex(DR.current_url(), '^weibo.com/(login.php|seeaustralia)',
+                                 'The link should go to the AUS.com Weibo page, '
+                                 'or it may redirect to the login page.')
+                DR.close_window()
+            else:
+                # TODO: Handle the global footer social media links
+                self.skipTest('Haven\'t done global social links yet.')
+        except Exception as ex:
+            DR.add_error(ex)
+            DR.close_other_windows()
 
         # Navigate to the Aquatics page
-        CP.NavMenu.ThingsToDo().open().aquatic().click()
-        # TODO: Implement action: "Click the watch video button"
+        try:
+            if DR.CN_MODE:
+                CP.NavMenu.ExploreAndPlan().open().aquatic().click()
+            else:
+                CP.NavMenu.ThingsToDo().open().aquatic().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.aquatic()
         pan = CP.PanoramicCarousel()
-        pan.watch_video()
+        # Take some notes on the page for later comparison.
+        url = DR.current_url()
+        # Click the watch video button
+        desc, img = pan.watch_video()
         # Click the other start video button
         pan.once_off_start_video()
         # Open the Menu, might not need to do this if you are fast enough
         pan.open_video_menu()
-        # Click the WeChat icon
-        pan.wechat()
-        # A QR code appears
-        qur = CP.QRCode()
-        # TODO: Implement action: "Scan the QR code using the WeChat app on your phone"
-        # TODO: Implement result: "The corresponding page opens in WeChat"
-        qur.close()
+        if DR.CN_MODE:
+            # Click the WeChat icon
+            pan.wechat()
+            # A QR code appears
+            qur = CP.QRCode()
+            # TODO: Implement action: "Scan the QR code using the WeChat app on your phone"
+            # TODO: Implement result: "The corresponding page opens in WeChat"
+            qur.close()
 
-        # Click the Weibo icon
-        pan.weibo()
-        # TODO: A window should pop up linking to service.weibo.com
-        # TODO: The page should contain copy related to the page and images pulled from the page
-        # TODO: This data should be correct
+            # Click the Weibo icon
+            pan.weibo()
+            # A window should pop up linking to service.weibo.com
+            DR.switch_to_window(1)
+            # It should contain the description of, images pulled from,
+            # and a minified link to, the video
+            weibo = CP.WeiboShare()
+            self.assertEqual(desc, weibo.page_description(), 'The Weibo message should default'
+                             ' to the video description.')
+            self.assertEqual(img, weibo.page_image(), "The video's preview image should be listed.")
+            DR.get(weibo.miniurl())
+            self.assertEqual(url, DR.current_url(), "The Weibo mini-url should resolve to the "
+                             "video's page url.")
+        else:
+            # TODO: Do the global 360 share bit.
+            pass
 
     def test_kdp(self):
+        """Tests the KDP Partner Search functionality."""
+        if not DR.CN_MODE:
+            self.skipTest('Only China has the KDP thing.')
         # Navigate to the KDP page
-        CP.NavMenu.PlanYourTrip().open().kdp().click()
+        CP.NavMenu.ExploreAndPlan().open().kdp().click()
         # Count results, assert all buttons lit.
         kdp = CP.KDPSearch()
         # North China, South China, East China and West China icons should all be active
@@ -121,6 +196,7 @@ class AUS(unittest.TestCase):
         self.assertEqual(total, subtotal)
 
     def test_header(self):
+        """Tests the various men usections in the header."""
         # Click the Australia.com logo in the header
         CP.NavMenu().logo().click()
         # Should link to homepage
@@ -163,12 +239,13 @@ class AUS(unittest.TestCase):
 
 
     def test_favourites(self):
+        """Tests the My Dream Trip functionality."""
         # Go to the Australia's Animals page
         if DR.CN_MODE:
-            CP.NavMenu.ExploreAndPlan().open().australias_animals().click()
+            CP.NavMenu.PracticalInformation().open().australias_animals().click()
         else:
             CP.NavMenu.PlanYourTrip().open().facts().click()
-            CP.WhatYouCanSeeMosaic().random_selection(1)[0].click()
+            CP.WhatYouCanSeeMosaic()['Australia\'s Animals'].click()
         # Click the Add To Favourites button
         favcount = CP.HeaderHeartIcon().favourites_count()
         CP.ShareThis().add_to_favourites()
@@ -184,177 +261,132 @@ class AUS(unittest.TestCase):
         # Go to favourites page
         CP.HeaderHeartIcon().click()
         # Remove a favourite
-        CP.MySalesTools()
-        driver.find_element_by_xpath("//div[@id='main-content']/div/div/div[5]/div[2]/div/div/div[2]/div/div[2]/div/div[3]/a/span").click()
+        favs = CP.MySalesTools().get_favourites()
+        oldfavs = {f.get_title() for f in favs}
+        rem = random.choice(favs)
+        oldfavs.remove(rem.get_title())
+        rem.close()
         # Confirm it was removed
+        DR.refresh()
+        favs = CP.MySalesTools().get_favourites()
+        self.assertSetEqual(oldfavs, {f.get_title() for f in favs})
 
     def test_whitsundays(self):
-        driver = self.driver
+        """Tests various things pertaining to Itinerary pages."""
         # Navigate to Whitsundays Sailing
-        driver.find_element_by_link_text("探索坊计划行程").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-3']/ul/li/div/div/div[2]/ul/li[2]/a/p").click()
-        driver.find_element_by_xpath("//div[@id='main-content']/div/div/div[5]/div/div[2]/div/div[2]/div/div[2]/div/div/div/div/div/div/div[2]/div/div/p").click()
+        if DR.CN_MODE:
+            CP.NavMenu.ExploreAndPlan().open().coastal_journeys().click()
+        else:
+            CP.NavMenu.ThingsToDo().open().coastal_journeys().click()
+        CP.WhatYouCanSeeMosaic()['Whitsundays Sailing'].go()
 
         # Click a few of the Itinerary Day links
-        driver.find_element_by_link_text(u"第七日").click()
+        iti = CP.ItineraryDay()
+        # Get the scroll position of that bit.
+        scr = DR.current_scroll()
+        iti.random_link()
         # Confirm scrolling has taken place?
+        self.assertNotEqual(scr, DR.current_scroll())
+        iti.back_to_top()
+        self.assertEqual(0, DR.current_scroll())
 
     def test_360(self):
-        driver = self.driver
+        """Checks the Aquatic And Coastal page. Slightly."""
         # Navigate to Acquatic And Coastal
-        driver.find_element_by_link_text("探索坊计划行程").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-3']/ul/li/div/div/div/div/div/div/div/a/span[2]/span/span").click()
+        if DR.CN_MODE:
+            CP.NavMenu.ExploreAndPlan().open().aquatic().click()
+        else:
+            CP.NavMenu.ThingsToDo().open().aquatic().click()
+        # Confirm the Panorama is there??
+        CP.PanoramicCarousel()
 
-        # Go do a bunch of stuff with the video maybe.
+        # Not part of the test, but go do a bunch of stuff with the video maybe?
 
     def test_search(self):
-        driver = self.driver
+        """Tests the Site and Header Search functionalities."""
         # Do this a couple of times, different buttons:
-        # Open the Search bar
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-search']/a/span").click()
-        # Click a Common Search Term
-        driver.find_element_by_link_text("签话信杯").click()
-        # Change the view?
-        driver.find_element_by_xpath("//div[@id='main-content']/div/div/div/div/div[3]/div/div/div/div/div/div/div[2]/a[2]/img[2]").click()
-        # Change back ?
-        driver.find_element_by_css_selector("img.btn-bubble-active").click()
-        # Click Load more
-        driver.find_element_by_css_selector("a.btn-primary.load-more").click()
-        # Confirm the count is incremented?
+        for term in CP.HeaderSearch().popular_searches():
+            # Open the Search bar
+            CP.HeaderSearch().open()
+            # Click a Common Search Term
+            term.click()
+            src = CP.SiteSearch()
+            # Change the view?
+            src.grid_mode()
+            # Change back ?
+            src.list_mode()
+            # Click Load more
+            count = src.count_results()
+            src.load_more()
+            # Confirm the count is incremented?
+            self.assertGreaterEqual(count, src.count_results())
 
     def test_wycs(self):
-        driver = self.driver
+        """Tests the What You-Can-See-Mosaic-related functionality."""
         # Navigate to the Three Days Itineraries page
-        driver.find_element_by_link_text("探索坊计划行程").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-3']/ul/li/div/div/div[2]/div/div/div/div/a/span[2]/span/span").click()
-        # Click on a tile
-        driver.find_element_by_xpath("//div[@id='main-content']/div/div/div[6]/div/div[2]/div/div/div/div/div[2]/div/div[2]/div/div/div/div[2]/div/div").click()
-        # Should direct to the correct page while the other tiles grey out
+        if DR.CN_MODE:
+            CP.NavMenu.ExploreAndPlan().open().city_journeys().click()
+        else:
+            CP.NavMenu.ThingsToDo().open().city_journeys().click()
+        # Click on a tile, should direct to the correct page while the other tiles grey out
+        CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
 
         # Go to the Great Barrier Reef page
-        driver.find_element_by_link_text("必游胜地").click()
-        driver.find_element_by_xpath("//div[@id='attractions']/div[2]/div/div/div/a/span[2]/span/span").click()
-        # Click on a tile
-        driver.find_element_by_xpath("//div[@id='main-content']/div[3]/div/div/div/div[2]/div/div[2]/div/div[2]/div/div/div/div/div/div/div[2]/div/div/p").click()
-        # Should direct to the correct page, other tiles faded
+        CP.NavMenu.PlacesToGo().open().great_barrier_reef().click()
+        # Click on a tile, should direct to the correct page, other tiles faded
+        CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
 
     def test_special_offers(self):
-        driver = self.driver
+        """Tests the Special Offers page"""
         # Navigate to the Special Offers page
-        driver.find_element_by_link_text("探索及计划行程").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-3']/ul/li/div/div/div[3]/ul/li/a/p").click()
+        if DR.CN_MODE:
+            CP.NavMenu.ExploreAndPlan().open().specialoffers().click()
+        else:
+            CP.NavMenu.ThingsToDo().open().campaigns().click()
         # Click on a Special Offers link
-        driver.find_element_by_css_selector("div.specialoffer-links > a").click()
+        CP.SpecialOffer().view_more_information()
 
     def test_brightcove(self):
-        driver = self.driver
+        """Tests the Brightcove Video Player."""
         # Go to the Tasmania page
-        driver.find_element_by_link_text(u"必游胜地").click()
-        driver.find_element_by_xpath("//div[@id='sites']/ul/li[2]/a/span").click()
-        driver.find_element_by_xpath("//div[@id='states']/div[2]/ul/li[2]/a/p").click()
+        pla = CP.NavMenu.PlacesToGo().open()
+        pla.states().click()
+        pla.tas().click()
         # Play the video somehow, check that it worked?
+        vid = CP.Video()
+        vid.play()
+        self.assertTrue(vid.is_playing())
 
     def test_banner_video(self):
-        driver = self.driver
+        """Tests the Hero Banner With Video."""
         # Navigate to the Australia's Animals page
-        driver.find_element_by_link_text(u"实用信息").click()
-        driver.find_element_by_xpath("//li[@id='nav-main-panel-2']/ul/li/div/div/div/ul/li[3]/a/p").click()
-        # Verify that the hero banner is animated. Somehow.
+        if DR.CN_MODE:
+            CP.NavMenu.PracticalInformation().open().australias_animals().click()
+        else:
+            CP.NavMenu.PlanYourTrip().open().facts().click()
+            CP.WhatYouCanSeeMosaic()['Australia\'s Animals'].go()
+        # Verify that the hero banner is animated. This seems to count?
+        self.assertTrue(CP.Video().is_playing())
 
     def test_explore(self):
-        driver = self.driver
+        """Tests the Explore component."""
         # Navigate to the Sydney page
-        driver.find_element_by_link_text(u"必游胜地").click()
-        driver.find_element_by_xpath("//div[@id='cities']/div[3]/div/div/div/a/span[2]/span/span").click()
+        CP.NavMenu.PlacesToGo().open().sydney().click()
         # Click the Location Pin button on a the Explore component
-        driver.find_element_by_css_selector("#explore-flip-btn > span.btn-bubble-button > img.btn-bubble-active").click()
-        driver.find_element_by_xpath("(//a[@id='explore-flip-btn']/span[2]/img[2])[2]").click()
-        driver.find_element_by_xpath("(//a[@id='explore-flip-btn']/span[2]/img[2])[3]").click()
-        # Confirm that the card flipped?
+        cards = CP.Explore().cards
+        for card in cards:
+            card.flip()
+        # Confirm that the card flipped
+        for card in cards:
+            self.assertTrue(card.is_flipped())
         # Click the back to overview button
-        driver.find_element_by_id("explore-flip-back-btn").click()
-        driver.find_element_by_xpath("(//a[contains(text(),'Back to overview')])[2]").click()
-        driver.find_element_by_xpath("(//a[contains(text(),'Back to overview')])[3]").click()
+        for card in cards():
+            card.unflip()
+        for card in cards:
+            self.assertFalse(card.is_flipped())
         # Add some to favourites
-        driver.find_element_by_css_selector("span.btn-bubble.is-touched > span.btn-bubble-button > img.btn-bubble-active").click()
-        driver.find_element_by_css_selector("span.btn-bubble.is-touched > span.btn-bubble-button > img.btn-bubble-active").click()
-        driver.find_element_by_css_selector("span.btn-bubble.is-touched > span.btn-bubble-button > img.btn-bubble-active").click()
+        count = CP.HeaderHeartIcon().favourites_count()
+        for card in cards:
+            card.add_to_favourites()
         # Confirm favourites incremented
-
-if __name__ == "__main__":
-    oldopen = open
-    def open8(*args, **kwargs):
-        if len(args) > 1 and 'b' not in args[1]:
-            kwargs['encoding'] = 'utf-8'
-        return oldopen(*args, **kwargs)
-
-    __builtins__.open = open8
-    # Create the test runner, choose the output path: right next to the test script file.]
-    runner = tap.TAPTestRunner()
-    runner.set_format('Result of: {method_name} - {short_description}')
-    runner.set_outdir(os.path.join(os.path.split(__file__)[0], 'REGR_{0}_{1}_{2}.tap'))
-                      #.format(locale, browser, time.strftime('%Y%m%d_%H%M')))
-    # tests = unittest.TestSuite([AUS('test_360')])
-    # suite = unittest.TestSuite()
-    suite = unittest.makeSuite(AUS)
-    # suite.addTests(tests)
-    runner.run(suite)
-
-
-    # Give a unique name to the output file so you don't overwrite it every time!
-    # with open(os.path.join(outdir, 'REGR_{0}_{1}_{2}.tap'
-    #                        .format(locale, browser, time.strftime('%Y%m%d_%H%M'))),
-    #           mode='w', encoding='UTF-8') as newfil:
-    #     newfil.write(buf.getvalue())
-    # print(buf.getvalue() or 'It was blank')
-    # buf.close()
-
-def perform_hacks():
-    """Because not everything works the way it SHOULD, have to override a few methods."""
-    # Another one, that menu sure does get in the way sometimes.
-    oldclick = DR.WebElement.click
-    def newclick(*args, **kwargs):
-        """Overwrite the WebElement.click method to make sure that it isn't behind the nav menu."""
-        try:
-            oldclick(*args, **kwargs)
-        except MOD.WebDriverException:
-            DR.scroll_element(args[0])
-            oldclick(*args, **kwargs)
-    DR.WebElement.click = newclick
-
-    # This one really is a mess. Had to copy the method verbatim and make the required changes.
-    # The original method contains this unused argument, and yes, it isn't used there either.
-    def newex(self, err, test):     # pylint: disable-msg=W0613
-        """Converts a sys.exc_info()-style tuple of values into a string."""
-        import traceback
-        exctype, value, tb = err
-        # Strip the traceback down to the innermost call.
-        tb_e = traceback.TracebackException(exctype, value, tb, limit=0,
-                                            capture_locals=self.tb_locals)
-        msgLines = list(tb_e.format())
-
-        if self.buffer:
-            output = sys.stdout.getvalue()
-            error = sys.stderr.getvalue()
-            if output:
-                if not output.endswith('\n'):
-                    output += '\n'
-                msgLines.append('\nStdout:\n%s' % output)
-            if error:
-                if not error.endswith('\n'):
-                    error += '\n'
-                msgLines.append('\nStderr:\n%s' % error)
-        return ''.join(msgLines)
-    # And, override the existing method.
-    # I do need to access this private property to correctly HAX it into working.
-    # pylint: disable-msg=W0212
-    unittest.result.TestResult._exc_info_to_string = newex
-    # Also, tap has its own renderer as well, so have to overwrite that as well.
-    def newf(exc):
-        """Rewrite this method so as to remove the traceback."""
-        import traceback
-        # Changed this bit, added the limit.
-        exception_lines = traceback.format_exception(*exc, limit=0)
-        lines = ''.join(exception_lines).splitlines(True)
-        return tap.formatter.format_as_diagnostics(lines)
-    tap.formatter.format_exception = newf
+        self.assertEqual(count + 3, CP.HeaderHeartIcon().favourites_count())

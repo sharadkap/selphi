@@ -101,7 +101,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
     """Represents the What You Can See Mosaic, however many tiles may appear."""
     def __init__(self):
         self.element = DR.flashy_find_element('div.whatYouCanSee div.mosaic')
-        self.tiles = DR.quietly_find_elements('.flipper')
+        self.tiles = DR.quietly_find_elements('.mosaic-item')
 
     def tile_count(self) -> int:
         """Returns the number of tiles in the mosaic."""
@@ -177,7 +177,7 @@ class NavSection(WrappedElement):
 class NavMenu(WrappedElement):
     """Represents the main Nav Menu."""
     def __init__(self):
-        self.element = DR.flashy_find_element('.main-nav-wrap')
+        self.element = DR.flashy_find_element('.navigation')
         attach_links(self, ['profile', 'logout'], selector='#link-{}')
         attach_links(self, ['logo'], selector='.{}-masthead')
         attach_links(self, ['holiday'], selector='.is-current a')
@@ -244,7 +244,7 @@ class NavMenu(WrappedElement):
                                 'australian-alps', 'kimberley', 'margaret-river',
                                 'explore',
                                 'act', 'nsw', 'nt', 'qld', 'sa', 'tas', 'vic', 'wa'],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span')
+                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
 
     class ThingsToDo(NavSection):
         """Represents the Things To Do section in the nav menu."""
@@ -259,7 +259,7 @@ class NavMenu(WrappedElement):
 
                                 "explore", "campaigns", "events", "news",
                                 "youthful-travellers", "aboriginal-australia"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span')
+                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
 
     class PlanYourTrip(NavSection):
         """Represents the Plan Your Trip section in the nav menu."""
@@ -271,7 +271,7 @@ class NavMenu(WrappedElement):
                                 "working-holiday-visa", "customs-quarantine",
 
                                 "find-travel-agent", "find-accommodation", "find-tours", "explore"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span')
+                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
 
     # And, the AUS.cn last two are a bit different.
     class PracticalInformation(NavSection):
@@ -286,7 +286,7 @@ class NavMenu(WrappedElement):
 
                                 "embassy", "work-study-abroad", "customs-quarantine",
                                 "healthy-safety"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span')
+                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
 
     class ExploreAndPlan(NavSection):
         """Represents the 探索及计划行程 section in the nav menu.
@@ -303,7 +303,7 @@ class NavMenu(WrappedElement):
 
                                 "kdp", "specialoffers", "hertzselfdriving",
                                 "download", "follow-us"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span')
+                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.
@@ -1289,6 +1289,7 @@ class QRCode(WrappedElement):
     def close(self):
         """Closes the popup, usually via the X button."""
         DR.flashy_find_element('.fancybox-close,.close', self.element).click()
+        DR.wait_until_gone('div.fancybox-wrap,div.modal')
 
     def decode(self) -> str:
         """Decodes the QR code image, returns the string it evaluates to."""
@@ -1299,7 +1300,7 @@ class QRCode(WrappedElement):
 class PanoramicCarousel(WrappedElement):
     """Represents the Panoramic Carousel and the 360 Video player."""
     def __init__(self):
-        self.element = DR.flashy_find_element('#panoramicCarousel')
+        self.element = DR.flashy_find_element('.panoramicCarousel')
 
     def watch_video(self) -> Tuple[str, str]:
         """Selects a random video to watch. Returns the video's Title+Description and Image src."""
@@ -1312,7 +1313,6 @@ class PanoramicCarousel(WrappedElement):
         desc = '  '.join([DR.quietly_find_element('.carouselcoastal-explore-title', slide).text,
                           DR.quietly_find_element('.carouselcoastal-explore-location',
                                                   slide).text])
-        print(DR.BASE_URL + backslide.get_attribute('style'))
         src = DR.BASE_URL + backslide.get_attribute('style').split('"')[1]
         DR.blip_element(DR.quietly_find_elements('.owl-page')[sliden]).click()
         btn.click()
@@ -1357,7 +1357,7 @@ class KDPSearch(FilteredSearch):
 class SiteSearch(FilteredSearch):
     """Represents the Search component on the page that appears when using the Header Search."""
     def __init__(self): # I did the important bits manually. pylint: disable-msg=W0231
-        self.element = DR.flashy_find_element('#search>div.search-component')
+        self.element = DR.flashy_find_element('.search>div.search-component')
         # Hold up, have to wait for the initial results to come in first,
         # they'll interrupt if they appear halfway through something else.
         DR.quietly_find_element('.mosaic-item')

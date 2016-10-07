@@ -1074,11 +1074,12 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         try:
             # Signing in with a temp password should redirect to the Change page, catch it if not.
             CP.SignIn().sign_in(USERNAME, TEMP_PASS, new_password=True)
+            change = CP.ChangePassword()
         except Exception as ex:
             CP.BackupHrefs.change()
             DR.add_error(ex)
+            change = CP.ChangePassword()
         # Fill out the Change Password Form with the Current Password and a New Password.
-        change = CP.ChangePassword()
         change.current_password(TEMP_PASS)
         change.new_password(DR.PASSWORD)    # Use the regular password, of course.
         # Click the Submit button, a panel should appear confirming the password change, and

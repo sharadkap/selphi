@@ -144,8 +144,8 @@ def wait_for_page() -> None:
     and its    document.readyState is 'complete'. A decent approximation?"""
     script = 'return document.readyState === "complete";'
     try:
-        WebDriverWait(DRIVER, LONG_WAIT).until(lambda: LAST_LINK in current_url())
-        WebDriverWait(DRIVER, LONG_WAIT).until(lambda: DRIVER.execute_script(script))
+        WebDriverWait(DRIVER, LONG_WAIT).until(lambda _: LAST_LINK in current_url())
+        WebDriverWait(DRIVER, LONG_WAIT).until(lambda _: DRIVER.execute_script(script))
     except TimeoutException:
         raise TimeoutException('Timed out waiting for {0} to load.'.format(LAST_LINK)) from None
 

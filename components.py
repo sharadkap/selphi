@@ -39,6 +39,12 @@ class MinorElement(WrappedElement):
     def __init__(self, selector: str, within: WrappedElement) -> None:
         self.element = DR.flashy_find_element(selector, within)
 
+class MinorElementParent(WrappedElement):
+    """Subclass of the superclass, this one picks up the parent element of the given selector."""
+    def __init__(self, selector: str, within: WrappedElement) -> None:
+        self.element = DR.blip_element(DR.get_parent_element(
+            DR.quietly_find_element(selector, within)))
+
 class SplashSelect(WrappedElement):
     """Represents the Language Selector on the Splash Page."""
     def __init__(self):
@@ -165,6 +171,17 @@ def attach_links(menu: WrappedElement, names: List[str], selector: str='[href*="
             return lambda: MinorElement(selector.format(n), menu.element)
         menu.__setattr__(name.replace('-', '_').replace('.', '_'), link_maker(name))
 
+def attach_fancy_links(menu: WrappedElement, names: List[str],
+                       selector: str='a.mosaic-overlay[href*="{}.html"]') -> None:
+    """Like attach_links, attaches an attribute that can be called to create a link.
+    This one is for those Mosaic-type links, and those need a bit of a workaround
+    to deal with element layering."""
+    for name in names:
+        def link_maker(n):
+            """A function that can be called to create a fancy link."""
+            return lambda: MinorElementParent(selector.format(n), menu.element)
+        menu.__setattr__(name.replace('-', '_').replace('.', '_'), link_maker(name))
+
 class NavSection(WrappedElement):
     """Methods common to the five Nav Menu sections."""
     def open(self) -> WrappedElement:
@@ -233,77 +250,79 @@ class NavMenu(WrappedElement):
             self.element = DR.flashy_find_element('#nav-main-panel-1')
             # This one is the thing that switched between the Cities and States submenus.
             attach_links(self, ['cities', 'states'], selector='[aria-controls={}]')
-            attach_links(self, ['sydney', 'melbourne', 'brisbane', 'perth', 'adelaide',
+            attach_links(self, ['adelaide',
                                 'alice-springs', 'broome', 'cairns', 'canberra', 'darwin',
                                 'gold-coast', 'hobart', 'regional-cities',
 
-                                'great-barrier-reef', 'red-centre', 'great-ocean-road',
-                                'kangaroo-island', 'blue-mountains', 'byron-bay', 'flinders-ranges',
+                                'blue-mountains', 'byron-bay', 'flinders-ranges',
                                 'fraser-island', 'freycinet', 'gippsland', 'kakadu',
                                 'namadgi', 'ningaloo', 'tasmanian-wilderness',
                                 'australian-alps', 'kimberley', 'margaret-river',
                                 'explore',
                                 'act', 'nsw', 'nt', 'qld', 'sa', 'tas', 'vic', 'wa'],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
+                         selector='[href*="{0}.html"] p')
+            attach_fancy_links(self, ['sydney', 'melbourne', 'brisbane', 'perth', 'red-centre',
+                                      'great-barrier-reef', 'great-ocean-road', 'kangaroo-island'])
 
     class ThingsToDo(NavSection):
         """Represents the Things To Do section in the nav menu."""
         def __init__(self):
             self.element = DR.flashy_find_element('#nav-main-panel-2')
-            attach_links(self, ["things-to-do", "aquatic", "nature-and-wildlife", "food-and-wine",
-                                "outback-australia", "top-things-to-do",
+            attach_links(self, ['aquatic', 'nature-and-wildlife', 'food-and-wine',
+                                'outback-australia', 'top-things-to-do',
 
-                                "drive-australia", "coastal-journeys", "holiday-ideas",
-                                "city-journeys", "48-hours-itineraries", "walking-australia",
-                                "itineraries",
+                                'coastal-journeys', 'holiday-ideas', 'city-journeys',
+                                '48-hours-itineraries', 'walking-australia', 'itineraries',
 
-                                "explore", "campaigns", "events", "news",
-                                "youthful-travellers", "aboriginal-australia"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
+                                'campaigns', 'events', 'news', 'youthful-travellers',
+                                'aboriginal-australia'],
+                         selector='[href*="{0}.html"] p')
+            attach_fancy_links(self, ['things-to-do', 'drive-australia', 'explore'])
 
     class PlanYourTrip(NavSection):
-        """Represents the Plan Your Trip section in the nav menu."""
+        '''Represents the Plan Your Trip section in the nav menu.'''
         def __init__(self):
             self.element = DR.flashy_find_element('#nav-main-panel-3')
-            attach_links(self, ["facts", "weather", "australias-seasons", "time-zones-in-australia",
+            attach_links(self, ['weather', 'australias-seasons', 'time-zones-in-australia',
 
-                                "planning-a-trip", "visa-information", "getting-around",
-                                "working-holiday-visa", "customs-quarantine",
+                                'visa-information', 'getting-around', 'working-holiday-visa',
+                                'customs-quarantine',
 
-                                "find-travel-agent", "find-accommodation", "find-tours", "explore"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
+                                'find-accommodation', 'find-tours', 'explore'],
+                         selector='[href*="{0}.html"] p')
+            attach_fancy_links(self, ['facts', 'planning-a-trip', 'find-travel-agent'])
 
     # And, the AUS.cn last two are a bit different.
     class PracticalInformation(NavSection):
-        """Represents the 实用信息 section in the nav menu. A combination of Facts and Planning?"""
+        '''Represents the 实用信息 section in the nav menu. A combination of Facts and Planning?'''
         def __init__(self):
             self.element = DR.flashy_find_element('#nav-main-panel-2')
-            attach_links(self, ["weather", "australias-seasons", "cities-states-territories",
-                                "australias-animals", "plants", "currency", "time-zones", "facts"
+            attach_links(self, ['australias-seasons', 'cities-states-territories',
+                                'australias-animals', 'plants', 'currency', 'time-zones', 'facts'
 
-                                "visa-information", "flight-information", "planning-a-trip",
-                                "getting-around", "useful-tips", "planning",
+                                'flight-information', 'planning-a-trip', 'getting-around',
+                                'useful-tips', 'planning',
 
-                                "embassy", "work-study-abroad", "customs-quarantine",
-                                "healthy-safety"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
+                                'work-study-abroad', 'customs-quarantine', 'healthy-safety'],
+                         selector='[href*="{0}.html"] p')
+            attach_fancy_links(self, ['weather', 'visa-information', 'embassy'])
 
     class ExploreAndPlan(NavSection):
-        """Represents the 探索及计划行程 section in the nav menu.
-        Things to do, Itineraries, Campaigns and some other miscellaniea."""
+        '''Represents the 探索及计划行程 section in the nav menu.
+        Things to do, Itineraries, Campaigns and some other miscellaniea.'''
         def __init__(self):
             self.element = DR.flashy_find_element('#nav-main-panel-3')
-            attach_links(self, ["aquatic", "things-to-do", "food-and-wine", "nature-and-wildlife",
-                                "aboriginal-australia", "australian-sport", "art-music-culture",
-                                "outback-australia", "youthful-travellers",
+            attach_links(self, ['things-to-do', 'food-and-wine', 'nature-and-wildlife',
+                                'aboriginal-australia', 'australian-sport', 'art-music-culture',
+                                'outback-australia', 'youthful-travellers',
 
-                                "city-journeys", "drive-australia", "coastal-journeys",
-                                "48-hours-itineraries", "walking-australia", "adventure-journeys",
-                                "outback-journeys", "aboriginal-discovery", "nature-discovery",
+                                'drive-australia', 'coastal-journeys', '48-hours-itineraries',
+                                'walking-australia', 'adventure-journeys', 'outback-journeys',
+                                'aboriginal-discovery', 'nature-discovery',
 
-                                "kdp", "specialoffers", "hertzselfdriving",
-                                "download", "follow-us"],
-                         selector='[href*="{0}.html"] p,[href*="{0}.html"] span.type-destination')
+                                'specialoffers', 'hertzselfdriving', 'download', 'follow-us'],
+                         selector='[href*="{0}.html"] p')
+            attach_fancy_links(self, ['aquatic', 'city-journeys', 'kdp'])
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.
@@ -322,7 +341,7 @@ class Footer(WrappedElement):
         self.element = DR.flashy_find_element('#main-footer')
         attach_links(self, ['splash', 'sitemap', 'privacy-policy', 'terms-and-conditions',
                             'terms-of-use', 'contact-us'])
-        attach_links(self, ['facebook', 'plus.google', 'youtube', 'twitter', 'instagram'],
+        attach_links(self, ['facebook', 'plus.google', 'youtube', 'twitter', 'instagram', 'weibo'],
                      selector='[href*="{}.com"]')
         attach_links(self, ['wechat'], selector='[href*="#china_qr_image"]')
         attach_links(self, ['australia', 'businessevents.australia'],
@@ -1284,12 +1303,14 @@ class WeiboShare(WrappedElement):
 class QRCode(WrappedElement):
     """Represents the various QR code popups that can appear in AUS.cn"""
     def __init__(self):
-        self.element = DR.flashy_find_element('.modal-content,.fancybox-skin')
+        self.element = DR.find_visible_element('.fancybox-skin,.modal-content')
 
     def close(self):
         """Closes the popup, usually via the X button."""
         DR.flashy_find_element('.fancybox-close,.close', self.element).click()
-        DR.wait_until_gone('div.fancybox-wrap,div.modal')
+        # This one doesn't work too well on non-unique selectors, do them separately.
+        DR.wait_until_gone('.fancybox-skin')
+        DR.wait_until_gone('.modal-content')
 
     def decode(self) -> str:
         """Decodes the QR code image, returns the string it evaluates to."""
@@ -1307,20 +1328,24 @@ class PanoramicCarousel(WrappedElement):
         # The text and the background images are on separate carousels. For some reason.
         num = len(DR.quietly_find_elements('.owl-item', self.element)) / 2
         sliden = random.randint(0, num - 1)
+        DR.blip_element(DR.quietly_find_elements('.owl-page')[sliden]).click()
         slide = DR.quietly_find_elements('.carouselcoastal-item-container', self.element)[sliden]
         backslide = DR.quietly_find_elements('.carouselcoastal-owl-bg', self.element)[sliden]
+        DR.wait_until(lambda: backslide.get_attribute('style') != '')
         btn = DR.flashy_find_element('.carouselcoastal-explore-btn', slide)
         desc = '  '.join([DR.quietly_find_element('.carouselcoastal-explore-title', slide).text,
                           DR.quietly_find_element('.carouselcoastal-explore-location',
                                                   slide).text])
         src = DR.BASE_URL + backslide.get_attribute('style').split('"')[1]
-        DR.blip_element(DR.quietly_find_elements('.owl-page')[sliden]).click()
         btn.click()
         return desc, src
 
     def once_off_start_video(self):
         """Clicks that second Watch Video button that appears once per session."""
+        DR.wait_until_present('#start360VideoButtonDesktop')
         DR.flashy_find_element('#start360VideoButtonDesktop', self.element).click()
+        # Wait for the once-off-screen to finish fading.
+        DR.wait_until_gone('#owl-onboarding-360')
 
     def open_video_menu(self):
         """Opens the sidebar menu on the video player."""
@@ -1353,6 +1378,13 @@ class KDPSearch(FilteredSearch):
         for x in DR.flashy_find_elements('.desk-cat-switch'):
             if 'is-active' in x.get_attribute('class'): # The region name is in the id value text.
                 result += DR.quietly_find_element('.type-below-btn', x).get_attribute('id')[49]
+        return result
+
+    def __getattr__(self, value):
+        """If you tried to access north, east, west, or south, this will switch to that filter.
+        Otherwise, that'll be an error."""
+        DR.flashy_find_element('img[src*="/content/dam/assets/image/aus-cn/kdp/{}"]'
+                               .format(value), self.element).click()
 
 class SiteSearch(FilteredSearch):
     """Represents the Search component on the page that appears when using the Header Search."""

@@ -262,6 +262,14 @@ def flashy_find_elements(selector: str, within: WebElement=None) -> ELEMENT_LIST
     within = within or DRIVER
     return blip_element(to_list(within.find_elements_by_css_selector(selector)))
 
+@find_error_improver
+def find_visible_element(selector: str, within: WebElement=None) -> WebElement:
+    """Given a selector that could match multiple different elements,
+    return the one that is currently visible, not the first one that matches."""
+    within = within or DRIVER
+    return blip_element([x for x in within.find_elements_by_css_selector(selector)
+                         if x.is_displayed()][0])
+
 def get_parent_element(element: WebElement) -> WebElement:
     """Gets the immediate parent of the given element."""
     return element.find_element_by_xpath('..')

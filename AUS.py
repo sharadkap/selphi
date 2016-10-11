@@ -131,7 +131,7 @@ class AUS(unittest.TestCase):
         pan = CP.PanoramicCarousel()
         # Take some notes on the page for later comparison.
         # Click the watch video button
-        desc, img = pan.watch_video()
+        desc, _ = pan.watch_video()
         # Click the other start video button
         pan.once_off_start_video()
         # Open the Menu, might not need to do this if you are fast enough
@@ -169,7 +169,11 @@ class AUS(unittest.TestCase):
         if not DR.CN_MODE:
             self.skipTest('Only China has the KDP thing.')
         # Navigate to the KDP page
-        CP.NavMenu.ExploreAndPlan().open().kdp().click()
+        try:
+            CP.NavMenu.ExploreAndPlan().open().kdp().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.kdp()
         # Count results, assert all buttons lit.
         kdp = CP.KDPSearch()
         # North China, South China, East China and West China icons should all be active
@@ -200,40 +204,49 @@ class AUS(unittest.TestCase):
 
     def test_header(self):
         """Tests the various menu sections in the header."""
-        # Click the Australia.com logo in the header
-        CP.NavMenu().logo().click()
-        # Should link to homepage
-        self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
+        try:
+            # Click the Australia.com logo in the header
+            CP.NavMenu().logo().click()
+            # Should link to homepage
+            self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
 
-        # Click the Holiday In Australia link in the header
-        CP.NavMenu().holiday().click()
-        # Should link to homepage.
-        self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
+            # Click the Holiday In Australia link in the header
+            CP.NavMenu().holiday().click()
+            # Should link to homepage.
+            self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
 
-        # Click the Business Events link in the header
-        CP.NavMenu().business_events().click()
-        # Should link to businessevents.australia.com/cn in new tab
-        DR.switch_to_window(1)
-        self.assertIn('businessevents.australia.c', DR.current_url())
-        DR.switch_to_window(0)
+            # Click the Business Events link in the header
+            CP.NavMenu().businessevents().click()
+            # Should link to businessevents.australia.com/cn in new tab
+            DR.switch_to_window(1)
+            self.assertIn('businessevents.australia.c', DR.current_url())
+            DR.close_window()
+        except Exception as ex:
+            DR.add_error(ex)
+            DR.close_other_windows()
 
-        # Open the Explore section in the header
-        if DR.CN_MODE:
-            eap = CP.NavMenu.ExploreAndPlan().open()
-            # Verify existence of the three Explore+Planning sections.
-            eap.aquatic()
-            eap.city_journeys()
-            eap.kpd()
-        else:
-            pass
-            # TODO: Read the AUS.com test, replicate here.
+        try:
+            # Open the Explore section in the header
+            if DR.CN_MODE:
+                eap = CP.NavMenu.ExploreAndPlan().open()
+                # Verify existence of the three Explore+Planning sections.
+                eap.aquatic()
+                eap.city_journeys()
+                eap.kdp()
+            else:
+                pass
+                # TODO: Read the AUS.com test, replicate here.
+        except Exception as ex:
+            DR.add_error(ex)
 
         # Open the Destinations section in the header
         ptg = CP.NavMenu.PlacesToGo().open()
         # Confirm existence of Cities and Destinations sections and map thing.
         ptg.sydney()
         ptg.great_barrier_reef()
-        ptg.explore()
+        # China does not have the AUS.com map.
+        if not DR.CN_MODE:
+            ptg.explore()
 
         # Click the States section switcher
         ptg.states().click()
@@ -243,24 +256,39 @@ class AUS(unittest.TestCase):
     def test_favourites(self):
         """Tests the My Dream Trip functionality."""
         # Go to the Australia's Animals page
-        if DR.CN_MODE:
-            CP.NavMenu.PracticalInformation().open().australias_animals().click()
-        else:
-            CP.NavMenu.PlanYourTrip().open().facts().click()
-            CP.WhatYouCanSeeMosaic()['Australia\'s Animals'].click()
-        # Click the Add To Favourites button
-        favcount = CP.HeaderHeartIcon().favourites_count()
-        CP.ShareThis().add_to_favourites()
-        # Wait for the animation to finish
-        # confirm incremention
-        self.assertEqual(CP.HeaderHeartIcon().favourites_count(), favcount + 1)
-        # Do that again with the Regional Cities page.
-        CP.NavMenu.PlacesToGo().open().regional_cities().click()
-        favcount = CP.HeaderHeartIcon().favourites_count()
-        CP.ShareThis().add_to_favourites()
-        self.assertEqual(CP.HeaderHeartIcon().favourites_count(), favcount + 1)
+        try:
+            if DR.CN_MODE:
+                CP.NavMenu.PracticalInformation().open().australias_animals().click()
+            else:
+                CP.NavMenu.PlanYourTrip().open().facts().click()
+                CP.WhatYouCanSeeMosaic()['Australia\'s Animals'].click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.australias_animals()
+        try:
+            # Click the Add To Favourites button
+            favcount = CP.HeaderHeartIcon().favourites_count() + 1
+            CP.ShareThis().add_to_favourites()
+            # Wait for the animation to finish and for confirmation of incremention
+            DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+                          'Heart Icon count == favcount.')
+            # Do that again with the Regional Cities page.
+            try:
+                CP.NavMenu.PlacesToGo().open().regional_cities().click()
+            except Exception as ex:
+                DR.add_error(ex)
+                CP.BackupHrefs.regional_cities()
+            # Do this again, because the heart count doesn't load at the same time as the page.
+            DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+                          'Heart Icon count == favcount.')
+            favcount = CP.HeaderHeartIcon().favourites_count() + 1
+            CP.ShareThis().add_to_favourites()
+            DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+                          'Heart Icon count == favcount.')
+        except Exception as ex:
+            DR.add_error(ex)
 
-        # Go to favourites page
+        # Go to favourites page. I would put a try-navigate here, but it's a dynamic url.
         CP.HeaderHeartIcon().click()
         # Remove a favourite
         favs = CP.MySalesTools().get_favourites()
@@ -276,14 +304,16 @@ class AUS(unittest.TestCase):
     def test_whitsundays(self):
         """Tests various things pertaining to Itinerary pages."""
         # Navigate to Whitsundays Sailing
-        if DR.CN_MODE:
-            CP.NavMenu.ExploreAndPlan().open().coastal_journeys().click()
-        else:
-            CP.NavMenu.ThingsToDo().open().coastal_journeys().click()
-        if DR.CN_MODE:
-            CP.WhatYouCanSeeMosaic()['圣灵群岛航海游'].go()
-        else:
-            CP.WhatYouCanSeeMosaic()['Whitsundays Sailing'].go()
+        try:
+            if DR.CN_MODE:
+                CP.NavMenu.ExploreAndPlan().open().coastal_journeys().click()
+                CP.WhatYouCanSeeMosaic()['圣灵群岛航海游'].go()
+            else:
+                CP.NavMenu.ThingsToDo().open().coastal_journeys().click()
+                CP.WhatYouCanSeeMosaic()['Whitsundays Sailing'].go()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.whitsundays()
 
         # Click a few of the Itinerary Day links
         iti = CP.ItineraryDay()
@@ -295,72 +325,78 @@ class AUS(unittest.TestCase):
         iti.back_to_top()
         self.assertEqual(0, DR.current_scroll())
 
-    def test_360(self):
-        """Checks the Aquatic And Coastal page. Slightly."""
-        # Navigate to Acquatic And Coastal
-        if DR.CN_MODE:
-            CP.NavMenu.ExploreAndPlan().open().aquatic().click()
-        else:
-            CP.NavMenu.ThingsToDo().open().aquatic().click()
-        # Confirm the Panorama is there??
-        CP.PanoramicCarousel()
-
-        # Not part of the test, but go do a bunch of stuff with the video maybe?
-
     def test_search(self):
         """Tests the Site and Header Search functionalities."""
         # Do this a couple of times, different buttons:
-        for term in CP.HeaderSearch().popular_searches():
-            # Open the Search bar
-            CP.HeaderSearch().open()
-            # Click a Common Search Term
-            term.click()
-            src = CP.SiteSearch()
-            # Change the view?
-            src.grid_mode()
-            # Change back ?
-            src.list_mode()
-            # Click Load more
-            count = src.count_results()
-            src.load_more()
-            # Confirm the count is incremented?
-            self.assertGreaterEqual(count, src.count_results())
+        # Opens the Search bar, clicks a Common Search Term
+        for _ in CP.HeaderSearch.popular_searches(3):
+            try:
+                src = CP.SiteSearch()
+                # Change the view?
+                src.grid_mode()
+                # Change back ?
+                src.list_mode()
+                # Click Load more
+                count = src.count_results()
+                src.load_more()
+                # Confirm the count is incremented?
+                self.assertGreaterEqual(count, src.count_results())
+            except Exception as ex:
+                DR.add_error(ex)
 
     def test_wycs(self):
         """Tests the What You-Can-See-Mosaic-related functionality."""
         # Navigate to the Three Days Itineraries page
-        if DR.CN_MODE:
-            CP.NavMenu.ExploreAndPlan().open().city_journeys().click()
-        else:
-            CP.NavMenu.ThingsToDo().open().city_journeys().click()
+        try:
+            if DR.CN_MODE:
+                CP.NavMenu.ExploreAndPlan().open().city_journeys().click()
+            else:
+                CP.NavMenu.ThingsToDo().open().city_journeys().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.city_journeys()
         # Click on a tile, should direct to the correct page while the other tiles grey out
-        CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
+        try:
+            CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
+        except Exception as ex:
+            DR.add_error(ex)
 
         # Go to the Great Barrier Reef page
-        CP.NavMenu.PlacesToGo().open().great_barrier_reef().click()
+        try:
+            CP.NavMenu.PlacesToGo().open().great_barrier_reef().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.great_barrier_reef()
         # Click on a tile, should direct to the correct page, other tiles faded
         CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
 
     def test_special_offers(self):
         """Tests the Special Offers page"""
         # Navigate to the Special Offers page
-        if DR.CN_MODE:
-            CP.NavMenu.ExploreAndPlan().open().specialoffers().click()
-        else:
-            CP.NavMenu.ThingsToDo().open().campaigns().click()
+        try:
+            if DR.CN_MODE:
+                CP.NavMenu.ExploreAndPlan().open().specialoffers().click()
+            else:
+                CP.NavMenu.ThingsToDo().open().campaigns().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.offers()
         # Click on a Special Offers link
         CP.SpecialOffer().view_more_information()
 
     def test_brightcove(self):
         """Tests the Brightcove Video Player."""
         # Go to the Tasmania page
-        pla = CP.NavMenu.PlacesToGo().open()
-        pla.states().click()
-        pla.tas().click()
-        # Play the video somehow, check that it worked?
+        try:
+            pla = CP.NavMenu.PlacesToGo().open()
+            pla.states().click()
+            pla.tas().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.tas()
+        # Play the video.
         vid = CP.Video()
         vid.play()
-        self.assertTrue(vid.is_playing())
 
     def test_banner_video(self):
         """Tests the Hero Banner With Video."""
@@ -376,7 +412,11 @@ class AUS(unittest.TestCase):
     def test_explore(self):
         """Tests the Explore component."""
         # Navigate to the Sydney page
-        CP.NavMenu.PlacesToGo().open().sydney().click()
+        try:
+            CP.NavMenu.PlacesToGo().open().sydney().click()
+        except Exception as ex:
+            DR.add_error(ex)
+            CP.BackupHrefs.sydney()
         # Click the Location Pin button on a the Explore component
         cards = CP.Explore().cards
         for card in cards:
@@ -385,7 +425,7 @@ class AUS(unittest.TestCase):
         for card in cards:
             self.assertTrue(card.is_flipped())
         # Click the back to overview button
-        for card in cards():
+        for card in cards:
             card.unflip()
         for card in cards:
             self.assertFalse(card.is_flipped())

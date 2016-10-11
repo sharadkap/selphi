@@ -79,19 +79,24 @@ class WelcomeVideo(WrappedElement):
 class Video(WrappedElement):
     """Generically represents either a Brightcove Video or a Youku video."""
     def __init__(self):
+        # Youku has a state holder in the window object, Brightcove loads along with the page.
         self.element = DR.flashy_find_element('.video-js,#youkuplayer')
+        DR.wait_until(lambda: DR.execute_script('return window.YKP===undefined||window.YKP.'
+                                                'playerCurrentState==="PLAYER_STATE_READY";'),
+                      'Either YKP is undefined, or YKP state = PLAYER_STATE_READY')
 
     def play(self):
-        """Starts up the video. Does a little sorcery to account for Youku."""
-        DR.execute_script('!function(){window.videoisplaying = false;var y = window.onPlayerStart;'
-                          'window.onPlayerStart = function(){window.videoisplaying = true;'
-                          'y(arguments)}}();')
-        self.element.click()
+        """Starts up the video. Probably."""
+        # This might be necessary, the Youku player is a little ahead of itself.
+        def x(): """Maybe"""; self.element.click(); return self.is_playing()
+        DR.wait_until(x, 'Click it and is it playing now?')
 
     def is_playing(self) -> bool:
         """Returns true is the video is playing, false if not. Approximately."""
+        # Brightcove has a css class when playing, Youku has a js flag set.
         return ('vjs-playing' in self.element.get_attribute('class') or
-                DR.execute_script('return window.videoisplaying'))
+                DR.execute_script('try{return window.YKP.playerCurrentState=='
+                                  '"PLAYER_STATE_PLAYING"}catch(e){}'))
 
 class BodyLoginButton(WrappedElement):
     """Represents the Sign In button that appears in a page's body content when signed out."""
@@ -130,7 +135,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
         def go(self) -> None:
             """Clicks on a tile, navigating to its link.
             Which of these two is correct is left as an exercise to the reader."""
-            DR.LAST_LINK = DR.quietly_find_element('.mosaic-item-container p>a',
+            DR.LAST_LINK = DR.quietly_find_element('.mosaic-item-detail-container p>a',
                                                    self.element).get_attribute('href')
             DR.blip_element(self.element).click()
             DR.wait_for_page()
@@ -196,9 +201,9 @@ class NavMenu(WrappedElement):
     def __init__(self):
         self.element = DR.flashy_find_element('.navigation')
         attach_links(self, ['profile', 'logout'], selector='#link-{}')
-        attach_links(self, ['logo'], selector='.{}-masthead')
+        attach_links(self, ['logo'], selector='.header-masthead .{}-masthead')
         attach_links(self, ['holiday'], selector='.is-current a')
-        attach_links(self, ['business.events'], selector='[href*={}.com]')
+        attach_links(self, ['businessevents'], selector='[href*="{}.australia.c"]')
 
     # ASP ones.
     class About(NavSection):
@@ -462,7 +467,9 @@ class ItineraryDay(WrappedElement):
 
     def random_link(self):
         """Clicks a random non-back-to-top, non-current-section link."""
-        DR.flashy_find_element('li>a[href!="#"]:not(.active)', self.element).click()
+        DR.flashy_find_element('li>a:not([href="#"]):not(.active)', self.element).click()
+        DR.wait_until(lambda: DR.execute_script('return $("body:animated").length') == 0,
+                      '$(body:animated).length equals zero.')
 
 class PDFPage(WrappedElement):
     """Represents a PDF file viewed within the browser.
@@ -484,7 +491,8 @@ class HeaderHeartIcon(WrappedElement):
         """Returns the number of favourites as indicated by the icon subtitle."""
         anim = DR.quietly_find_element('.icon-heart-animate', self.element)
         DR.wait_until(lambda: anim.get_attribute('style') == '' or
-                      anim.get_attribute('style').find('opacity: 0;') != -1)
+                      anim.get_attribute('style').find('opacity: 0;') != -1,
+                      'anim\'s style is blank, or has an opacity of 0.')
         try:
             return int(DR.flashy_find_element('.my-trip-count', self.element).text)
         except ValueError:
@@ -497,12 +505,20 @@ class HeaderSearch(WrappedElement):
 
     def open(self):
         """Opens the main Search Form area."""
-        return DR.blip_element(self.element).click()
+        DR.blip_element(self.element).click()
+        return self
 
-    def popular_searches(self):
-        """Returns a generator function of the suggested search buttons."""
-        return (DR.blip_element(x)
-                for x in DR.quietly_find_elements('#nav-main-panel-search .nav-pills a'))
+    @staticmethod
+    def popular_searches(num: int):
+        """Returns a generator function of a number of the suggested search buttons."""
+        def search(i):
+            """Opens a given search key."""
+            hs = HeaderSearch().open()
+            DR.blip_element(DR.quietly_find_elements('.nav-pills a', hs.element)[i]).click()
+        # Gets the number of search terms, picks up to num of them at random.
+        keyl = len(DR.quietly_find_elements('.nav-pills a'))
+        num = min(keyl, num)
+        return (search(y) for y in random.sample(range(keyl), num))
 
     def search(self, term: str):
         """Enters the given term into the search bar and clicks the Search button."""
@@ -523,7 +539,8 @@ class InteractiveMap(WrappedElement):
         def open_menu(self) -> None:
             """Opens a menu, and waits until it is open, too."""
             DR.blip_element(self.element).click()
-            DR.wait_until(lambda: self.element.get_attribute('class') == 'active')
+            DR.wait_until(lambda: self.element.get_attribute('class') == 'active',
+                          'self.element\'s class is active.')
 
         def pick_random(self) -> None:
             """Picks a random entry from the menu."""
@@ -593,7 +610,8 @@ class InteractiveMap(WrappedElement):
                 DR.flashy_find_element('#back-to-filter', self.element).click()
                 panel = DR.get_parent_element(
                     DR.get_parent_element(DR.quietly_find_element('#map-menu')))
-                DR.wait_until(lambda: panel.get_attribute('style').find('rotateY(0deg)') != -1)
+                DR.wait_until(lambda: panel.get_attribute('style').find('rotateY(0deg)') != -1,
+                              'panel\'s style does not contain rotateY(0deg)')
 
             def find_out_more(self) -> str:
                 """Returns the url of the Find Out More link."""
@@ -622,7 +640,8 @@ class InteractiveMap(WrappedElement):
                     suge = random.choice(suges)
                     sug = suge.text
                     suge.click()
-                    DR.wait_until(lambda: DR.quietly_find_element('#info-title').text == sug)
+                    DR.wait_until(lambda: DR.quietly_find_element('#info-title').text == sug,
+                                  '#info-title.text == sug')
                     return sug
                 except IndexError:    # There can apparently be no suggested itineraries.
                     return ''
@@ -650,7 +669,8 @@ class InteractiveMap(WrappedElement):
                 pin.click()
                 panel = DR.quietly_find_element('#info-box')
                 DR.wait_until(lambda: panel.is_displayed() and
-                              panel.get_attribute('style').find('rotateY(0deg)') != -1)
+                              panel.get_attribute('style').find('rotateY(0deg)') != -1,
+                              'panel is displayed and panel.style has no rotateY')
                 return name
 
             def count(self) -> int:
@@ -1232,7 +1252,7 @@ class AussieStore(WrappedElement):
             ren = rem.text.casefold()
             DR.blip_element(DR.quietly_find_elements('.product-remove')[rei]).click()
             self.element = DR.quietly_find_element('.shoppingcart')
-            DR.wait_until(lambda: count == self.count())
+            DR.wait_until(lambda: count == self.count(), 'count equals self.count()')
             return ren
 
         def remove_all(self) -> None:
@@ -1242,7 +1262,7 @@ class AussieStore(WrappedElement):
                 DR.flashy_find_element('.product-remove').click()
                 count -= 1
                 self.element = DR.quietly_find_element('.shoppingcart')
-                DR.wait_until(lambda: self.count() == count)
+                DR.wait_until(lambda: self.count() == count, 'count equals self.count()')
 
 #start some AUS.com only components?
 class ShareThis(WrappedElement):
@@ -1261,7 +1281,8 @@ class ShareThis(WrappedElement):
                                self.element).click()
         if DR.check_visible_quick('ul', self.element):
             slider = DR.quietly_find_element('ul.share2', self.element)
-            DR.wait_until(lambda: 'display: block;' in slider.get_attribute('style'))
+            DR.wait_until(lambda: 'display: block;' in slider.get_attribute('style'),
+                          'display: block in slider.style')
 
     def page_description(self) -> str:
         """Returns the page's Description: The Hero Text and the Summary combined."""
@@ -1331,7 +1352,7 @@ class PanoramicCarousel(WrappedElement):
         DR.blip_element(DR.quietly_find_elements('.owl-page')[sliden]).click()
         slide = DR.quietly_find_elements('.carouselcoastal-item-container', self.element)[sliden]
         backslide = DR.quietly_find_elements('.carouselcoastal-owl-bg', self.element)[sliden]
-        DR.wait_until(lambda: backslide.get_attribute('style') != '')
+        DR.wait_until(lambda: backslide.get_attribute('style') != '', 'backslide.style not blank')
         btn = DR.flashy_find_element('.carouselcoastal-explore-btn', slide)
         desc = '  '.join([DR.quietly_find_element('.carouselcoastal-explore-title', slide).text,
                           DR.quietly_find_element('.carouselcoastal-explore-location',
@@ -1382,9 +1403,13 @@ class KDPSearch(FilteredSearch):
 
     def __getattr__(self, value):
         """If you tried to access north, east, west, or south, this will switch to that filter.
-        Otherwise, that'll be an error."""
-        DR.flashy_find_element('img[src*="/content/dam/assets/image/aus-cn/kdp/{}"]'
-                               .format(value), self.element).click()
+        Otherwise, that'll be an error. Returns a callable method."""
+        def switch_to():
+            """Switches to the chosen region filter."""
+            DR.find_visible_element('img[src*="/content/dam/assets/image/aus-cn/kdp/{}"]'
+                                    .format(value), self.element).click()
+            DR.wait_until_gone('.filteredSearch .preload-image-wrapper img')
+        return switch_to
 
 class SiteSearch(FilteredSearch):
     """Represents the Search component on the page that appears when using the Header Search."""
@@ -1393,14 +1418,18 @@ class SiteSearch(FilteredSearch):
         # Hold up, have to wait for the initial results to come in first,
         # they'll interrupt if they appear halfway through something else.
         DR.quietly_find_element('.mosaic-item')
+        # This one is also a nuisance.
+        DR.wait_until_present('.btn-list-view')
 
     def list_mode(self):
         """Sets the results display to List Mode."""
         DR.flashy_find_element('.btn-list-view', self.element).click()
+        DR.wait_until_present('.search-grid-container.mosaic-list-view')
 
     def grid_mode(self):
         """Sets the results display to Grid Mode."""
         DR.flashy_find_element('.btn-grid-view', self.element).click()
+        DR.wait_until_gone('.search-grid-container.mosaic-list-view')
 
 class SpecialOffer(WrappedElement):
     """Represents the Special Offer component."""
@@ -1415,8 +1444,8 @@ class Explore(WrappedElement):
     """Represents the Explore component. Not the Map, the triple-minimap-flip things."""
     def __init__(self):
         self.element = DR.flashy_find_element('.explore-container')
-        self.cards = [self.ExploreCard(x) for x in
-                      DR.quietly_find_elements('.explore-item-container', self.element)]
+        self.cards = [self.ExploreCard(x) for x in DR.quietly_find_elements(
+            '.explore-item-container', self.element) if x.is_displayed()]
 
     class ExploreCard(WrappedElement):
         """Represents a card in the Explore component."""
@@ -1429,6 +1458,8 @@ class Explore(WrappedElement):
 
         def unflip(self):
             """Clicks the Back To Overview link, returning the card to its original orientation."""
+            # Wait until the regular flip is finished before unflipping.
+            DR.wait_until_present('#explore-flip-back-btn')
             DR.flashy_find_element('#explore-flip-back-btn', self.element).click()
 
         def is_flipped(self) -> bool:
@@ -1523,3 +1554,40 @@ class BackupHrefs:
     def aquatic():
         """Opens the Aquatic And Coastal page."""
         DR.get(DR.BASE_URL + DR.LOCALE + '/things-to-do/aquatic.html')
+
+    def kdp():
+        """Opens the Key Distribution Partner search page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/plan/kdp.html')
+
+    def regional_cities():
+        """Opens the Regional Cities page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/places/regional-cities.html')
+
+    def australias_animals():
+        """Opens the Australia's Animals page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/facts/australias-animals.html')
+
+    def whitsundays():
+        """Opens the Whitsundays Sailing page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/itineraries/qld-whitsundays-sailing.html')
+
+    def city_journeys():
+        """Opens the Three Day Itineraries: City Journeys page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/itineraries/city-journeys.html')
+
+    def great_barrier_reef():
+        """Opens the Great Barrier Reef page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/places/great-barrier-reef.html')
+
+    def offers():
+        """Opens the Special Offers page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + ('/campaigns.html' if DR.CN_MODE
+                                          else '/campaign/specialoffers.html'))
+
+    def tas():
+        """Opens the Tasmania page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/places/tas.html')
+
+    def sydney():
+        """Opens the Tasmania page."""
+        DR.get(DR.BASE_URL + DR.LOCALE + '/places/sydney.html')

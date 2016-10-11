@@ -171,14 +171,15 @@ def wait_until_gone(selector: str) -> WebElement:
     except TimeoutException:
         raise TimeoutException('Timed out waiting for {0} to disappear.'.format(selector)) from None
 
-def wait_until(condition: FunctionType) -> Any:
+def wait_until(condition: FunctionType, desc: str) -> Any:
     """Holds up execution, repeatedly calling the given function until it returns truthy.
-    The given condition lambda should have no inputs."""
+    The given condition lambda should have no inputs.
+    desc should explain what the lambda does, as the contents can't really be examined."""
     try:
         return WebDriverWait(DRIVER, LONG_WAIT).until(lambda _: condition())
     except TimeoutException:
         raise TimeoutException(
-            'Timed out waiting for method {0} to be true.'.format(condition)) from None
+            'Timed out waiting for condition: {0}'.format(desc)) from None
 
 def switch_to_window(window: int) -> None:
     """Switch WebDriver's focus to the given open tab or window. Zero based indexing."""
@@ -314,7 +315,8 @@ class Email:
         with imaplib.IMAP4_SSL(TEST_EMAIL_IMAP_SERVER) as imap:
             imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
             imap.select()
-            nums = wait_until(lambda: self.email_loop(imap, really_get_new))
+            nums = wait_until(lambda: self.email_loop(imap, really_get_new),
+                              'Waiting for emails to be found, calls self.email_loop.')
             # The Latin Character Set emails have two parts, the second of which is the html part.
             got, ems = imap.fetch(nums, 'body[2]')
             if got == 'NO':    # The others do not have two parts.

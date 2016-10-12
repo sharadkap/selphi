@@ -28,8 +28,8 @@ class AUS(unittest.TestCase):
         """Called after finishing each test, closes the browser and counts up the errors."""
         DR.close()
         self.maxDiff = None
-        self.assertEqual([], DR.verificationErrors, '\nThis will fail if there were any nonlethal \
-            assertions. Hopefully the custom messages are helpful enough.')
+        self.assertEqual([], DR.verificationErrors, '\nThis will fail if there were any nonlethal '
+                         'assertions. Hopefully the custom messages are helpful enough.')
 
     def test_social(self):
         """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.
@@ -83,7 +83,7 @@ class AUS(unittest.TestCase):
                 DR.close_window()
             else:
                 # TODO: Global Share Icon behaviour.
-                self.skipTest('Haven\'t done global share component yet.')
+                self.skipTest("Haven't done global share component yet.")
         except Exception as ex:
             DR.add_error(ex)
             DR.close_other_windows()
@@ -114,7 +114,7 @@ class AUS(unittest.TestCase):
                 DR.close_window()
             else:
                 # TODO: Handle the global footer social media links
-                self.skipTest('Haven\'t done global social links yet.')
+                self.skipTest("Haven't done global social links yet.")
         except Exception as ex:
             DR.add_error(ex)
             DR.close_other_windows()
@@ -261,7 +261,7 @@ class AUS(unittest.TestCase):
                 CP.NavMenu.PracticalInformation().open().australias_animals().click()
             else:
                 CP.NavMenu.PlanYourTrip().open().facts().click()
-                CP.WhatYouCanSeeMosaic()['Australia\'s Animals'].click()
+                CP.WhatYouCanSeeMosaic()["Australia's Animals"].click()
         except Exception as ex:
             DR.add_error(ex)
             CP.BackupHrefs.australias_animals()
@@ -358,8 +358,11 @@ class AUS(unittest.TestCase):
         # Click on a tile, should direct to the correct page while the other tiles grey out
         try:
             CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
+            # Some of them go to external sites which open in a new tab.
+            DR.close_other_windows()
         except Exception as ex:
             DR.add_error(ex)
+            DR.close_other_windows()
 
         # Go to the Great Barrier Reef page
         try:
@@ -405,7 +408,7 @@ class AUS(unittest.TestCase):
             CP.NavMenu.PracticalInformation().open().australias_animals().click()
         else:
             CP.NavMenu.PlanYourTrip().open().facts().click()
-            CP.WhatYouCanSeeMosaic()['Australia\'s Animals'].go()
+            CP.WhatYouCanSeeMosaic()["Australia's Animals"].go()
         # Verify that the hero banner is animated. This seems to count?
         self.assertTrue(CP.Video().is_playing())
 
@@ -434,4 +437,8 @@ class AUS(unittest.TestCase):
         for card in cards:
             card.add_to_favourites()
         # Confirm favourites incremented
-        self.assertEqual(count + 3, CP.HeaderHeartIcon().favourites_count())
+        DR.wait_until(lambda: count + 3 == CP.HeaderHeartIcon().favourites_count(),
+                      'count + 3 equals favourites.count.')
+
+if __name__ == '__main__':
+    unittest.main()

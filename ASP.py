@@ -33,8 +33,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
     def tearDown(self) -> None:
         """Called after finishing each test, closes the browser and counts up the errors."""
         DR.close()
-        self.assertEqual([], DR.verificationErrors, '\nThis will fail if there were any nonlethal \
-            assertions. Hopefully the custom messages are helpful enough.')
+        self.assertEqual([], DR.verificationErrors, '\nThis will fail if there were any nonlethal '
+                         'assertions. Hopefully the custom messages are helpful enough.')
 
     # Tests start here.
     def test_Splash_Page(self) -> None:
@@ -68,8 +68,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             video.play()
             # Video loads and plays. Again, there are still other things to test.
             try:
-                self.assertTrue(video.is_playing(), 'After clicking the Play button, \
-                    the video should be playing.')
+                self.assertTrue(video.is_playing(), 'After clicking the Play button, '
+                                'the video should be playing.')
             except Exception as ex:
                 DR.add_error(ex)
         # Login and Register buttons should be present in the body content.
@@ -181,8 +181,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         footer.splash().click()
         # Should link back to the Splash page.
         DR.wait_for_page()
-        self.assertIn('/splash.html', DR.current_url(), 'The Splash link should \
-            lead to the Splash page, of course.')
+        self.assertIn('/splash.html', DR.current_url(), 'The Splash link should lead to the Splash'
+                      ' page, of course.')
 
     def test_Sitemap(self) -> None:
         """Checks the Sitemap page links."""
@@ -192,8 +192,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             CP.Footer().sitemap().click()
             # Should link to the Sitemap page."
             DR.wait_for_page()
-            self.assertIn('/sitemap.html', DR.current_url(), 'The Sitemap link \
-                should link to the Sitemap page.')
+            self.assertIn('/sitemap.html', DR.current_url(), 'The Sitemap link should link to the '
+                          'Sitemap page.')
         except Exception as ex:
             CP.BackupHrefs.sitemap()
             DR.add_error(ex)
@@ -279,7 +279,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             result.view_more_information()
             # Should link to that result's More Info page.
             self.assertEqual(result.SearchResultPage().get_title().casefold(), name,
-                             'The result\'s link should go to the relevant page.')
+                             "The result's link should go to the relevant page.")
 
     def test_Interactive_Map(self) -> None:
         """Checks the Interactive Map page."""
@@ -821,7 +821,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Checks the Download Qualification Badge page."""
         # China doesn't have this?
         if DR.CN_MODE:
-            self.skipTest('China doesn\'t have the Qualification Badge Download.')
+            self.skipTest("China doesn't have the Qualification Badge Download.")
         # Pre-condition: Logged in as a Qualified User.
         DR.open_home_page()
         CP.SignIn().sign_in(USERNAME, DR.PASSWORD)
@@ -867,7 +867,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # yes its a big method i know    pylint: disable-msg=R0914
         # China doesn't have the store.
         if DR.CN_MODE:
-            self.skipTest('China doesn\'t have the Aussie Store.')
+            self.skipTest("China doesn't have the Aussie Store.")
         # Just gotta put this here.
         def examine_products(category):
             """Given a category, check a bunch of randomly selected items."""
@@ -884,7 +884,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 # Should link to the Product's Page
                 product = CP.AussieStore.ProductPage()
                 self.assertEqual(prodname, product.name(),
-                                 'A Product link should link to the same Product\'s page.')
+                                 "A Product link should link to the same Product's page.")
                 # Product Page should have a unique Code, which also should not be N/A or null.
                 code = product.unique_code()
                 self.assertNotIn('N/A', code,
@@ -980,7 +980,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             # Should redirect to that Product's page
             product = CP.AussieStore.ProductPage()
             self.assertEqual(product.name(), productname,
-                             'A Product link should link to that Product\'s page.')
+                             "A Product link should link to that Product's page.")
             # Click the Add To Cart button, should go to the Cart Page
             product.add_to_cart()
             cart = CP.AussieStore.CartPage()
@@ -989,9 +989,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             if gotprof:
                 cartcontact = cart.contact_details()
                 self.assertEqual(cartcontact, contactBlob,
-                                 'The Cart contact details should match the user\'s Profile data.')
+                                 "The Cart contact details should match the user's Profile data.")
                 self.assertNotIn('null', cartcontact,
-                                 'The Cart contact details should contain no \'null\' values.')
+                                 "The Cart contact details should contain no 'null' values.")
             # Tidy up the cart before going into the large test.
             cart.remove_all()
         except Exception as ex:
@@ -1021,8 +1021,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # The Status Badge area shows the Premier Aussie Specialist Icon.
         profile = CP.Profile()
         self.assertEqual(profile.user_level(), CP.Profile.PREMIER,
-                         'The Profile page should show a Premier badge for a Premier. \
-            But this test usually fails when included in a Full Run.')
+                         'The Profile page should show a Premier badge for a Premier. But this '
+                         'test usually fails when included in a Full Run.')
 
     def test_Forgotten_Username(self):
         """Tests the Forgotten Username feature."""
@@ -1042,7 +1042,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # An email should be received at the given address containing the Username.
         usnaema = DR.Email.ForgottenUsernameEmail(USERID)
         self.assertEqual(USERNAME, usnaema.get_username(),
-                         'The Username provided in the email should match the user\'s username.')
+                         "The Username provided in the email should match the user's username.")
 
     def test_Forgotten_Password(self):
         """Tests the Forgotten Password feature."""
@@ -1063,7 +1063,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # An email should be received at the given address containing the Username and new Password
         uspaema = DR.Email.ForgottenPasswordEmail(USERID)
         self.assertEqual(USERNAME, uspaema.get_username(),
-                         'The Username provided in the email should match the user\'s username.')
+                         "The Username provided in the email should match the user's username.")
         # Read that email and sign in with the new password.
         TEMP_PASS = uspaema.get_password()
 
@@ -1092,4 +1092,4 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Password, and has Qualified, and received emails for each of these five events.
         # Links should point ot the correct pages in the correct locale.
         self.assertEqual({DR.LOCALE[1:]}, DR.Email(USERID).get_all_locales(),
-                         'The emails received should all link to the user\'s locale.')
+                         "The emails received should all link to the user's locale.")

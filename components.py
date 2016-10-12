@@ -112,7 +112,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
     """Represents the What You Can See Mosaic, however many tiles may appear."""
     def __init__(self):
         self.element = DR.flashy_find_element('div.whatYouCanSee div.mosaic')
-        self.tiles = DR.quietly_find_elements('.mosaic-item')
+        self.tiles = [x for x in DR.quietly_find_elements('.mosaic-item') if x.is_displayed()]
 
     def tile_count(self) -> int:
         """Returns the number of tiles in the mosaic."""
@@ -138,6 +138,11 @@ class WhatYouCanSeeMosaic(WrappedElement):
             DR.LAST_LINK = DR.quietly_find_element('.mosaic-item-detail-container p>a',
                                                    self.element).get_attribute('href')
             DR.blip_element(self.element).click()
+            # External links open in a new tab. No problem if not.
+            try:
+                DR.switch_to_window(1)
+            except IndexError:
+                pass
             DR.wait_for_page()
 
         def get_title(self) -> str:
@@ -433,13 +438,18 @@ class FilteredSearch(WrappedElement):
         """Returns the number of search results currently displayed."""
         return len(DR.flashy_find_elements('.mosaic-item', self.element))
 
-    def read_results_counter(self) -> (int, int) or None:
+    def read_results_counter(self, wait: bool=False) -> (int, int) or None:
         """Returns the number of results the 'Showing X-Y of Z results' thing says there are:
-        A tuple as (shown, total), or a None if it's not shown, such as with Travel Club"""
-        counter = DR.flashy_find_element('.search-result-count-copy', self.element).text
-        counter = [int(x) for x in re.findall(r'\d+', counter)]
-        if counter == []:
-            return None
+        A tuple as (shown, total), or a None if it's not shown, such as with Travel Club.
+        If wait is set to True, will wait for the counter to load before assuming its absence."""
+        while True:
+            counter = DR.flashy_find_element('.search-result-count-copy', self.element).text
+            counter = [int(x) for x in re.findall(r'\d+', counter)]
+            if counter == []:
+                if not wait:
+                    return None
+            else:
+                break
         # Different languages can show the numbers in different orders.
         counter.sort()
         # The largest number must be the total results, with the other two being 'this many shown'.
@@ -492,7 +502,7 @@ class HeaderHeartIcon(WrappedElement):
         anim = DR.quietly_find_element('.icon-heart-animate', self.element)
         DR.wait_until(lambda: anim.get_attribute('style') == '' or
                       anim.get_attribute('style').find('opacity: 0;') != -1,
-                      'anim\'s style is blank, or has an opacity of 0.')
+                      "anim's style is blank, or has an opacity of 0.")
         try:
             return int(DR.flashy_find_element('.my-trip-count', self.element).text)
         except ValueError:
@@ -540,7 +550,7 @@ class InteractiveMap(WrappedElement):
             """Opens a menu, and waits until it is open, too."""
             DR.blip_element(self.element).click()
             DR.wait_until(lambda: self.element.get_attribute('class') == 'active',
-                          'self.element\'s class is active.')
+                          "self.element's class is active.")
 
         def pick_random(self) -> None:
             """Picks a random entry from the menu."""
@@ -611,7 +621,7 @@ class InteractiveMap(WrappedElement):
                 panel = DR.get_parent_element(
                     DR.get_parent_element(DR.quietly_find_element('#map-menu')))
                 DR.wait_until(lambda: panel.get_attribute('style').find('rotateY(0deg)') != -1,
-                              'panel\'s style does not contain rotateY(0deg)')
+                              "panel's style does not contain rotateY(0deg)")
 
             def find_out_more(self) -> str:
                 """Returns the url of the Find Out More link."""
@@ -1336,7 +1346,7 @@ class QRCode(WrappedElement):
     def decode(self) -> str:
         """Decodes the QR code image, returns the string it evaluates to."""
         # TODO: Figure this out? Probably requires Linux or something.
-        raise NotImplementedError('I assume this must be possible, but I\'ve yet to find out how. '
+        raise NotImplementedError("I assume this must be possible, but I've yet to find out how. "
                                   'Just scan the QR manually?')
 
 class PanoramicCarousel(WrappedElement):
@@ -1390,7 +1400,9 @@ class KDPSearch(FilteredSearch):
 
     def total_results(self):
         """Returns the number of total results shown on the component's Count thing."""
-        return self.read_results_counter()[1]
+        # This really is quite a bother?
+        time.sleep(1)
+        return self.read_results_counter(True)[1]
 
     def lit_icons(self):
         """Gets a string of which of the Region Filters are active. may contain n, e, w, or s.

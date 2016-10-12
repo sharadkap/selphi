@@ -7,22 +7,23 @@ import drivery as DR
 import modules as MOD
 import components as CP
 
-# Sort the tests by declaration order, not alphabetical order.
+# A mapping of the test names to their abbreviations
 aspnames = OrderedDict(
-    [('SPL', 'test_Splash_Page'), ('HPG', 'test_Homepage'),
-     ('NAV', 'test_Navigation'), ('FTR', 'test_Footer'), ('SMP', 'test_Sitemap'),
-     ('ITN', 'test_Filtered_Search__Itineraries'), ('FCT', 'test_Filtered_Search__Fact_Sheets'),
-     ('MAP', 'test_Interactive_Map'), ('CTC', 'test_Contact_Us'), ('REG', 'test_Registration'),
-     ('LOG', 'test_Login'), ('FAV', 'test_Favourites'), ('PRF', 'test_My_Profile'),
-     ('TRN', 'test_Training_Summary'), ('ASC', 'test_Aussie_Specialist_Club'),
-     ('TVL', 'test_Travel_Club'), ('FML', 'test_Famils'),
-     ('PHT', 'test_Aussie_Specialist_Photos'), ('DLB', 'test_Download_Qualification_Badge'),
-     ('STR', 'test_Aussie_Store'), ('PRM', 'test_Premier_Badge'),
-     ('FUN', 'test_Forgotten_Username'), ('FPW', 'test_Forgotten_Password'),
-     ('CPW', 'test_Change_Password'), ('CMP', 'test_Campaign')])
+    [('SPL', 'test_01_Splash_Page'), ('HPG', 'test_02_Homepage'), ('NAV', 'test_03_Navigation'),
+     ('FTR', 'test_04_Footer'), ('SMP', 'test_05_Sitemap'),
+     ('ITN', 'test_06_Filtered_Search_Itineraries'), ('FCT', 'test_07_Filtered_Search_Fact_Sheets'),
+     ('MAP', 'test_08_Interactive_Map'), ('CTC', 'test_09_Contact_Us'),
+     ('REG', 'test_10_Registration'), ('LOG', 'test_11_Login'), ('FAV', 'test_12_Favourites'),
+     ('PRF', 'test_13_My_Profile'), ('TRN', 'test_14_Training_Summary'),
+     ('ASC', 'test_15_Aussie_Specialist_Club'), ('TVL', 'test_16_Travel_Club'),
+     ('FML', 'test_17_Famils'), ('PHT', 'test_18_Aussie_Specialist_Photos'),
+     ('DLB', 'test_19_Download_Qualification_Badge'), ('STR', 'test_20_Aussie_Store'),
+     ('PRM', 'test_21_Premier_Badge'), ('FUN', 'test_22_Forgotten_Username'),
+     ('FPW', 'test_23_Forgotten_Password'), ('CPW', 'test_24_Change_Password'),
+     ('CMP', 'test_25_Campaign')])
 
 class ASP(unittest.TestCase): # pylint: disable-msg=R0904
-    """The main test suite, a regression run of ASP Global."""
+    """The Test Suite for the ASP regresseion. Test methods are numbered because HipTest."""
     def setUp(self) -> None:
         """Called just before each test is run, sets up the browser and test records."""
         # Initialise the browser connection.
@@ -37,7 +38,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                          'assertions. Hopefully the custom messages are helpful enough.')
 
     # Tests start here.
-    def test_Splash_Page(self) -> None:
+    def test_01_Splash_Page(self) -> None:
         """Tests the Splash Page."""
         # Open the splash page.
         DR.splash_page()
@@ -55,7 +56,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertIn(DR.LOCALE, DR.current_url(),
                       'The selected locale should link to that locale.')
 
-    def test_Homepage(self) -> None:
+    def test_02_Homepage(self) -> None:
         """Tests the Welcome Page content."""
         DR.open_home_page()
         # Video should be present. But its absence isn't worth aborting the test over.
@@ -83,7 +84,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertEqual(mosaic.tile_count(), 5,
                          'There should be five mosaic tiles on the homepage.')
 
-    def test_Navigation(self) -> None:
+    def test_03_Navigation(self) -> None:
         """Checks that the contents of the Signed Out Nav Menu are correct."""
         DR.open_home_page()
         # Click on 'About' in the Mega Menu.
@@ -140,7 +141,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         except Exception as ex:
             DR.add_error(ex)
 
-    def test_Footer(self) -> None:
+    def test_04_Footer(self) -> None:
         """Checks the content of the Footer."""
         DR.open_home_page()
         footer = CP.Footer()
@@ -184,7 +185,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertIn('/splash.html', DR.current_url(), 'The Splash link should lead to the Splash'
                       ' page, of course.')
 
-    def test_Sitemap(self) -> None:
+    def test_05_Sitemap(self) -> None:
         """Checks the Sitemap page links."""
         DR.open_home_page()
         # Click the Sitemap link in the Footer.
@@ -216,7 +217,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         except Exception as ex:
             DR.add_error(ex)
 
-    def test_Filtered_Search__Itineraries(self) -> None:
+    def test_06_Filtered_Search_Itineraries(self) -> None:
         """Checks the Itineraries Search."""
         DR.open_home_page()
         # Navigate to Sales Resources > Itinerary Suggestions.
@@ -230,7 +231,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         search.random_search()
         self.look_at_search_results(search)
 
-    def test_Filtered_Search__Fact_Sheets(self) -> None:
+    def test_07_Filtered_Search_Fact_Sheets(self) -> None:
         """Tests the Fact Sheet Search."""
         DR.open_home_page()
         # Navigate to Sales Resources > Fact Sheets.
@@ -281,7 +282,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.assertEqual(result.SearchResultPage().get_title().casefold(), name,
                              "The result's link should go to the relevant page.")
 
-    def test_Interactive_Map(self) -> None:
+    def test_08_Interactive_Map(self) -> None:
         """Checks the Interactive Map page."""
         # Navigate to Sales Resources > Interactive Map
         DR.open_home_page()
@@ -413,7 +414,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         finally:
             panel.back_to_menu()
 
-    def test_Contact_Us(self) -> None:
+    def test_09_Contact_Us(self) -> None:
         """Checks the Contact Us page."""
         DR.open_home_page()
         # Navigate to About > Contact Us.
@@ -426,7 +427,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         #   with the relevant contact." Can't actually test that, so a 'mailto:' will have to do.
         CP.ContactUs()
 
-    def test_Registration(self) -> None:
+    def test_10_Registration(self) -> None:
         """Checks the Registration process."""
         global USERID, USERNAME    # I'm sure it's fine. pylint: disable-msg=W0601
         DR.open_home_page()
@@ -483,7 +484,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Should open the Registration Acknowledgement page, confirming the account is set up.
         DR.get(regemail.activation_link())
 
-    def test_Login(self):
+    def test_11_Login(self):
         """Tests the Login-related functionality."""
         # Log in.
         DR.open_home_page()
@@ -525,7 +526,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.assertTrue(CP.NavMenu.AussieSpecialistClub.not_present(),
                             'A trainee should not have access to the Aussie Specialist Club.')
 
-    def test_Favourites(self):
+    def test_12_Favourites(self):
         """Tests the Sales Tools functionality."""
         favtitles = set()
         def mosaicad(num):
@@ -621,7 +622,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertEqual(0, len(tools.get_favourites()),
                          'Favourites list should be empty after removing all of them.')
 
-    def test_My_Profile(self):
+    def test_13_My_Profile(self):
         """Tests the Profile page."""
         # Pre-condition: Should be signed in.
         DR.open_home_page()
@@ -661,7 +662,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertIn(lastname.strip(), CP.NavMenu().user_names(),
                       'Header Name Display should reflect changes made.')
 
-    def test_Training_Summary(self):
+    def test_14_Training_Summary(self):
         """Checks the Training Summary page."""
         def do_mod_then_back(mod: str, offset: int) -> None:
             """Doing the Module clicks the Back To Training button, which leads to LIVE
@@ -746,7 +747,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertSetEqual({'mod1', 'mod2', 'mod3', 'nsw', 'qld'}, profile.module_badges(),
                             'The Profile should contain the badges of the modules just completed.')
 
-    def test_Aussie_Specialist_Club(self):
+    def test_15_Aussie_Specialist_Club(self):
         """Checks the Aussie Specialist Club nav menu links."""
         # Pre-condition: Logged in as a Qualified User.
         DR.open_home_page()
@@ -766,7 +767,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             club.asp_logo()
             club.aussie_store()
 
-    def test_Travel_Club(self):
+    def test_16_Travel_Club(self):
         """Tests the Travel Club search."""
         # Pre-condition: Logged in as a Qualified User.
         DR.open_home_page()
@@ -783,7 +784,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Look at the search results.
         self.look_at_search_results(travelsearch)
 
-    def test_Famils(self):
+    def test_17_Famils(self):
         """Checks the Famils page."""
         # pre-condition: Logged in as a Qualified User.
         DR.open_home_page()
@@ -798,7 +799,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Should Display Famils page content.
         CP.Famils()
 
-    def test_Aussie_Specialist_Photos(self):
+    def test_18_Aussie_Specialist_Photos(self):
         """Checks the Aussie Specialist Photos page."""
         # pre-condition: Logged in as a Qualified User.
         DR.open_home_page()
@@ -817,7 +818,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 pic.get_link()
             pic.close()
 
-    def test_Download_Qualification_Badge(self):
+    def test_19_Download_Qualification_Badge(self):
         """Checks the Download Qualification Badge page."""
         # China doesn't have this?
         if DR.CN_MODE:
@@ -862,7 +863,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # as a Test Order, so as to prevent the STO from trying to
         # deliver materials to the test address.
 
-    def test_Aussie_Store(self):
+    def test_20_Aussie_Store(self):
         """Checks all of the Aussie Store functionality, except for actually placing an order."""
         # yes its a big method i know    pylint: disable-msg=R0914
         # China doesn't have the store.
@@ -1007,7 +1008,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         except Exception as ex:
             DR.add_error(ex)
 
-    def test_Premier_Badge(self):
+    def test_21_Premier_Badge(self):
         """Checks that the Profile Page has a Premier Badge. Expect this one to fail."""
         # Pre-condition: Logged in as a Premier User
         DR.open_home_page()
@@ -1024,7 +1025,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                          'The Profile page should show a Premier badge for a Premier. But this '
                          'test usually fails when included in a Full Run.')
 
-    def test_Forgotten_Username(self):
+    def test_22_Forgotten_Username(self):
         """Tests the Forgotten Username feature."""
         DR.open_home_page()
         # Click the Sign In link
@@ -1044,7 +1045,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertEqual(USERNAME, usnaema.get_username(),
                          "The Username provided in the email should match the user's username.")
 
-    def test_Forgotten_Password(self):
+    def test_23_Forgotten_Password(self):
         """Tests the Forgotten Password feature."""
         global TEMP_PASS    # I'm sure it's fine. pylint: disable-msg=W0601
         DR.open_home_page()
@@ -1067,7 +1068,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Read that email and sign in with the new password.
         TEMP_PASS = uspaema.get_password()
 
-    def test_Change_Password(self):
+    def test_24_Change_Password(self):
         """Tests the Change Password feature."""
         DR.open_home_page()
         # Sign in with the new password, because these tests *are* being executed in order, right?
@@ -1086,7 +1087,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # The page should redirect back to the Profile page.
         change.submit()
 
-    def test_Campaign(self):
+    def test_25_Campaign(self):
         """Ensures that all emails received are in the correct locale."""
         # Pre-condition: User has registered, forgotten Username and
         # Password, and has Qualified, and received emails for each of these five events.

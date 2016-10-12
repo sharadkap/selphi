@@ -6,14 +6,15 @@ from collections import OrderedDict
 import drivery as DR
 import components as CP
 
+# A mapping of the test names to the abbreviations.
 ausnames = OrderedDict(
-    [('SOC', 'test_social'), ('KDP', 'test_kdp'), ('HDR', 'test_header'),
-     ('FAV', 'test_favourites'), ('ITI', 'test_whitsundays'), ('360', 'test_360'),
-     ('SRC', 'test_search'), ('WYC', 'test_wycs'), ('OFF', 'test_special_offers'),
-     ('BRT', 'test_brightcove'), ('BVD', 'test_banner_video'), ('XPL', 'test_explore'), ])
+    [('SOC', 'test_01_social'), ('KDP', 'test_02_kdp'), ('HDR', 'test_03_header'),
+     ('FAV', 'test_04_favourites'), ('ITI', 'test_05_whitsundays'), ('SRC', 'test_06_search'),
+     ('WYC', 'test_07_wycs'), ('OFF', 'test_08_special_offers'), ('BRT', 'test_09_brightcove'),
+     ('BVD', 'test_10_banner_video'), ('XPL', 'test_11_explore')])
 
 class AUS(unittest.TestCase):
-    """The Test Suite for the AUS.com regression."""
+    """The Test Suite for the AUS regression. Tests methods are numbered because HipTest."""
     def setUp(self):
         """Called just before each test is run, sets up the browser and test records."""
         DR.verificationErrors = []    # This might work. Keep a list of everything that went wrong.
@@ -31,7 +32,7 @@ class AUS(unittest.TestCase):
         self.assertEqual([], DR.verificationErrors, '\nThis will fail if there were any nonlethal '
                          'assertions. Hopefully the custom messages are helpful enough.')
 
-    def test_social(self):
+    def test_01_social(self):
         """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.
         Does not test the QR code links, can't seem to do that."""
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)
@@ -164,7 +165,7 @@ class AUS(unittest.TestCase):
             # TODO: Do the global 360 share bit.
             pass
 
-    def test_kdp(self):
+    def test_02_kdp(self):
         """Tests the KDP Partner Search functionality."""
         if not DR.CN_MODE:
             self.skipTest('Only China has the KDP thing.')
@@ -202,7 +203,7 @@ class AUS(unittest.TestCase):
         # And make sure that they all add to the total.
         self.assertEqual(total, subtotal)
 
-    def test_header(self):
+    def test_03_header(self):
         """Tests the various menu sections in the header."""
         try:
             # Click the Australia.com logo in the header
@@ -253,7 +254,7 @@ class AUS(unittest.TestCase):
         # Confirm the States section appeared.
         self.assertTrue(ptg.act().is_displayed())
 
-    def test_favourites(self):
+    def test_04_favourites(self):
         """Tests the My Dream Trip functionality."""
         # Go to the Australia's Animals page
         try:
@@ -301,7 +302,7 @@ class AUS(unittest.TestCase):
         favs = CP.MySalesTools().get_favourites()
         self.assertSetEqual(oldfavs, {f.get_title() for f in favs})
 
-    def test_whitsundays(self):
+    def test_05_whitsundays(self):
         """Tests various things pertaining to Itinerary pages."""
         # Navigate to Whitsundays Sailing
         try:
@@ -325,7 +326,7 @@ class AUS(unittest.TestCase):
         iti.back_to_top()
         self.assertEqual(0, DR.current_scroll())
 
-    def test_search(self):
+    def test_06_search(self):
         """Tests the Site and Header Search functionalities."""
         # Do this a couple of times, different buttons:
         # Opens the Search bar, clicks a Common Search Term
@@ -344,7 +345,7 @@ class AUS(unittest.TestCase):
             except Exception as ex:
                 DR.add_error(ex)
 
-    def test_wycs(self):
+    def test_07_wycs(self):
         """Tests the What You-Can-See-Mosaic-related functionality."""
         # Navigate to the Three Days Itineraries page
         try:
@@ -373,7 +374,7 @@ class AUS(unittest.TestCase):
         # Click on a tile, should direct to the correct page, other tiles faded
         CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
 
-    def test_special_offers(self):
+    def test_08_special_offers(self):
         """Tests the Special Offers page"""
         # Navigate to the Special Offers page
         try:
@@ -387,7 +388,7 @@ class AUS(unittest.TestCase):
         # Click on a Special Offers link
         CP.SpecialOffer().view_more_information()
 
-    def test_brightcove(self):
+    def test_09_brightcove(self):
         """Tests the Brightcove Video Player."""
         # Go to the Tasmania page
         try:
@@ -401,7 +402,7 @@ class AUS(unittest.TestCase):
         vid = CP.Video()
         vid.play()
 
-    def test_banner_video(self):
+    def test_10_banner_video(self):
         """Tests the Hero Banner With Video."""
         # Navigate to the Australia's Animals page
         if DR.CN_MODE:
@@ -412,7 +413,7 @@ class AUS(unittest.TestCase):
         # Verify that the hero banner is animated. This seems to count?
         self.assertTrue(CP.Video().is_playing())
 
-    def test_explore(self):
+    def test_11_explore(self):
         """Tests the Explore component."""
         # Navigate to the Sydney page
         try:

@@ -15,9 +15,13 @@ ausnames = OrderedDict(
 
 class AUS(unittest.TestCase):
     """The Test Suite for the AUS regression. Tests methods are numbered because HipTest."""
+    def __init__(self, name, glob):
+        super(AUS, self, name).__init__()
+        self.g = glob
+
     def setUp(self):
         """Called just before each test is run, sets up the browser and test records."""
-        DR.verificationErrors = []    # This might work. Keep a list of everything that went wrong.
+        self.verificationErrors = []    # Keep a list of everything that went wrong.
         self.accept_next_alert = True
         DR.begin()
         DR.CN_MODE = True
@@ -29,8 +33,12 @@ class AUS(unittest.TestCase):
         """Called after finishing each test, closes the browser and counts up the errors."""
         DR.close()
         self.maxDiff = None
-        self.assertEqual([], DR.verificationErrors, '\nThis will fail if there were any nonlethal '
-                         'assertions. Hopefully the custom messages are helpful enough.')
+        self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
+                         ' assertions. Hopefully the custom messages are helpful enough.')
+
+    def add_error(self, error) -> None:
+        """Adds an error to the errors list. Shortcut."""
+        self.verificationErrors.append(error)
 
     def test_01_social(self):
         """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.
@@ -42,7 +50,7 @@ class AUS(unittest.TestCase):
             else:
                 CP.NavMenu.PlanYourTrip().open().getting_around().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.getting_around()
         # ShareThis compoent bit:
         try:
@@ -86,7 +94,7 @@ class AUS(unittest.TestCase):
                 # TODO: Global Share Icon behaviour.
                 self.skipTest("Haven't done global share component yet.")
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             DR.close_other_windows()
 
         # Footer bit:
@@ -117,7 +125,7 @@ class AUS(unittest.TestCase):
                 # TODO: Handle the global footer social media links
                 self.skipTest("Haven't done global social links yet.")
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             DR.close_other_windows()
 
         # Navigate to the Aquatics page
@@ -127,7 +135,7 @@ class AUS(unittest.TestCase):
             else:
                 CP.NavMenu.ThingsToDo().open().aquatic().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.aquatic()
         pan = CP.PanoramicCarousel()
         # Take some notes on the page for later comparison.
@@ -173,7 +181,7 @@ class AUS(unittest.TestCase):
         try:
             CP.NavMenu.ExploreAndPlan().open().kdp().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.kdp()
         # Count results, assert all buttons lit.
         kdp = CP.KDPSearch()
@@ -223,7 +231,7 @@ class AUS(unittest.TestCase):
             self.assertIn('businessevents.australia.c', DR.current_url())
             DR.close_window()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             DR.close_other_windows()
 
         try:
@@ -238,7 +246,7 @@ class AUS(unittest.TestCase):
                 pass
                 # TODO: Read the AUS.com test, replicate here.
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
 
         # Open the Destinations section in the header
         ptg = CP.NavMenu.PlacesToGo().open()
@@ -264,7 +272,7 @@ class AUS(unittest.TestCase):
                 CP.NavMenu.PlanYourTrip().open().facts().click()
                 CP.WhatYouCanSeeMosaic()["Australia's Animals"].click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.australias_animals()
         try:
             # Click the Add To Favourites button
@@ -277,7 +285,7 @@ class AUS(unittest.TestCase):
             try:
                 CP.NavMenu.PlacesToGo().open().regional_cities().click()
             except Exception as ex:
-                DR.add_error(ex)
+                self.add_error(ex)
                 CP.BackupHrefs.regional_cities()
             # Do this again, because the heart count doesn't load at the same time as the page.
             DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
@@ -287,7 +295,7 @@ class AUS(unittest.TestCase):
             DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
                           'Heart Icon count == favcount.')
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
 
         # Go to favourites page. I would put a try-navigate here, but it's a dynamic url.
         CP.HeaderHeartIcon().click()
@@ -313,7 +321,7 @@ class AUS(unittest.TestCase):
                 CP.NavMenu.ThingsToDo().open().coastal_journeys().click()
                 CP.WhatYouCanSeeMosaic()['Whitsundays Sailing'].go()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.whitsundays()
 
         # Click a few of the Itinerary Day links
@@ -343,7 +351,7 @@ class AUS(unittest.TestCase):
                 # Confirm the count is incremented?
                 self.assertGreaterEqual(count, src.count_results())
             except Exception as ex:
-                DR.add_error(ex)
+                self.add_error(ex)
 
     def test_07_wycs(self):
         """Tests the What You-Can-See-Mosaic-related functionality."""
@@ -354,7 +362,7 @@ class AUS(unittest.TestCase):
             else:
                 CP.NavMenu.ThingsToDo().open().city_journeys().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.city_journeys()
         # Click on a tile, should direct to the correct page while the other tiles grey out
         try:
@@ -362,14 +370,14 @@ class AUS(unittest.TestCase):
             # Some of them go to external sites which open in a new tab.
             DR.close_other_windows()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             DR.close_other_windows()
 
         # Go to the Great Barrier Reef page
         try:
             CP.NavMenu.PlacesToGo().open().great_barrier_reef().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.great_barrier_reef()
         # Click on a tile, should direct to the correct page, other tiles faded
         CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
@@ -383,7 +391,7 @@ class AUS(unittest.TestCase):
             else:
                 CP.NavMenu.ThingsToDo().open().campaigns().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.offers()
         # Click on a Special Offers link
         CP.SpecialOffer().view_more_information()
@@ -396,7 +404,7 @@ class AUS(unittest.TestCase):
             pla.states().click()
             pla.tas().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.tas()
         # Play the video.
         vid = CP.Video()
@@ -419,7 +427,7 @@ class AUS(unittest.TestCase):
         try:
             CP.NavMenu.PlacesToGo().open().sydney().click()
         except Exception as ex:
-            DR.add_error(ex)
+            self.add_error(ex)
             CP.BackupHrefs.sydney()
         # Click the Location Pin button on a the Explore component
         cards = CP.Explore().cards

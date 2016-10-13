@@ -6,8 +6,8 @@ import io
 import sys
 import time
 import signal
-import argparse
 import unittest
+import configparser
 from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
 import tap
@@ -15,59 +15,26 @@ import drivery as DR
 import modules as MOD
 
 from ASP import ASP, aspnames
+from AUS import AUS, ausnames
 
 def main():
     """Read the arguments, run the tests."""
-    global USERNAME, USERID        # I'm sure it's fine. pylint: disable-msg=W0601
-
-    parser = argparse.ArgumentParser()
-    m = parser.add_mutually_exclusive_group()
-    m.add_argument('--asp', help='Set this flag to run with the ASP regression test suite.',
-                   action='store_true')
-    parser.add_argument('-e', '--environment', help='The Domain of the environment to test. \
-                        Remember to include http(s). Default is %(default)s.', nargs=1, type=str,
-                        default=[DR.BASE_URL], metavar='')
-    parser.add_argument('-ce', '--chenvironment', help='The Domain of the China environment to \
-                        test (if applicable). Remember to include http(s). Default is %(default)s.',
-                        nargs=1, type=str, default=[DR.CN_BASE_URL], metavar='')
-    parser.add_argument('-l', '--locales', help='Which locales to test. \
-                        One or more of [%(choices)s]. Default is %(default)s.',
-                        nargs='+', type=str, choices=DR.LOCALES.keys(), default=['gb'], metavar='')
-    parser.add_argument('-b', '--browser', help='Which browser to use. One or more of \
-                        [%(choices)s]. Default is %(default)s', nargs='+', default=['chrome'],
-                        choices=DR.BROWSERS.keys(), metavar='')
-    parser.add_argument('-u', '--username', help='The Username to use in testing. \
-        Due to the way the tests are structured, it will have to be a Test Account formatted user: \
-        last four characters the email subaddress code (testeratta+xxxx@gmail.com), \
-        password Welcome1. Only do this if your custom suite does not include Registration. \
-        Likely won\'t work if you have multiple locales.', default=[None], nargs=1, metavar='')
-    parser.add_argument('-t', '--tests', help='Which tests to run. Will be run in the order \
-                    supplied. Default is all, in the default testing order. Choices are [{}]'
-                        .format(', '.join(["'{}' for {}"
-                                           .format(x, aspnames[x]) for x in aspnames])),
-                        nargs='+', choices=aspnames.keys(), default=aspnames.keys(),
-                        type=str, metavar='')
-    args = parser.parse_args()
-
+    args = read_properties()
     # Set the settings from the given arguments
-    if args.username[0]:
-        USERNAME = args.username[0]
-        USERID = USERNAME[-4:]    # The mail ID is the last four characters.
-        DR.EMAIL = DR.EMAIL.format(USERID)
-    else:
-        USERNAME, USERID = None, None
+    if args.username:
+        args.userid = args.username[-4:]    # The mail ID is the last four characters.
+        args.email = args.email.format(args.userid)
 
     # Get the output settings, the chosen test methods from the ASP suite.
     outdir = os.path.split(__file__)[0]
-    names = [ASP(aspnames[x]) for x in args.tests]
 
     # Run them in each locale.
     pool = Pool(cpu_count() * 2)  # It's mostly waiting; we can afford to overload the cores, right?
     # KeyboardInterrupts don't actually break out of blocking-waits, so do this the hard way.
     try:
-        asy = pool.map_async(launch_test, [(loc, bro, outdir, names, USERNAME, USERID,
-                                      [args.environment[0], args.chenvironment[0]])
-                                     for loc in args.locales for bro in args.browser])
+        asy = pool.map_async(
+            launch_test, [(loc, bro, outdir, args.copy())
+                          for loc in args.locales for bro in args.browser])
         while True:
             if asy.ready():
                 return
@@ -78,29 +45,27 @@ def main():
         raise
 
 def launch_test(args) -> None:
-    """Do all the things needed to run a test suite. Put this as the target call of a process.
-    It looks like this is messing with things on a Global level, but it's actually totally fine."""
-    # These have to be here, otherwise the processes won't have access to it.
-    # pylint: disable-msg=E1126, W0601
+    """Do all the things needed to run a test suite. Put this as the target call of a process."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
-    global USERNAME, USERID
-    locale, browser, outdir, names, USERNAME, USERID, env = args
-    # Processes don't share global state, but the processes get reused, so have to clean up anyway.
-    DR.reset_globals()
+    locale, browser, outdir, globs = args   # Unpack arguments.
+    # Instantiate the test suites, and give them their process-unique globals
+    if args.site == 'ASP':
+        names = [ASP(aspnames[x], globs) for x in args.tests or aspnames]
+    elif args.site == 'AUS':
+        names = [AUS(ausnames[x], globs) for x in args.tests or ausnames]
+
     # Do a bunch of method overrides to get it to work properly.
     perform_hacks()
-    # If a url was given, make that the default.
-    DR.BASE_URL = env[0]
-    DR.CN_BASE_URL = env[1]
     # Set up the run settings.
     DR.BROWSER_TYPE = DR.BROWSERS[browser]
     # If China Mode, do it in China, otherwise set the locale
-    if locale == 'cn':
-        DR.CN_MODE = True
-        DR.LOCALE = DR.CN_LOCALE
-        DR.BASE_URL = DR.CN_BASE_URL
+    if locale == '/zh-cn':
+        globs.cnmode = True
+        globs.base_url = globs.chenvironment
     else:
-        DR.LOCALE = DR.LOCALES[locale]
+        # If a url was given, make that the default.
+        globs.base_url = globs.environment
+
 
     # Create the test runner, choose the output path: right next to the test script file.
     buf = io.StringIO()
@@ -163,7 +128,7 @@ def perform_hacks():
     # I do need to access this private property to correctly HAX it into working.
     # pylint: disable-msg=W0212
     unittest.result.TestResult._exc_info_to_string = newex
-    # Also, tap has its own renderer as well, so have to overwrite that as well.
+    # Also, tap has its own renderer as well, so have to overwrite that too.
     def newf(exc):
         """Rewrite this method so as to remove the traceback."""
         import traceback
@@ -173,6 +138,26 @@ def perform_hacks():
         return tap.formatter.format_as_diagnostics(lines)
     tap.formatter.format_exception = newf
 
+def read_properties() -> dict:
+    """Read the run options from the properties file and tidy them up a little."""
+    class Nict(dict):
+        """Makes the dict a little more namespacey."""
+        def __setattr__(self, name, value):
+            self['name'] = value
+        def __getattr__(self, name):
+            try:
+                return self['name']
+            except KeyError:
+                return None
+        def copy(self):
+            return Nict(dict.copy(self))
+    conf = configparser.ConfigParser()
+    conf.read(filenames='test.properties')
+    result = Nict(conf['Main Section'])
+    result.locales = result.locales.split(',')
+    result.browser = result.browsers.split(',')
+    result.tests = result.tests.split(',') if result.tests else []
+    return result
 
 if __name__ == '__main__':
     main()

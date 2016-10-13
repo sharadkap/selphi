@@ -15,13 +15,6 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import bs4
 
     ###Some Magic Numbers, default values.###
-def reset_globals():
-    """Call this to reset all of the globals that can get overwritten to their default values."""
-    # pylint: disable-msg=W0603
-    global LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE
-    LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE = (
-        30, 2, False, 'https://www.aussiespecialist.com', 'https://www.aussiespecialist.cn',
-        '/en-gb', 'testeratta+{}@gmail.com', Chrome)
 # """The default time, in seconds, to search the DOM before declaring an Element Not Found."""
 LONG_WAIT = 30
 # """Time in seconds to poll for something that should be absent or already here."""
@@ -41,11 +34,7 @@ LOCALES = {'ca': '/en-ca', 'in': '/en-in', 'my': '/en-my', 'sg': '/en-sg', 'gb':
 # """To aid in checking for Page Loaded Status, note the last link clicked.
 LAST_LINK = ''
 
-# """The generic standard Test Account Password."""
-PASSWORD = 'Welcome1'
-# """The email address to be associated with the given user."""
-EMAIL = 'testeratta+{}@gmail.com'
-# Login details for the gmail IMAP server, if that ever becomes a thing.
+# Login details for the gmail IMAP server.
 TEST_EMAIL_IMAP_SERVER = 'imap.gmail.com'
 TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
 TEST_EMAIL_PASSWORD = 'WelcomeTest'
@@ -59,12 +48,6 @@ BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox,
             'ie': Ie, 'opera': Opera, 'safari': Safari}
 DRIVER = Chrome        # Global variable placeholder
 
-# """A Set of the full list of options that should be in the splash page language selector."""
-LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", "/en-my.html",
-              "/en-sg.html", "/id-id.html", "/de-de.html", "/zh-hk.html", "/en-hk.html",
-              "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", "/pt-br.html",
-              "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html",
-              "https://www.aussiespecialist.cn/zh-cn"}
 # A script to scroll a single element into view proper, just in case.
 SCROLL_SCRIPT = ('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
                  '-wp.innerHeight/2)')
@@ -78,9 +61,6 @@ BLIP_SCRIPT = ('try{$("head").append("<style>@keyframes selhian{0%{outline: 0px 
 # """Type annotation, referring to either a WebElement, or a list of them."""
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
 ELEMENT_LIST = List[WebElement] # pylint: disable-msg=E1126
-
-# Hold onto a list of exceptions, use this for nonfatal exceptions.
-verificationErrors = []
 
 def to_list(item) -> list:
     """Wraps the input into a list if it wasn't already one."""
@@ -220,10 +200,6 @@ def check_visible_quick(selector: str, within: WebElement=None) -> bool:
 def execute_mouse_over(element: WebElement) -> None:
     """Simulates the mouse moving into an element."""
     ActionChains(DRIVER).move_to_element(element).perform()
-
-def add_error(error: Exception) -> None:
-    """Appends an exception to the errors list. Bit of a shortcut."""
-    verificationErrors.append(error)
 
 def find_error_improver(func):
     """A decorator to get the NoSuchElementException to actually tell you what the problem is."""

@@ -49,23 +49,22 @@ def launch_test(args) -> None:
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
     # Instantiate the test suites, and give them their process-unique globals
-    if args.site == 'ASP':
-        names = [ASP(aspnames[x], globs) for x in args.tests or aspnames]
-    elif args.site == 'AUS':
-        names = [AUS(ausnames[x], globs) for x in args.tests or ausnames]
+    if globs.site == 'ASP':
+        names = [ASP(aspnames[x], globs) for x in globs.tests or aspnames]
+    elif globs.site == 'AUS':
+        names = [AUS(ausnames[x], globs) for x in globs.tests or ausnames]
 
     # Do a bunch of method overrides to get it to work properly.
     perform_hacks()
     # Set up the run settings.
     DR.BROWSER_TYPE = DR.BROWSERS[browser]
     # If China Mode, do it in China, otherwise set the locale
-    if locale == '/zh-cn':
-        globs.cnmode = True
+    if locale == globs.cn_locale:
+        globs.cn_mode = True
         globs.base_url = globs.chenvironment
     else:
         # If a url was given, make that the default.
         globs.base_url = globs.environment
-
 
     # Create the test runner, choose the output path: right next to the test script file.
     buf = io.StringIO()
@@ -138,19 +137,20 @@ def perform_hacks():
         return tap.formatter.format_as_diagnostics(lines)
     tap.formatter.format_exception = newf
 
-def read_properties() -> dict:
+class Nict(dict):
+    """Makes the dict a little more namespacey."""
+    def __setattr__(self, name, value):
+        self['name'] = value
+    def __getattr__(self, name):
+        try:
+            return self['name']
+        except KeyError:
+            return None
+    def copy(self):
+        return Nict(dict.copy(self))
+
+def read_properties() -> Nict:
     """Read the run options from the properties file and tidy them up a little."""
-    class Nict(dict):
-        """Makes the dict a little more namespacey."""
-        def __setattr__(self, name, value):
-            self['name'] = value
-        def __getattr__(self, name):
-            try:
-                return self['name']
-            except KeyError:
-                return None
-        def copy(self):
-            return Nict(dict.copy(self))
     conf = configparser.ConfigParser()
     conf.read(filenames='test.properties')
     result = Nict(conf['Main Section'])

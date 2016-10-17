@@ -66,8 +66,8 @@ def main():
     # KeyboardInterrupts don't actually break out of blocking-waits, so do this the hard way.
     try:
         asy = pool.map_async(launch_test, [(loc, bro, outdir, names, USERNAME, USERID,
-                                      [args.environment[0], args.chenvironment[0]])
-                                     for loc in args.locales for bro in args.browser])
+                                            [args.environment[0], args.chenvironment[0]])
+                                           for loc in args.locales for bro in args.browser])
         while True:
             if asy.ready():
                 return

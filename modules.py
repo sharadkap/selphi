@@ -39,12 +39,16 @@ def parseargs():
     TIME_FORMAT = ' '.join(ARGS.timeformat)
     MOD_STEM_D = '{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ARGS.environment[0])
     MOD_STEM = '{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ARGS.environment[0])
-    MOD_STEM_C_D = ('{0}/content/sites/asp-{{0}}/resources/en/{{1}}/assets/asset/{{3}}_{{2}}.zip/ou'
-                    'tput/index_SCORM.html'.format(ARGS.chenvironment[0]))
-    MOD_STEM_C = ('{0}/content/sites/asp-{{0}}/en/assignments.resource.html/content/sites/asp-{{0}}'
-                  '/resources/en/{{1}}'.format(ARGS.chenvironment[0]))
+    # MOD_STEM_C = ('{0}/content/sites/asp-{{0}}/en/assignments.resource.html/content/sites/asp-{{0}}'
+    # '/resources/en/{{1}}'.format(ARGS.chenvironment[0]))
+    # MOD_STEM_C_D = ('{0}/content/sites/asp-{{0}}/resources/en/{{1}}/assets/asset/{{3}}_{{2}}.zip/ou'
+    #                 'tput/index_SCORM.html'.format(ARGS.chenvironment[0]))
     SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
     RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
+    MOD_STEM_C_D = ('{0}/content/sites/asp/resources/{{0}}/{{1}}/assets/asset/{{3}}_{{2}}.zip/ou'
+    'tput/index_SCORM.html'.format(ARGS.chenvironment[0]))
+    MOD_STEM_C = ('{0}/content/sites/asp/{{0}}/assignments.resource.html/content/sites/asp'
+    '/resources/{{0}}/{{1}}'.format(ARGS.chenvironment[0]))
 
 def main() -> None:
     """Run this if the modules suite is being executed as itself."""
@@ -172,12 +176,12 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
         ctem = MOD_STEM_C_D
         stem = MOD_STEM_D
         mods = MODULES_D
-        langs = LANGS_D
+        # langs = LANGS_D
     else:
         ctem = MOD_STEM_C
         stem = MOD_STEM
         mods = MODULES
-        langs = LANGS
+    langs = LANGS
     output = '\n"START: {0}", {1}\n'.format(get_time(), ','.join(modfilter).upper())   # header row.
     pool = Pool(cpu_count() * 2)
     results = pool.map(do_locale, [(x, langs, ctem, stem, mods, modfilter, b,
@@ -193,7 +197,6 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
         print('That tends to lock it, so now it cannot be written to.')
         print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
         print(output)
-
 
 def do_locale(args):
     """The target of a process, go do all the modules in a locale."""
@@ -212,8 +215,10 @@ def do_locale(args):
         try:
             # Try to do the module
             if scorm:    # Scorm den.
-                DRIVER.get(ctem.format(langs[lang].replace('_', '-'), MODULES_C[mod][0],
-                                       MODULES_C[mod][1], langs[lang]))
+                DRIVER.get(ctem.format(langs[lang][0].replace('-','_'), MODULES_C[mod][0],
+                           MODULES_C[mod][1], langs[lang][1]))
+                # DRIVER.get(ctem.format(langs[lang].replace('_', '-''), MODULES_C[mod][0],
+                #                        MODULES_C[mod][1], langs[lang]))
             else:
                 DRIVER.get(stem.format(langs[lang], mods[mod]))
             log_in_first(lang, scorm)

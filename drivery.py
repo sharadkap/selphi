@@ -46,8 +46,19 @@ def to_list(item) -> list:
     """Wraps the input into a list if it wasn't already one."""
     return item if isinstance(item, list) else [item]
 
+def find_error_improver(func: FunctionType):
+    """A decorator, gets the NoSuchElementException to actually tell you what the problem is."""
+    def actually_helpful(self, selector, within=None):
+        """Does a thing, and if it didn't work, tells you what was missing from where."""
+        try:
+            return func(self, selector, within)
+        except NoSuchElementException:
+            raise NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(
+                selector, self.current_url())) from None
+    return actually_helpful
+
 class Drivery:
-    """Because Module-Level-State is a terrible idea, have a class singleton.
+    """Because Module-Level-State is apparently a terrible idea, have a class singleton.
     Wraps a WebDriver instance, and does a bunch of other useful things."""
     def __init__(self, globs: Nict, browser: str='chrome'):
         # To aid in checking for Page Loaded Status, note the last link clicked.
@@ -190,17 +201,6 @@ class Drivery:
     def execute_mouse_over(self, element: WebElement) -> None:
         """Simulates the mouse moving into an element."""
         ActionChains(self.driver).move_to_element(element).perform()
-
-    def find_error_improver(self, func):
-        """A decorator, gets the NoSuchElementException to actually tell you what the problem is."""
-        def actually_helpful(selector, within=None):
-            """Does a thing, and if it didn't work, tells you what was missing from where."""
-            try:
-                return func(selector, within)
-            except NoSuchElementException:
-                raise NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(
-                    selector, self.current_url())) from None
-        return actually_helpful
 
     @find_error_improver
     def quietly_find_element(self, selector: str, within: WebElement=None) -> WebElement:

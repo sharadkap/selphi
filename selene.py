@@ -96,7 +96,7 @@ def perform_hacks():
         try:
             oldclick(*args, **kwargs)
         except MOD.WebDriverException:
-            DR.scroll_element(args[0])
+            DR.Drivery.scroll_element(args[0])
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
 

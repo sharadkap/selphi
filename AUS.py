@@ -3,7 +3,7 @@
 import random
 import unittest
 from collections import OrderedDict
-import drivery as DR
+from drivery import Drivery
 import components as CP
 
 # A mapping of the test names to the abbreviations.
@@ -17,21 +17,17 @@ class AUS(unittest.TestCase):
     """The Test Suite for the AUS regression. Tests methods are numbered because HipTest."""
     def __init__(self, name, glob):
         super(AUS, self, name).__init__()
-        self.g = glob
+        self.globs = glob
 
     def setUp(self):
         """Called just before each test is run, sets up the browser and test records."""
         self.verificationErrors = []    # Keep a list of everything that went wrong.
         self.accept_next_alert = True
-        DR.begin()
-        DR.CN_MODE = True
-        DR.BASE_URL = "http://www.australia.cn"
-        DR.LOCALE = '/zh-cn'
-        DR.open_home_page()
+        self.dr = Drivery(self.globs)
 
     def tearDown(self):
         """Called after finishing each test, closes the browser and counts up the errors."""
-        DR.close()
+        self.dr.close()
         self.maxDiff = None
         self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
                          ' assertions. Hopefully the custom messages are helpful enough.')
@@ -45,7 +41,7 @@ class AUS(unittest.TestCase):
         Does not test the QR code links, can't seem to do that."""
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)
         try:
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 CP.NavMenu.PracticalInformation().open().getting_around().click()
             else:
                 CP.NavMenu.PlanYourTrip().open().getting_around().click()
@@ -57,80 +53,80 @@ class AUS(unittest.TestCase):
             # Click the Share icon
             share = CP.ShareThis()
             share.open_share()
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 # Two icons should slide out from under it
                 # Click the icon for WeChat (two chat balloon faces)
                 share.open_wechat()
                 qur = CP.QRCode()
                 # TODO: A QR code should appear, scan it.
-                # DR.get(qur.decode())
+                # self.dr.get(qur.decode())
                 # TODO: Implement result: "The corresponding page opens in WeChat"
-                # self.assertEqual(DR.current_url(), 'who even knows')
-                # DR.back()
+                # self.assertEqual(self.dr.current_url(), 'who even knows')
+                # self.dr.back()
                 # Close the QR code.
                 qur.close()
 
                 # Take some notes on the page for later comparison.
                 desc = share.page_description()
                 # img = share.page_image()
-                url = DR.current_url()
+                url = self.dr.current_url()
                 # Click the icon for Weibo (eyeball thing)
                 share.open_weibo()
                 # A window should pop up linking to service.weibo.com
-                DR.switch_to_window(1)
+                self.dr.switch_to_window(1)
                 # It should contain the description of, images pulled from,
                 # and a minified link to, the page
                 weibo = CP.WeiboShare()
-                self.assertEqual(desc, weibo.page_description(), 'The Weibo message should default'
-                                 ' to the page description.')
+                self.assertEqual(desc, weibo.page_description(), 'The Weibo message should default '
+                                 'to the page description.')
                 # The page image should be there, but the image filenames are all parameterized,
                 # there's no way to confirm that it's the right image other than looking at it.
                 # self.assertEqual(img, weibo.page_image(), "The page's image should be listed.")
-                DR.get(weibo.miniurl())
-                self.assertEqual(url, DR.current_url(), "The Weibo mini-url should resolve to the "
-                                 "page's url.")
-                DR.close_window()
+                self.dr.get(weibo.miniurl())
+                self.assertEqual(url, self.dr.current_url(), "The Weibo mini-url should resolve to "
+                                 "the page's url.")
+                self.dr.close_window()
             else:
                 # TODO: Global Share Icon behaviour.
                 self.skipTest("Haven't done global share component yet.")
         except Exception as ex:
             self.add_error(ex)
-            DR.close_other_windows()
+            self.dr.close_other_windows()
 
         # Footer bit:
         try:
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 # Click on the WeChat QR code/link in the footer
                 footer = CP.Footer()
                 footer.wechat().click()
                 # A QR code should appear in an overlay
                 qur = CP.QRCode()
                 # TODO: Implement action: "Scan the QR code using your WeChat app"
-                # DR.get(qur.decode())
+                # self.dr.get(qur.decode())
                 # TODO: Implement result: "The WeChat account belonging to TA China shows up"
-                # self.assertEqual(DR.current_url(), 'who even knows')
-                # DR.back()
+                # self.assertEqual(self.dr.current_url(), 'who even knows')
+                # self.dr.back()
                 qur.close()
 
                 # Click on the Sina Weibo image link
                 footer.weibo().click()
                 # A new tab/window opens to TA's Sina Weibo account (login to Sina Weibo required)
-                DR.switch_to_window(1)
+                self.dr.switch_to_window(1)
                 # TODO: Maybe set up a weibo account and log in properly?
-                self.assertRegex(DR.current_url(), 'weibo.com/(login.php|.+?seeaustralia)',
+                self.assertRegex(self.dr.current_url(), 'weibo.com/(login.php|.+?seeaustralia)',
                                  'The link should go to the AUS.com Weibo page, '
                                  'or it may redirect to a login page.')
-                DR.close_window()
+                self.dr.close_window()
             else:
                 # TODO: Handle the global footer social media links
                 self.skipTest("Haven't done global social links yet.")
         except Exception as ex:
             self.add_error(ex)
-            DR.close_other_windows()
+            self.dr.close_other_windows()
 
         # Navigate to the Aquatics page
         try:
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 CP.NavMenu.ExploreAndPlan().open().aquatic().click()
             else:
                 CP.NavMenu.ThingsToDo().open().aquatic().click()
@@ -145,7 +141,7 @@ class AUS(unittest.TestCase):
         pan.once_off_start_video()
         # Open the Menu, might not need to do this if you are fast enough
         # pan.open_video_menu()
-        if DR.CN_MODE:
+        if self.globs.cn_mode:
             # Click the WeChat icon
             pan.wechat()
             # A QR code appears
@@ -157,7 +153,7 @@ class AUS(unittest.TestCase):
             # Click the Weibo icon
             pan.weibo()
             # A window should pop up linking to service.weibo.com
-            DR.switch_to_window(1)
+            self.dr.switch_to_window(1)
             # It should contain the description of, images pulled from,
             # and a minified link to, the video
             weibo = CP.WeiboShare()
@@ -166,8 +162,8 @@ class AUS(unittest.TestCase):
             # The page image should be there, but the image filenames are all parameterized,
             # there's no way to confirm that it's the right image other than looking at it.
             # self.assertEqual(img, weibo.page_image(), "The video preview image should be listed.")
-            DR.get(weibo.miniurl())
-            self.assertRegex(DR.current_url(), '(passport.)?weibo.com/(login.php)?',
+            self.dr.get(weibo.miniurl())
+            self.assertRegex(self.dr.current_url(), '(passport.)?weibo.com/(login.php)?',
                              "The Weibo mini-url should resolve to some Weibo page url.")
         else:
             # TODO: Do the global 360 share bit.
@@ -175,7 +171,7 @@ class AUS(unittest.TestCase):
 
     def test_02_kdp(self):
         """Tests the KDP Partner Search functionality."""
-        if not DR.CN_MODE:
+        if not self.globs.cn_mode:
             self.skipTest('Only China has the KDP thing.')
         # Navigate to the KDP page
         try:
@@ -217,26 +213,26 @@ class AUS(unittest.TestCase):
             # Click the Australia.com logo in the header
             CP.NavMenu().logo().click()
             # Should link to homepage
-            self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
+            self.assertEqual(self.dr.current_url(), self.globs.base_url + self.globs.locale)
 
             # Click the Holiday In Australia link in the header
             CP.NavMenu().holiday().click()
             # Should link to homepage.
-            self.assertEqual(DR.current_url(), DR.BASE_URL + DR.LOCALE)
+            self.assertEqual(self.dr.current_url(), self.globs.base_url + self.globs.locale)
 
             # Click the Business Events link in the header
             CP.NavMenu().businessevents().click()
             # Should link to businessevents.australia.com/cn in new tab
-            DR.switch_to_window(1)
-            self.assertIn('businessevents.australia.c', DR.current_url())
-            DR.close_window()
+            self.dr.switch_to_window(1)
+            self.assertIn('businessevents.australia.c', self.dr.current_url())
+            self.dr.close_window()
         except Exception as ex:
             self.add_error(ex)
-            DR.close_other_windows()
+            self.dr.close_other_windows()
 
         try:
             # Open the Explore section in the header
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 eap = CP.NavMenu.ExploreAndPlan().open()
                 # Verify existence of the three Explore+Planning sections.
                 eap.aquatic()
@@ -254,7 +250,7 @@ class AUS(unittest.TestCase):
         ptg.sydney()
         ptg.great_barrier_reef()
         # China does not have the AUS.com map.
-        if not DR.CN_MODE:
+        if not self.globs.cn_mode:
             ptg.explore()
 
         # Click the States section switcher
@@ -266,7 +262,7 @@ class AUS(unittest.TestCase):
         """Tests the My Dream Trip functionality."""
         # Go to the Australia's Animals page
         try:
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 CP.NavMenu.PracticalInformation().open().australias_animals().click()
             else:
                 CP.NavMenu.PlanYourTrip().open().facts().click()
@@ -279,8 +275,8 @@ class AUS(unittest.TestCase):
             favcount = CP.HeaderHeartIcon().favourites_count() + 1
             CP.ShareThis().add_to_favourites()
             # Wait for the animation to finish and for confirmation of incremention
-            DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
-                          'Heart Icon count == favcount.')
+            self.dr.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+                               'Heart Icon count == favcount.')
             # Do that again with the Regional Cities page.
             try:
                 CP.NavMenu.PlacesToGo().open().regional_cities().click()
@@ -288,12 +284,12 @@ class AUS(unittest.TestCase):
                 self.add_error(ex)
                 CP.BackupHrefs.regional_cities()
             # Do this again, because the heart count doesn't load at the same time as the page.
-            DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
-                          'Heart Icon count == favcount.')
+            self.dr.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+                               'Heart Icon count == favcount.')
             favcount = CP.HeaderHeartIcon().favourites_count() + 1
             CP.ShareThis().add_to_favourites()
-            DR.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
-                          'Heart Icon count == favcount.')
+            self.dr.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+                               'Heart Icon count == favcount.')
         except Exception as ex:
             self.add_error(ex)
 
@@ -306,7 +302,7 @@ class AUS(unittest.TestCase):
         oldfavs.remove(rem.get_title())
         rem.close()
         # Confirm it was removed
-        DR.refresh()
+        self.dr.refresh()
         favs = CP.MySalesTools().get_favourites()
         self.assertSetEqual(oldfavs, {f.get_title() for f in favs})
 
@@ -314,7 +310,7 @@ class AUS(unittest.TestCase):
         """Tests various things pertaining to Itinerary pages."""
         # Navigate to Whitsundays Sailing
         try:
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 CP.NavMenu.ExploreAndPlan().open().coastal_journeys().click()
                 CP.WhatYouCanSeeMosaic()['圣灵群岛航海游'].go()
             else:
@@ -327,12 +323,12 @@ class AUS(unittest.TestCase):
         # Click a few of the Itinerary Day links
         iti = CP.ItineraryDay()
         # Get the scroll position of that bit.
-        scr = DR.current_scroll()
+        scr = self.dr.current_scroll()
         iti.random_link()
         # Confirm scrolling has taken place?
-        self.assertNotEqual(scr, DR.current_scroll())
+        self.assertNotEqual(scr, self.dr.current_scroll())
         iti.back_to_top()
-        self.assertEqual(0, DR.current_scroll())
+        self.assertEqual(0, self.dr.current_scroll())
 
     def test_06_search(self):
         """Tests the Site and Header Search functionalities."""
@@ -357,7 +353,7 @@ class AUS(unittest.TestCase):
         """Tests the What You-Can-See-Mosaic-related functionality."""
         # Navigate to the Three Days Itineraries page
         try:
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 CP.NavMenu.ExploreAndPlan().open().city_journeys().click()
             else:
                 CP.NavMenu.ThingsToDo().open().city_journeys().click()
@@ -368,10 +364,10 @@ class AUS(unittest.TestCase):
         try:
             CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
             # Some of them go to external sites which open in a new tab.
-            DR.close_other_windows()
+            self.dr.close_other_windows()
         except Exception as ex:
             self.add_error(ex)
-            DR.close_other_windows()
+            self.dr.close_other_windows()
 
         # Go to the Great Barrier Reef page
         try:
@@ -386,7 +382,7 @@ class AUS(unittest.TestCase):
         """Tests the Special Offers page"""
         # Navigate to the Special Offers page
         try:
-            if DR.CN_MODE:
+            if self.globs.cn_mode:
                 CP.NavMenu.ExploreAndPlan().open().specialoffers().click()
             else:
                 CP.NavMenu.ThingsToDo().open().campaigns().click()
@@ -413,7 +409,7 @@ class AUS(unittest.TestCase):
     def test_10_banner_video(self):
         """Tests the Hero Banner With Video."""
         # Navigate to the Australia's Animals page
-        if DR.CN_MODE:
+        if self.globs.cn_mode:
             CP.NavMenu.PracticalInformation().open().australias_animals().click()
         else:
             CP.NavMenu.PlanYourTrip().open().facts().click()
@@ -446,8 +442,8 @@ class AUS(unittest.TestCase):
         for card in cards:
             card.add_to_favourites()
         # Confirm favourites incremented
-        DR.wait_until(lambda: count + 3 == CP.HeaderHeartIcon().favourites_count(),
-                      'count + 3 equals favourites.count.')
+        self.dr.wait_until(lambda: count + 3 == CP.HeaderHeartIcon().favourites_count(),
+                           'count + 3 equals favourites.count.')
 
 if __name__ == '__main__':
     unittest.main()

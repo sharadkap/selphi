@@ -24,12 +24,21 @@ one being dragged to the second. Note, Tuples can contain Lists too."""
 
 from collections import OrderedDict
 
+# Editing this is easier than using the command line.
+ENVS = ['https://poc-pub-elb-asp.tour-aus.aws.haylix.net',
+        'https://poc-pub-elb-asp.tour-aus.aws.haylix.net',
+        'https://poc-pub-elb-asp.tour-aus.aws.haylix.net',
+        'https://poc-pub-elb-asp.tour-aus.aws.haylix.net']
+
+AUTH = ['dev', 'bclvOP']
+
 # Which users to log in with when testing through site.
-USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
-'sg': 'sgprodyyw', 'gb': 'gbpocuytm', 'us': 'usprokcmi', \
-'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
+USERS = {'ca': 'cadevZXYI', 'in': 'indevKWFR', 'my': 'mydevVOXU', \
+'sg': 'sgdevTDBZ', 'gb': 'gbpocubdp', 'us': 'usdevMYIQ', \
+'ehk': 'hkdevXEOS', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
 'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
 'cn': 'cnwwwAYYC'}
+# Backup
 # USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
 # 'sg': 'sgprodyyw', 'gb': 'gbpoccgvn''gbwwwvjvz', 'us': 'usprokcmi', \
 # 'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
@@ -46,10 +55,12 @@ LANGS_D = {'ca': 'en_ca/ca_en', 'in': 'en_in/in_en', 'my': 'en_my/my_en', \
 'cn': 'zh_cn'}
 
 # List of locale codes.
-LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), 'sg': ('en-sg', 'sg_en'), \
-    'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), \
-'ehk': ('en-hk', 'hk_en'), 'zhk': ('zh-hk', 'hk_zh'), 'id': ('id-id', 'id_id'), 'jp': ('ja-jp', 'jp_ja'), 'kr': ('ko-kr', 'kr_ko'), \
-'br': ('pt-br', 'br_pt'), 'cl': ('es-cl', 'cl_es'), 'de': ('de-de', 'de_de'), 'fr': ('fr-fr', 'fr_fr'), 'it': ('it-it', 'it_it'), \
+LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), \
+    'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), \
+'ehk': ('en-hk', 'hk_en'), 'zhk': ('zh-hk', 'hk_zh'), 'id': ('id-id', 'id_id'), \
+    'jp': ('ja-jp', 'jp_ja'), 'kr': ('ko-kr', 'kr_ko'), \
+'br': ('pt-br', 'br_pt'), 'cl': ('es-cl', 'cl_es'), 'de': ('de-de', 'de_de'), \
+    'fr': ('fr-fr', 'fr_fr'), 'it': ('it-it', 'it_it'), \
 'cn': ('zh-cn', 'cn_zh')}
 
 # List of direct module names
@@ -71,6 +82,18 @@ MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod
         ('golf', ('res6', 'niche_golf_ali')), ('lodges', ('res15', 'niche_lodges_ali')), \
         ('ra', ('res14', 'niche_ra_ali')), ('walks', ('res17', 'niche_walks_ali')), \
         ('wine', ('res18', 'niche_wine_ali')), ('aquatic', ('res19', 'niche_coastal_ali'))])
+
+# US POC
+# MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res7', 'core_mod2_7')), \
+#         ('3', ('res8', 'core_mod3_7')), \
+#     ('act', ('res3', 'sto_act_0407')), ('nsw', ('res11', 'sto_nsw_ali')), \
+#         ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res13', 'sto_qld_ali')), \
+#         ('sa', ('res14', 'sto_sa_ali')), ('tas', ('res15', 'sto_tas_ali0321')), \
+#         ('vic', ('res16', 'sto_vic_ali')), ('wa', ('res17', 'sto_wa_ali')), \
+#     ('aboriginal', ('res1', 'Aboriginal_Exp_HO_ali')), \
+#         ('golf', ('res4', 'niche_golf_ali')), ('lodges', ('res6', 'niche_lodges_ali')), \
+#         ('ra', ('res9', 'niche_ra_ali')), ('walks', ('res5', 'niche_walks_ali')), \
+#         ('wine', ('res10', 'niche_wine_ali')), ('aquatic', ('res2', 'niche_coastal_ali'))])
 # MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
 #         ('3', ('core_3', 'core_mod3_ali')), \
 #     ('act', ('_1', 'sto_act_0407')), ('nsw', ('_20', 'sto_nsw_ali')), \
@@ -78,9 +101,9 @@ MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod
 #         ('sa', ('sa', 'sto_sa_ali')), ('tas', ('_18', 'sto_tas_ali0321')), \
 #         ('vic', ('_17', 'sto_vic_ali')), ('wa', ('wa', 'sto_wa_ali')), \
 #     ('aboriginal', ('niche_aboriginal', 'Aboriginal_Exp_HO_ali')), \
-#         ('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
-#         ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
-#         ('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
+# +5 ('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
+# +5 ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
+#+7('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
 
 # Formulation of global module names.
 M = 'mandatory-modules/core-module'

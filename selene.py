@@ -21,9 +21,9 @@ def main():
     """Read the arguments, run the tests."""
     args = read_properties()
     # Set the settings from the given arguments
-    if args.username:
-        args.userid = args.username[-4:]    # The mail ID is the last four characters.
-        args.email = args.email.format(args.userid)
+    if 'username' in args.keys():
+        args['userid'] = args['username'][-4:]    # The mail ID is the last four characters.
+        args['email'] = args['email'].format(args['userid'])
 
     # Get the output settings, the chosen test methods from the ASP suite.
     outdir = os.path.split(__file__)[0]
@@ -32,9 +32,8 @@ def main():
     pool = Pool(cpu_count() * 2)  # It's mostly waiting; we can afford to overload the cores, right?
     # KeyboardInterrupts don't actually break out of blocking-waits, so do this the hard way.
     try:
-        asy = pool.map_async(
-            launch_test, [(loc, bro, outdir, args.copy())
-                          for loc in args.locales for bro in args.browser])
+        asy = pool.map_async(launch_test, [(loc, bro, outdir, args.copy())
+                                          for loc in args['locales'] for bro in args['browsers']])
         while True:
             if asy.ready():
                 return
@@ -44,27 +43,32 @@ def main():
         pool.terminate()
         raise
 
+def lunch_test(args) -> None:
+    """Dummy method."""
+    print(args)
+
 def launch_test(args) -> None:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
     # Instantiate the test suites, and give them their process-unique globals
-    if globs.site == 'ASP':
-        names = [ASP(aspnames[x], globs) for x in globs.tests or aspnames]
-    elif globs.site == 'AUS':
-        names = [AUS(ausnames[x], globs) for x in globs.tests or ausnames]
-
+    if globs['site'] == 'ASP':
+        print(5, ASP(aspnames['FTR'], globs), 7)
+        names = [ASP(aspnames[x], globs) for x in globs['tests'] or aspnames]
+    elif globs['site'] == 'AUS':
+        names = [AUS(ausnames[x], globs) for x in globs['tests'] or ausnames]
     # Do a bunch of method overrides to get it to work properly.
     perform_hacks()
     # Set up the run settings.
-    DR.BROWSER_TYPE = DR.BROWSERS[browser]
+    globs['locale'] = locale
+    globs['browser'] = browser
     # If China Mode, do it in China, otherwise set the locale
-    if locale == globs.cn_locale:
-        globs.cn_mode = True
-        globs.base_url = globs.chenvironment
+    if locale == globs['cn_locale']:
+        globs['cn_mode'] = True
+        globs['base_url'] = globs['chenvironment']
     else:
         # If a url was given, make that the default.
-        globs.base_url = globs.environment
+        globs['base_url'] = globs['environment']
 
     # Create the test runner, choose the output path: right next to the test script file.
     buf = io.StringIO()
@@ -95,8 +99,8 @@ def perform_hacks():
         """Overwrite the WebElement.click method to make sure that it isn't behind the nav menu."""
         try:
             oldclick(*args, **kwargs)
-        except MOD.WebDriverException:
-            DR.Drivery.scroll_element(args[0])
+        except MOD.WebDriverException:  # args[0] will be the 'self' argument, so, the WebElement.
+            args[0].parent().execute_script(DR.SCROLL_SCRIPT, args[0])
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
 
@@ -137,26 +141,16 @@ def perform_hacks():
         return tap.formatter.format_as_diagnostics(lines)
     tap.formatter.format_exception = newf
 
-class Nict(dict):
-    """Makes the dict a little more namespacey."""
-    def __setattr__(self, name, value):
-        self['name'] = value
-    def __getattr__(self, name):
-        try:
-            return self['name']
-        except KeyError:
-            return None
-    def copy(self):
-        return Nict(dict.copy(self))
-
-def read_properties() -> Nict:
+def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""
     conf = configparser.ConfigParser()
-    conf.read(filenames='test.properties')
-    result = Nict(conf['Main Section'])
-    result.locales = result.locales.split(',')
-    result.browser = result.browsers.split(',')
-    result.tests = result.tests.split(',') if result.tests else []
+    conf.read('test.properties')
+    result = dict(conf['Main Section'])
+    result['auth'] = result['auth'].split(',') if result['auth'] else []
+    result['locales'] = result['locales'].split(',')
+    result['browsers'] = result['browsers'].split(',')
+    result['tests'] = result['tests'].split(',') if result['tests'] else []
+    result['asp_from_emails'] = result['asp_from_emails'].split(',')
     return result
 
 if __name__ == '__main__':

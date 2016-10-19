@@ -5,7 +5,7 @@ import quopri
 import imaplib
 from types import FunctionType
 from typing import List, Set, Union, Any
-from selenium.webdriver import Chrome, Edge, Firefox, Ie, Opera, Safari
+from selenium.webdriver import Chrome, Edge, Firefox, Ie, Opera, Safari, FirefoxProfile
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -13,7 +13,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import bs4
-from selene import Nict
 
     ###Some Magic Numbers, default values.###
 # """How long, in seconds, to search the DOM before declaring an Element Not Found."""
@@ -60,12 +59,19 @@ def find_error_improver(func: FunctionType):
 class Drivery:
     """Because Module-Level-State is apparently a terrible idea, have a class singleton.
     Wraps a WebDriver instance, and does a bunch of other useful things."""
-    def __init__(self, globs: Nict, browser: str='chrome'):
-        # To aid in checking for Page Loaded Status, note the last link clicked.
+    def __init__(self, globs: dict):
+        # To aid in checking for Page Loaded Status, track the last link clicked.
         self.last_link = ''
-        self.base_url = globs.base_url
-        self.locale = globs.locale
-        self.driver = BROWSERS[browser]()
+        self.base_url = globs['base_url']
+        self.auth = globs['auth']
+        self.locale = globs['locale']
+        # A workaround. Firefox gets suspicious when you hide a password in the url.
+        if globs['browser'] == 'firefox':
+            p = FirefoxProfile()
+            p.set_preference('network.http.phishy-userpass-length', 255)
+            self.driver = Firefox(p)
+        else:
+            self.driver = BROWSERS[globs['browser']]()
         self.driver.implicitly_wait(LONG_WAIT)
         self.driver.maximize_window()
 
@@ -77,11 +83,11 @@ class Drivery:
 
     def splash_page(self) -> None:
         """Navigates to the Splash Page."""
-        self.driver.get(self.base_url + '/splash.html')
+        self.get(self.base_url + '/splash.html')
 
     def open_home_page(self) -> None:
         """Opens the Welcome Page. Shortcut method."""
-        self.driver.get(self.base_url + self.locale)
+        self.get(self.base_url + self.locale)
 
     def current_url(self) -> str:
         """Kind of a technicality. Returns the current url."""
@@ -96,8 +102,14 @@ class Drivery:
         self.driver.refresh()
 
     def get(self, url: str) -> None:
-        """The Rules."""
+        """For whatever reason, there is no Basic Authentication that works across all browsers.
+        This has workarounds for each. Ironically, only IE supports the correct method."""
+        isie = isinstance(self.driver, Ie)
+        if not isie and self.auth:
+            url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*self.auth), url)
         self.driver.get(url)
+        if isie and self.auth:
+            self.driver.switch_to.alert.authenticate(*self.auth)
 
     def close_window(self) -> None:
         """Closes the currently-focused window or tab. Try not to use this when only one is left."""
@@ -254,7 +266,7 @@ class Email:
     """Handler for the email checks. Due to languages, there's really no way to tell
     which email is which, so to ensure schedule synchronicity, make sure
     get_new_messages is called every time an email is expected."""
-    def __init__(self, globs: Nict, dr: Drivery, userid: str):
+    def __init__(self, globs: dict, dr: Drivery, userid: str):
         self.email = globs.email.format(userid)
         self.cn_mode, self.imapsvr, self.usern, self.passw, self.froms = (
             globs.cn_mode, globs.test_email_imap_server, globs.test_email_username,
@@ -310,7 +322,7 @@ class Email:
 
     class LocalizedEmail():    # Oh, whatever. pylint: disable-msg=R0903
         """Superclass for the various emails."""
-        def __init__(self, globs: Nict, dr: Drivery, userid: str):
+        def __init__(self, globs: dict, dr: Drivery, userid: str):
             self.email = bs4.BeautifulSoup(
                 Email(globs, dr, userid).get_new_messages()[0], 'html.parser')
             self.userid = userid

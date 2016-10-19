@@ -1,12 +1,14 @@
 """Automated testing of the Modules"""
 import os
+import re
 import time
+import signal
 from typing import Union, List
 import argparse
 from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge
+from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge, FirefoxProfile
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
@@ -14,7 +16,7 @@ from selenium.webdriver.remote.webdriver import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from modulescripts import LANGS, LANGS_D, MODULES, MODULES_D, MODULES_C, SCRIPTS, USERS
+from modulescripts import LANGS, LANGS_D, MODULES, MODULES_D, MODULES_C, SCRIPTS, USERS, ENVS, AUTH
 
 RESET_MODULE = 'cpCmndGotoSlide=0'
 MINIWAIT = 0.5
@@ -37,8 +39,8 @@ def parseargs():
     global MOD_STEM_C, MOD_STEM_C_D, SCREENSHOT_DIR, RESULTS_FILE
     IMPLICITLY_WAIT = ARGS.wait[0]
     TIME_FORMAT = ' '.join(ARGS.timeformat)
-    MOD_STEM_D = '{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ARGS.environment[0])
-    MOD_STEM = '{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ARGS.environment[0])
+    MOD_STEM_D = '{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ENVS[0])
+    MOD_STEM = '{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ENVS[1])
     # MOD_STEM_C = ('{0}/content/sites/asp-{{0}}/en/assignments.resource.html/content/sites/asp-{{0}}'
     # '/resources/en/{{1}}'.format(ARGS.chenvironment[0]))
     # MOD_STEM_C_D = ('{0}/content/sites/asp-{{0}}/resources/en/{{1}}/assets/asset/{{3}}_{{2}}.zip/ou'
@@ -46,9 +48,9 @@ def parseargs():
     SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
     RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
     MOD_STEM_C_D = ('{0}/content/sites/asp/resources/{{0}}/{{1}}/assets/asset/{{3}}_{{2}}.zip/ou'
-    'tput/index_SCORM.html'.format(ARGS.chenvironment[0]))
+    'tput/index_SCORM.html'.format(ENVS[2]))
     MOD_STEM_C = ('{0}/content/sites/asp/{{0}}/assignments.resource.html/content/sites/asp'
-    '/resources/{{0}}/{{1}}'.format(ARGS.chenvironment[0]))
+    '/resources/{{0}}/{{1}}'.format(ENVS[3]))
 
 def main() -> None:
     """Run this if the modules suite is being executed as itself."""
@@ -58,15 +60,15 @@ def main() -> None:
                 'safari': Safari, 'opera': Opera, 'edge': Edge}
     # pylint: disable-msg=C0103
     PARSER = argparse.ArgumentParser()
-    PARSER.add_argument('-e', '--environment', help='Which environment to test in. Format: '
-                        'the website domain and protocol code (https thing). If the server requires'
-                        ' authentication, include it like "https://username:password@server.domain.'
-                        'com". Default is %(default)s.', nargs=1, type=str,
-                        default=['https://prod.aussiespecialist.com'], metavar='')
-    PARSER.add_argument('-ce', '--chenvironment', help='Which environment to test in if using '
-                        'China. Format: the website domain and protocol code (https thing). '
-                        'Default is %(default)s.', nargs=1, type=str,
-                        default=['https://www.aussiespecialist.cn'], metavar='')
+    # PARSER.add_argument('-e', '--environment', help='Which environment to test in. Format: '
+    #                     'the website domain and protocol code (https thing). If the server requires'
+    #                     ' authentication, include it like "https://username:password@server.domain.'
+    #                     'com". Default is %(default)s.', nargs=1, type=str,
+    #                     default=['https://prod.aussiespecialist.com'], metavar='')
+    # PARSER.add_argument('-ce', '--chenvironment', help='Which environment to test in if using '
+    #                     'China. Format: the website domain and protocol code (https thing). '
+    #                     'Default is %(default)s.', nargs=1, type=str,
+    #                     default=['https://www.aussiespecialist.cn'], metavar='')
     PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of '
                         '[%(choices)s]. Default is all.', nargs='+', type=str,
                         choices=MODULES.keys(), metavar='', default=list(MODULES.keys()))
@@ -102,7 +104,12 @@ def restart_driver(br):
     """Restarts the DRIVER."""
     # Global not defined at module level. Well, whatever. pylint: disable-msg=W0601
     global DRIVER
-    DRIVER = br()
+    if br == Firefox:   # And, a workaround for Firefox's distrust of basic authentication.
+        p = FirefoxProfile()
+        p.set_preference('network.http.phishy-userpass-length', 255)
+        DRIVER = Firefox(p)
+    else:
+        DRIVER = br()
     DRIVER.implicitly_wait(IMPLICITLY_WAIT)
     DRIVER.maximize_window()
 
@@ -124,7 +131,8 @@ def new_drag_drop(source: str, target: str) -> None:
     # IE WHY.
     source, target = getid(source), getid(target)
     DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return x.getBoundingClientRect'
-                          '().top;}),wp=window.top;wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2)',
+                          '().top;}),wp=window.top;wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 +'
+                          ' wp.$("iframe[src*=\'/content/\']").offset().top)',
                           source, target)
     DRIVER.execute(Command.MOVE_TO, {'element': source.id})
     DRIVER.execute(Command.MOUSE_DOWN, {})
@@ -155,7 +163,8 @@ def click_surely(ele: WebElement) -> None:
     If that doesn't work, manual override, it was probably just behind a blank textbox."""
     try:
         DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
-                              '-wp.innerHeight/2)', ele)
+                              '-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']").offset().top)'
+                              , ele)
         ele.click()
     except WebDriverException:
         DRIVER.execute(Command.MOVE_TO, {'element': ele.id})
@@ -184,8 +193,18 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
     langs = LANGS
     output = '\n"START: {0}", {1}\n'.format(get_time(), ','.join(modfilter).upper())   # header row.
     pool = Pool(cpu_count() * 2)
-    results = pool.map(do_locale, [(x, langs, ctem, stem, mods, modfilter, b,
-                                    BROWSERS[b], ARGS) for x in langfilter for b in brows])
+    try:
+        asy = pool.map_async(do_locale, [(x, langs, ctem, stem, mods, modfilter, b,
+                                        BROWSERS[b], ARGS) for x in langfilter for b in brows])
+        while True:
+            if asy.ready():
+                break
+            time.sleep(1)   # Alright! Busy-Waiting! That can't possibly go awry!
+
+    except KeyboardInterrupt:
+        pool.terminate()
+        raise
+    results = asy.get()
     output += '\n'.join(results)    # Each locale's row.
     output += '\n"FINISH: {0}"\n\n'.format(get_time())    # Footer row.
 
@@ -202,6 +221,7 @@ def do_locale(args):
     """The target of a process, go do all the modules in a locale."""
     # Global can't be defined at module level. Processes are wierd. pylint: disable-msg=W0601
     global ARGS
+    signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     # Unpack arguments
     lang, langs, ctem, stem, mods, modfilter, brname, browser, ARGS = args
     parseargs()
@@ -215,8 +235,17 @@ def do_locale(args):
         try:
             # Try to do the module
             if scorm:    # Scorm den.
-                DRIVER.get(ctem.format(langs[lang][0].replace('-','_'), MODULES_C[mod][0],
-                           MODULES_C[mod][1], langs[lang][1]))
+                url = ctem.format(langs[lang][0].replace('-','_'),
+                                  MODULES_C[mod][0], MODULES_C[mod][1], langs[lang][1])
+                isie = isinstance(DRIVER, Ie)
+                if not isie and AUTH:
+                    url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*AUTH), url)
+                DRIVER.get(url)
+                if isie and AUTH:
+                    try:
+                        DRIVER.switch_to.alert.authenticate(*AUTH)
+                    except WebDriverException:
+                        pass    # If the alert is not present, skip it.
                 # DRIVER.get(ctem.format(langs[lang].replace('_', '-''), MODULES_C[mod][0],
                 #                        MODULES_C[mod][1], langs[lang]))
             else:
@@ -254,13 +283,15 @@ def log_in_first(lang: str, cnmode: bool=False) -> None:
             print('The Direct View error message didn\'t appear, guess they fixed it?')
     if not ARGS.direct:
         DRIVER.implicitly_wait(MINIWAIT)
-        if len(DRIVER.find_elements_by_id('link-logout')) == 0:
+        lo = DRIVER.find_elements_by_id('link-logout')
+        if len(lo) == 0 or not lo[0].is_displayed():
             try:
                 DRIVER.find_element_by_css_selector('.link-signin-text').click()
                 DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
                 DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
                 DRIVER.find_element_by_id('usersignin').click()
             except NoSuchElementException:
+                DRIVER.implicitly_wait(IMPLICITLY_WAIT) # Just in case the other one gets missed.
                 raise NoSuchElementException(
                     'Login failed, something was missing from the login panel.') from None
         DRIVER.implicitly_wait(IMPLICITLY_WAIT)

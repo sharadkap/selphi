@@ -8,15 +8,16 @@ import argparse
 from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver import Chrome, Firefox, Ie, Safari, Opera, Edge, FirefoxProfile
-from selenium.webdriver.remote.command import Command
+from selenium.webdriver import (Chrome, Firefox, Ie, Safari, Opera, Edge,
+                                FirefoxProfile, ActionChains)
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webdriver import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from modulescripts import LANGS, LANGS_D, MODULES, MODULES_D, MODULES_C, SCRIPTS, USERS, ENVS, AUTH
+from modulescripts import (LANGS, MODULES, SCRIPTS, USERS, ENVS,
+                           AUTH, TIMEFORMAT)
 
 RESET_MODULE = 'cpCmndGotoSlide=0'
 MINIWAIT = 0.5
@@ -35,22 +36,12 @@ def do_module(driver: WebDriver, module: str) -> None:
 def parseargs():
     """Do this bit separately so it can be copied into the new processes."""
     # pylint: disable-msg=W0601
-    global IMPLICITLY_WAIT, TIME_FORMAT, MOD_STEM_D, MOD_STEM
-    global MOD_STEM_C, MOD_STEM_C_D, SCREENSHOT_DIR, RESULTS_FILE
+    global IMPLICITLY_WAIT, MOD_STEM, SCREENSHOT_DIR, RESULTS_FILE
     IMPLICITLY_WAIT = ARGS.wait[0]
-    TIME_FORMAT = ' '.join(ARGS.timeformat)
-    MOD_STEM_D = '{0}/content/asp/captivate/{{0}}_{{1}}/index.html'.format(ENVS[0])
-    MOD_STEM = '{0}/{{0}}/secure/training/training-summary/{{1}}.html'.format(ENVS[1])
-    # MOD_STEM_C = ('{0}/content/sites/asp-{{0}}/en/assignments.resource.html/content/sites/asp-{{0}}'
-    # '/resources/en/{{1}}'.format(ARGS.chenvironment[0]))
-    # MOD_STEM_C_D = ('{0}/content/sites/asp-{{0}}/resources/en/{{1}}/assets/asset/{{3}}_{{2}}.zip/ou'
-    #                 'tput/index_SCORM.html'.format(ARGS.chenvironment[0]))
     SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
     RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
-    MOD_STEM_C_D = ('{0}/content/sites/asp/resources/{{0}}/{{1}}/assets/asset/{{3}}_{{2}}.zip/ou'
-    'tput/index_SCORM.html'.format(ENVS[2]))
-    MOD_STEM_C = ('{0}/content/sites/asp/{{0}}/assignments.resource.html/content/sites/asp'
-    '/resources/{{0}}/{{1}}'.format(ENVS[3]))
+    MOD_STEM = ('{0}/content/sites/asp/{{0}}/assignments.resource.html/content/sites/asp'
+                '/resources/{{0}}/{{1}}'.format(ENVS[3]))
 
 def main() -> None:
     """Run this if the modules suite is being executed as itself."""
@@ -60,15 +51,6 @@ def main() -> None:
                 'safari': Safari, 'opera': Opera, 'edge': Edge}
     # pylint: disable-msg=C0103
     PARSER = argparse.ArgumentParser()
-    # PARSER.add_argument('-e', '--environment', help='Which environment to test in. Format: '
-    #                     'the website domain and protocol code (https thing). If the server requires'
-    #                     ' authentication, include it like "https://username:password@server.domain.'
-    #                     'com". Default is %(default)s.', nargs=1, type=str,
-    #                     default=['https://prod.aussiespecialist.com'], metavar='')
-    # PARSER.add_argument('-ce', '--chenvironment', help='Which environment to test in if using '
-    #                     'China. Format: the website domain and protocol code (https thing). '
-    #                     'Default is %(default)s.', nargs=1, type=str,
-    #                     default=['https://www.aussiespecialist.cn'], metavar='')
     PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of '
                         '[%(choices)s]. Default is all.', nargs='+', type=str,
                         choices=MODULES.keys(), metavar='', default=list(MODULES.keys()))
@@ -78,16 +60,8 @@ def main() -> None:
     PARSER.add_argument('-b', '--browsers', help='Which browser to use. One or more of '
                         '[%(choices)s]. Default is %(default)s', nargs='+', default=['chrome'],
                         choices=BROWSERS.keys(), metavar='')
-    PARSER.add_argument('-d', '--direct', help=os.linesep+'Access the modules Directly.',
-                        action='store_true')
     PARSER.add_argument('-w', '--wait', help='Wait this many seconds before deciding an element is '
                         'missing. Default is %(default)s', default=[20], type=int, nargs=1)
-    PARSER.add_argument('-tf', '--timeformat', help='The format to use for writing timestamps. '
-                        'See https://docs.python.org/3/library/time.html#time.strftime for full '
-                        'formatting info. Default is %(default)s', default=['%Y/%m/%d %H:%M'],
-                        nargs='+', type=str)
-    PARSER.add_argument('-s', '--scorm', help='Force SCORM MODE. Causes the url scheme to use '
-                        'the complex scform, even for non China locales.', action='store_true')
     ARGS = PARSER.parse_args()
     parseargs()
     os.makedirs(SCREENSHOT_DIR, exist_ok=True)
@@ -117,7 +91,7 @@ def new_drag_drop(source: str, target: str) -> None:
     """Like the ActionChains drag and drop,
     but updates the mouse position just after mousedown."""
     # Command.MOVE_TO, desite taking a css id string, does not actually perform a DOM lookup.
-    def getid(loc):
+    def getid(loc) -> WebElement:
         """Interpret whether input is a locator or a series or alternate locators."""
         if isinstance(loc, str):
             try:
@@ -128,17 +102,14 @@ def new_drag_drop(source: str, target: str) -> None:
             return pick_from_possibilities(loc)
         else:
             raise TypeError('You broke it. String, or List only.')
-    # IE WHY.
-    source, target = getid(source), getid(target)
-    DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return x.getBoundingClientRect'
-                          '().top;}),wp=window.top;wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 +'
-                          ' wp.$("iframe[src*=\'/content/\']").offset().top)',
-                          source, target)
-    DRIVER.execute(Command.MOVE_TO, {'element': source.id})
-    DRIVER.execute(Command.MOUSE_DOWN, {})
-    DRIVER.execute(Command.MOVE_TO, {'xoffset': int(1), 'yoffset': int(1)})
-    DRIVER.execute(Command.MOVE_TO, {'element': target.id})
-    DRIVER.execute(Command.MOUSE_UP, {})
+    # IE WHY.    FIREFOX, ET TU?
+    source, fource, target = getid(source), getid('re-{}c'.format(source)), getid(target)
+    if not isinstance(DRIVER, Firefox):
+        DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return x.getBoundingClientRect'
+                              '().top;}),wp=window.top;wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 +'
+                              ' wp.$("iframe[src*=\'/content/\']").offset().top)',
+                              source, target)
+    ActionChains(DRIVER).click_and_hold(source).move_to_element(fource).release(target).perform()
     time.sleep(MINIWAIT)
 
 def domo(locator: Union[str, tuple, list]) -> None:
@@ -162,13 +133,13 @@ def click_surely(ele: WebElement) -> None:
     """When clicking on an element, move it onscreen first. BECAUSE IE.
     If that doesn't work, manual override, it was probably just behind a blank textbox."""
     try:
-        DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
-                              '-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']").offset().top)'
-                              , ele)
+        if not isinstance(DRIVER, Firefox):
+            DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
+                                  '-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']").offset().top)'
+                                  , ele)
         ele.click()
     except WebDriverException:
-        DRIVER.execute(Command.MOVE_TO, {'element': ele.id})
-        DRIVER.execute(Command.CLICK)
+        ActionChains(DRIVER).move_to_element(ele).click().perform()
 
 def pick_from_possibilities(locator: str) -> WebElement:
     """Deal with alternate ids. Use a css selector to get any proposed elements."""
@@ -181,26 +152,15 @@ def pick_from_possibilities(locator: str) -> WebElement:
 def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows: LIST_STR) -> None:
     """Run the selected set of modules and locales, logging results,
     and saving a screenshot in case of failure.    By default, will run all of them."""
-    if ARGS.direct:
-        ctem = MOD_STEM_C_D
-        stem = MOD_STEM_D
-        mods = MODULES_D
-        # langs = LANGS_D
-    else:
-        ctem = MOD_STEM_C
-        stem = MOD_STEM
-        mods = MODULES
-    langs = LANGS
     output = '\n"START: {0}", {1}\n'.format(get_time(), ','.join(modfilter).upper())   # header row.
     pool = Pool(cpu_count() * 2)
     try:
-        asy = pool.map_async(do_locale, [(x, langs, ctem, stem, mods, modfilter, b,
-                                        BROWSERS[b], ARGS) for x in langfilter for b in brows])
+        asy = pool.map_async(do_locale, [(x, LANGS, MOD_STEM, modfilter, b,
+                                          BROWSERS[b], ARGS) for x in langfilter for b in brows])
         while True:
             if asy.ready():
                 break
-            time.sleep(1)   # Alright! Busy-Waiting! That can't possibly go awry!
-
+            time.sleep(1)   # Poolmapwaiting blocks KeyboardInterrupts, so don't do that.
     except KeyboardInterrupt:
         pool.terminate()
         raise
@@ -223,34 +183,31 @@ def do_locale(args):
     global ARGS
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     # Unpack arguments
-    lang, langs, ctem, stem, mods, modfilter, brname, browser, ARGS = args
+    lang, langs, stem, modfilter, brname, browser, ARGS = args
     parseargs()
     # Reset the driver between rounds
     restart_driver(browser)
     # Start recording results.
     result = '_'.join([lang.upper(), brname.upper()])
-    # China is different, of course, of course, watch out for these checks below.
-    scorm = (lang == 'cn' or ARGS.scorm)
     for mod in modfilter:
         try:
+            # Figure out the locale coding.
+            url = stem.format(langs[lang][0].replace('-', '_'),
+                              MODULES[mod][0], MODULES[mod][1], langs[lang][1])
+            # Deal with Basic Server Authentication
+            isie = isinstance(DRIVER, Ie)
+            # Chrome and Firefox know how to use http headers.
+            if not isie and AUTH:
+                url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*AUTH), url)
+            DRIVER.get(url)
+            # IE knows how to write to popups.
+            if isie and AUTH:
+                try:
+                    DRIVER.switch_to.alert.authenticate(*AUTH)
+                except WebDriverException:  # If you're already logged in, never mind.
+                    pass
+            log_in_first(lang)
             # Try to do the module
-            if scorm:    # Scorm den.
-                url = ctem.format(langs[lang][0].replace('-','_'),
-                                  MODULES_C[mod][0], MODULES_C[mod][1], langs[lang][1])
-                isie = isinstance(DRIVER, Ie)
-                if not isie and AUTH:
-                    url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*AUTH), url)
-                DRIVER.get(url)
-                if isie and AUTH:
-                    try:
-                        DRIVER.switch_to.alert.authenticate(*AUTH)
-                    except WebDriverException:
-                        pass    # If the alert is not present, skip it.
-                # DRIVER.get(ctem.format(langs[lang].replace('_', '-''), MODULES_C[mod][0],
-                #                        MODULES_C[mod][1], langs[lang]))
-            else:
-                DRIVER.get(stem.format(langs[lang], mods[mod]))
-            log_in_first(lang, scorm)
             for elem in SCRIPTS[mod]:
                 domo(elem)
             result += ',"{0}: PASS"'.format(get_time())
@@ -261,45 +218,39 @@ def do_locale(args):
     DRIVER.quit()
     return result
 
-def switch_into_module(driver: WebDriver, cnmode: bool=False) -> None:
+def switch_into_module(driver: WebDriver) -> None:
     """Extract the Enter Iframe function just so it can be better exported."""
-    if cnmode:    # Scorm's wrapper on the modules needs to be opened first.
-        driver.find_element_by_css_selector('.scf-play-button').click()
+    # Scorm's wrapper on the modules needs to be opened first.
+    driver.find_element_by_css_selector('.scf-play-button').click()
     iframe = driver.find_element_by_css_selector('iframe[src^="/content/"]')
     driver.switch_to.frame(iframe)
-    if cnmode:    # Scorm has TWO layers of framing.
-        iframe = driver.find_element_by_css_selector('frame#ScormContent')
-        driver.switch_to.frame(iframe)
+    # Scorm has TWO layers of framing.
+    iframe = driver.find_element_by_css_selector('frame#ScormContent')
+    driver.switch_to.frame(iframe)
 
-def log_in_first(lang: str, cnmode: bool=False) -> None:
+def log_in_first(lang: str) -> None:
     """If testing with login, first, have to go and log in and everything.
     As it happens, restarting the module will also fix the Loading Forever bug."""
-    # There's an error in China if you view them directly.
-    if ARGS.direct and cnmode:
+    DRIVER.implicitly_wait(MINIWAIT)
+    lo = DRIVER.find_elements_by_id('link-logout')
+    li = DRIVER.find_elements_by_css_selector('.link-signin-text')
+    # Try to log in, if you aren't already logged in.
+    if (len(lo) == 0 or not lo[0].is_displayed()) and len(li) != 0 and li[0].is_displayed():
         try:
-            WebDriverWait(DRIVER, timeout=IMPLICITLY_WAIT).until(EC.alert_is_present())
-            DRIVER.switch_to.alert.dismiss()
-        except TimeoutError:
-            print('The Direct View error message didn\'t appear, guess they fixed it?')
-    if not ARGS.direct:
-        DRIVER.implicitly_wait(MINIWAIT)
-        lo = DRIVER.find_elements_by_id('link-logout')
-        if len(lo) == 0 or not lo[0].is_displayed():
-            try:
-                DRIVER.find_element_by_css_selector('.link-signin-text').click()
-                DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
-                DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
-                DRIVER.find_element_by_id('usersignin').click()
-            except NoSuchElementException:
-                DRIVER.implicitly_wait(IMPLICITLY_WAIT) # Just in case the other one gets missed.
-                raise NoSuchElementException(
-                    'Login failed, something was missing from the login panel.') from None
-        DRIVER.implicitly_wait(IMPLICITLY_WAIT)
-        try:
-            switch_into_module(DRIVER, cnmode)
-        except NoSuchElementException:
-            raise NoSuchElementException(
-                'The module framing is missing something here, look into that.') from None
+            li[0].click()
+            DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
+            DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
+            DRIVER.find_element_by_id('usersignin').click()
+        except NoSuchElementException as ex:
+            DRIVER.implicitly_wait(IMPLICITLY_WAIT) # Just in case the other one gets missed.
+            raise NoSuchElementException('Login failed, something was missing from the '
+                                         'login panel.\n\n' + ex.msg) from None
+    DRIVER.implicitly_wait(IMPLICITLY_WAIT)
+    try:
+        switch_into_module(DRIVER)
+    except NoSuchElementException as ex:
+        raise NoSuchElementException('The module framing is missing something here, '
+                                     'look into that.' + ex.msg) from None
     # Make sure the module is loaded first. Harder than it looks.
     # First, make sure that something is in the DOM,
     try:
@@ -322,7 +273,7 @@ def log_in_first(lang: str, cnmode: bool=False) -> None:
 
 def get_time() -> str:
     """Get the time, and formatted as well."""
-    return time.strftime(TIME_FORMAT)
+    return time.strftime(TIMEFORMAT)
 
 def draw_failure(lang: str, mod: str) -> None:
     """Take a screenshot, save it to the screenshot folder."""

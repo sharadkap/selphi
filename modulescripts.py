@@ -32,9 +32,11 @@ ENVS = ['https://poc-pub-elb-asp.tour-aus.aws.haylix.net',
 
 AUTH = ['dev', 'bclvOP']
 
+TIMEFORMAT = '%Y/%m/%d %H:%M'
+
 # Which users to log in with when testing through site.
 USERS = {'ca': 'cadevZXYI', 'in': 'indevKWFR', 'my': 'mydevVOXU', \
-'sg': 'sgdevTDBZ', 'gb': 'gbpocubdp', 'us': 'usdevMYIQ', \
+'sg': 'sgdevTDBZ', 'gb': 'gbpocuxem', 'us': 'uspocwgau', \
 'ehk': 'hkdevXEOS', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
 'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
 'cn': 'cnwwwAYYC'}
@@ -45,15 +47,6 @@ USERS = {'ca': 'cadevZXYI', 'in': 'indevKWFR', 'my': 'mydevVOXU', \
 # 'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
 # 'cn': 'cnwwwAYYC'}
 
-# List of complex locale codes.
-LANGS_D = {'ca': 'en_ca/ca_en', 'in': 'en_in/in_en', 'my': 'en_my/my_en', \
-    'sg': 'en_sg/sg_en', 'gb': 'en_uk/uk_en', 'us': 'en_us/us_en', \
-'ehk':'en_hk/hk_en', 'zhk':'zh_hk/hk_zh', 'id': 'id_id/id_id', \
-    'jp': 'ja_jp/jp_ja', 'kr': 'ko_kr/kr_ko', \
-'br': 'pt_br/br_pt', 'cl': 'es_cl/cl_es', 'de': 'de_de/de_de', \
-    'fr': 'fr_fr/fr_fr', 'it': 'it_it/it_it', \
-'cn': 'zh_cn'}
-
 # List of locale codes.
 LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), \
     'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), \
@@ -63,16 +56,8 @@ LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my
     'fr': ('fr-fr', 'fr_fr'), 'it': ('it-it', 'it_it'), \
 'cn': ('zh-cn', 'cn_zh')}
 
-# List of direct module names
-MODULES_D = OrderedDict([('1', 'core_mod1'), ('2', 'core_mod2'), ('3', 'core_mod3'), \
-    ('act', 'sto_act'), ('nsw', 'sto_nsw'), ('nt', 'sto_nt'), ('qld', 'sto_qld'), \
-        ('sa', 'sto_sa'), ('tas', 'sto_tas'), ('vic', 'sto_vic'), ('wa', 'sto_wa'), \
-    ('aboriginal', 'niche_aboriginal'), ('golf', 'niche_golf'), ('lodges', 'niche_lodges'), \
-        ('ra', 'niche_ra'), ('walks', 'niche_walks'), ('wine', 'niche_wine'), \
-        ('aquatic', 'niche_coastal')])
-
-# List of Scorm-type module names.
-MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_7')), \
+# GB POC
+MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_7')), \
         ('3', ('res2', 'core_mod3_7')), \
     ('act', ('res13', 'sto_act_0407')), ('nsw', ('res4', 'sto_nsw_ali')), \
         ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res7', 'sto_qld_ali')), \
@@ -83,8 +68,8 @@ MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod
         ('ra', ('res14', 'niche_ra_ali')), ('walks', ('res17', 'niche_walks_ali')), \
         ('wine', ('res18', 'niche_wine_ali')), ('aquatic', ('res19', 'niche_coastal_ali'))])
 
-# US POC
-# MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res7', 'core_mod2_7')), \
+# # US POC
+# MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res7', 'core_mod2_7')), \
 #         ('3', ('res8', 'core_mod3_7')), \
 #     ('act', ('res3', 'sto_act_0407')), ('nsw', ('res11', 'sto_nsw_ali')), \
 #         ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res13', 'sto_qld_ali')), \
@@ -94,7 +79,7 @@ MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod
 #         ('golf', ('res4', 'niche_golf_ali')), ('lodges', ('res6', 'niche_lodges_ali')), \
 #         ('ra', ('res9', 'niche_ra_ali')), ('walks', ('res5', 'niche_walks_ali')), \
 #         ('wine', ('res10', 'niche_wine_ali')), ('aquatic', ('res2', 'niche_coastal_ali'))])
-# MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
+# MODULES = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
 #         ('3', ('core_3', 'core_mod3_ali')), \
 #     ('act', ('_1', 'sto_act_0407')), ('nsw', ('_20', 'sto_nsw_ali')), \
 #         ('nt', ('nt', 'sto_nt_ali')), ('qld', ('qld', 'sto_qld_ali')), \
@@ -105,19 +90,9 @@ MODULES_C = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod
 # +5 ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
 #+7('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
 
-# Formulation of global module names.
-M = 'mandatory-modules/core-module'
-OPT = 'optional-modules/'
-S = OPT + 'state-and-territory/sto_'
-N = OPT + 'niche/niche_'
-MODULES = OrderedDict([('1', M + '1'), ('2', M + '2'), ('3', M + '3'), \
-        ('act', S + 'act'), ('nsw', S + 'nsw'), ('nt', S + 'nt'), ('qld', S + 'qld'), \
-        ('sa', S + 'sa'), ('tas', S + 'tas'), ('vic', S + 'vic'), ('wa', S + 'wa'), \
-    ('aboriginal', N + 'aboriginal'), ('golf', N + 'golf'), ('lodges', N + 'lodges'), \
-        ('ra', N + 'ra'), ('walks', N + 'walks'), ('wine', N + 'winery'), \
-        ('aquatic', N + 'coastal')])
-
-### Begin the Do Not Touch Zone ###
+        ### ### ### ### ### ### ### ### ###
+        ### Begin the Do Not Touch Zone ###
+        ### ### ### ### ### ### ### ### ###
 
 MOD_1_SCRIPT = ['Button_728', \
 ['Button_902', 'Button_903', 'Button_953', 'Button_918', \

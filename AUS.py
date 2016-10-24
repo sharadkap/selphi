@@ -42,22 +42,22 @@ class AUS(unittest.TestCase):
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)
         try:
             if self.globs.cn_mode:
-                CP.NavMenu.PracticalInformation().open().getting_around().click()
+                CP.NavMenu.PracticalInformation(self.dr).open().getting_around().click()
             else:
-                CP.NavMenu.PlanYourTrip().open().getting_around().click()
+                CP.NavMenu.PlanYourTrip(self.dr).open().getting_around().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.getting_around()
+            CP.BackupHrefs(self.dr).getting_around()
         # ShareThis compoent bit:
         try:
             # Click the Share icon
-            share = CP.ShareThis()
+            share = CP.ShareThis(self.dr)
             share.open_share()
             if self.globs.cn_mode:
                 # Two icons should slide out from under it
                 # Click the icon for WeChat (two chat balloon faces)
                 share.open_wechat()
-                qur = CP.QRCode()
+                qur = CP.QRCode(self.dr)
                 # TODO: A QR code should appear, scan it.
                 # self.dr.get(qur.decode())
                 # TODO: Implement result: "The corresponding page opens in WeChat"
@@ -76,7 +76,7 @@ class AUS(unittest.TestCase):
                 self.dr.switch_to_window(1)
                 # It should contain the description of, images pulled from,
                 # and a minified link to, the page
-                weibo = CP.WeiboShare()
+                weibo = CP.WeiboShare(self.dr)
                 self.assertEqual(desc, weibo.page_description(), 'The Weibo message should default '
                                  'to the page description.')
                 # The page image should be there, but the image filenames are all parameterized,
@@ -97,10 +97,10 @@ class AUS(unittest.TestCase):
         try:
             if self.globs.cn_mode:
                 # Click on the WeChat QR code/link in the footer
-                footer = CP.Footer()
+                footer = CP.Footer(self.dr)
                 footer.wechat().click()
                 # A QR code should appear in an overlay
-                qur = CP.QRCode()
+                qur = CP.QRCode(self.dr)
                 # TODO: Implement action: "Scan the QR code using your WeChat app"
                 # self.dr.get(qur.decode())
                 # TODO: Implement result: "The WeChat account belonging to TA China shows up"
@@ -127,13 +127,13 @@ class AUS(unittest.TestCase):
         # Navigate to the Aquatics page
         try:
             if self.globs.cn_mode:
-                CP.NavMenu.ExploreAndPlan().open().aquatic().click()
+                CP.NavMenu.ExploreAndPlan(self.dr).open().aquatic().click()
             else:
-                CP.NavMenu.ThingsToDo().open().aquatic().click()
+                CP.NavMenu.ThingsToDo(self.dr).open().aquatic().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.aquatic()
-        pan = CP.PanoramicCarousel()
+            CP.BackupHrefs(self.dr).aquatic()
+        pan = CP.PanoramicCarousel(self.dr)
         # Take some notes on the page for later comparison.
         # Click the watch video button
         desc, _ = pan.watch_video()
@@ -145,7 +145,7 @@ class AUS(unittest.TestCase):
             # Click the WeChat icon
             pan.wechat()
             # A QR code appears
-            qur = CP.QRCode()
+            qur = CP.QRCode(self.dr)
             # TODO: Implement action: "Scan the QR code using the WeChat app on your phone"
             # TODO: Implement result: "The corresponding page opens in WeChat"
             qur.close()
@@ -156,7 +156,7 @@ class AUS(unittest.TestCase):
             self.dr.switch_to_window(1)
             # It should contain the description of, images pulled from,
             # and a minified link to, the video
-            weibo = CP.WeiboShare()
+            weibo = CP.WeiboShare(self.dr)
             self.assertEqual(desc, weibo.page_description(), 'The Weibo message should default'
                              ' to the video description.')
             # The page image should be there, but the image filenames are all parameterized,
@@ -175,12 +175,12 @@ class AUS(unittest.TestCase):
             self.skipTest('Only China has the KDP thing.')
         # Navigate to the KDP page
         try:
-            CP.NavMenu.ExploreAndPlan().open().kdp().click()
+            CP.NavMenu.ExploreAndPlan(self.dr).open().kdp().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.kdp()
+            CP.BackupHrefs(self.dr).kdp()
         # Count results, assert all buttons lit.
-        kdp = CP.KDPSearch()
+        kdp = CP.KDPSearch(self.dr)
         # North China, South China, East China and West China icons should all be active
         self.assertEqual(len(kdp.lit_icons()), 4)
         total = kdp.total_results()
@@ -211,17 +211,17 @@ class AUS(unittest.TestCase):
         """Tests the various menu sections in the header."""
         try:
             # Click the Australia.com logo in the header
-            CP.NavMenu().logo().click()
+            CP.NavMenu(self.dr).logo().click()
             # Should link to homepage
             self.assertEqual(self.dr.current_url(), self.globs.base_url + self.globs.locale)
 
             # Click the Holiday In Australia link in the header
-            CP.NavMenu().holiday().click()
+            CP.NavMenu(self.dr).holiday().click()
             # Should link to homepage.
             self.assertEqual(self.dr.current_url(), self.globs.base_url + self.globs.locale)
 
             # Click the Business Events link in the header
-            CP.NavMenu().businessevents().click()
+            CP.NavMenu(self.dr).businessevents().click()
             # Should link to businessevents.australia.com/cn in new tab
             self.dr.switch_to_window(1)
             self.assertIn('businessevents.australia.c', self.dr.current_url())
@@ -233,7 +233,7 @@ class AUS(unittest.TestCase):
         try:
             # Open the Explore section in the header
             if self.globs.cn_mode:
-                eap = CP.NavMenu.ExploreAndPlan().open()
+                eap = CP.NavMenu.ExploreAndPlan(self.dr).open()
                 # Verify existence of the three Explore+Planning sections.
                 eap.aquatic()
                 eap.city_journeys()
@@ -245,7 +245,7 @@ class AUS(unittest.TestCase):
             self.add_error(ex)
 
         # Open the Destinations section in the header
-        ptg = CP.NavMenu.PlacesToGo().open()
+        ptg = CP.NavMenu.PlacesToGo(self.dr).open()
         # Confirm existence of Cities and Destinations sections and map thing.
         ptg.sydney()
         ptg.great_barrier_reef()
@@ -263,47 +263,47 @@ class AUS(unittest.TestCase):
         # Go to the Australia's Animals page
         try:
             if self.globs.cn_mode:
-                CP.NavMenu.PracticalInformation().open().australias_animals().click()
+                CP.NavMenu.PracticalInformation(self.dr).open().australias_animals().click()
             else:
-                CP.NavMenu.PlanYourTrip().open().facts().click()
-                CP.WhatYouCanSeeMosaic()["Australia's Animals"].click()
+                CP.NavMenu.PlanYourTrip(self.dr).open().facts().click()
+                CP.WhatYouCanSeeMosaic(self.dr)["Australia's Animals"].click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.australias_animals()
+            CP.BackupHrefs(self.dr).australias_animals()
         try:
             # Click the Add To Favourites button
-            favcount = CP.HeaderHeartIcon().favourites_count() + 1
-            CP.ShareThis().add_to_favourites()
+            favcount = CP.HeaderHeartIcon(self.dr).favourites_count() + 1
+            CP.ShareThis(self.dr).add_to_favourites()
             # Wait for the animation to finish and for confirmation of incremention
-            self.dr.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+            self.dr.wait_until(lambda: CP.HeaderHeartIcon(self.dr).favourites_count() == favcount,
                                'Heart Icon count == favcount.')
             # Do that again with the Regional Cities page.
             try:
-                CP.NavMenu.PlacesToGo().open().regional_cities().click()
+                CP.NavMenu.PlacesToGo(self.dr).open().regional_cities().click()
             except Exception as ex:
                 self.add_error(ex)
-                CP.BackupHrefs.regional_cities()
+                CP.BackupHrefs(self.dr).regional_cities()
             # Do this again, because the heart count doesn't load at the same time as the page.
-            self.dr.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+            self.dr.wait_until(lambda: CP.HeaderHeartIcon(self.dr).favourites_count() == favcount,
                                'Heart Icon count == favcount.')
-            favcount = CP.HeaderHeartIcon().favourites_count() + 1
-            CP.ShareThis().add_to_favourites()
-            self.dr.wait_until(lambda: CP.HeaderHeartIcon().favourites_count() == favcount,
+            favcount = CP.HeaderHeartIcon(self.dr).favourites_count() + 1
+            CP.ShareThis(self.dr).add_to_favourites()
+            self.dr.wait_until(lambda: CP.HeaderHeartIcon(self.dr).favourites_count() == favcount,
                                'Heart Icon count == favcount.')
         except Exception as ex:
             self.add_error(ex)
 
         # Go to favourites page. I would put a try-navigate here, but it's a dynamic url.
-        CP.HeaderHeartIcon().click()
+        CP.HeaderHeartIcon(self.dr).click()
         # Remove a favourite
-        favs = CP.MySalesTools().get_favourites()
+        favs = CP.MySalesTools(self.dr).get_favourites()
         oldfavs = {f.get_title() for f in favs}
         rem = random.choice(favs)
         oldfavs.remove(rem.get_title())
         rem.close()
         # Confirm it was removed
         self.dr.refresh()
-        favs = CP.MySalesTools().get_favourites()
+        favs = CP.MySalesTools(self.dr).get_favourites()
         self.assertSetEqual(oldfavs, {f.get_title() for f in favs})
 
     def test_05_whitsundays(self):
@@ -311,17 +311,17 @@ class AUS(unittest.TestCase):
         # Navigate to Whitsundays Sailing
         try:
             if self.globs.cn_mode:
-                CP.NavMenu.ExploreAndPlan().open().coastal_journeys().click()
-                CP.WhatYouCanSeeMosaic()['圣灵群岛航海游'].go()
+                CP.NavMenu.ExploreAndPlan(self.dr).open().coastal_journeys().click()
+                CP.WhatYouCanSeeMosaic(self.dr)['圣灵群岛航海游'].go()
             else:
-                CP.NavMenu.ThingsToDo().open().coastal_journeys().click()
-                CP.WhatYouCanSeeMosaic()['Whitsundays Sailing'].go()
+                CP.NavMenu.ThingsToDo(self.dr).open().coastal_journeys().click()
+                CP.WhatYouCanSeeMosaic(self.dr)['Whitsundays Sailing'].go()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.whitsundays()
+            CP.BackupHrefs(self.dr).whitsundays()
 
         # Click a few of the Itinerary Day links
-        iti = CP.ItineraryDay()
+        iti = CP.ItineraryDay(self.dr)
         # Get the scroll position of that bit.
         scr = self.dr.current_scroll()
         iti.random_link()
@@ -334,9 +334,9 @@ class AUS(unittest.TestCase):
         """Tests the Site and Header Search functionalities."""
         # Do this a couple of times, different buttons:
         # Opens the Search bar, clicks a Common Search Term
-        for _ in CP.HeaderSearch.popular_searches(3):
+        for _ in CP.HeaderSearch.popular_searches(self.dr, 3):
             try:
-                src = CP.SiteSearch()
+                src = CP.SiteSearch(self.dr)
                 # Change the view?
                 src.grid_mode()
                 # Change back ?
@@ -354,15 +354,15 @@ class AUS(unittest.TestCase):
         # Navigate to the Three Days Itineraries page
         try:
             if self.globs.cn_mode:
-                CP.NavMenu.ExploreAndPlan().open().city_journeys().click()
+                CP.NavMenu.ExploreAndPlan(self.dr).open().city_journeys().click()
             else:
-                CP.NavMenu.ThingsToDo().open().city_journeys().click()
+                CP.NavMenu.ThingsToDo(self.dr).open().city_journeys().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.city_journeys()
+            CP.BackupHrefs(self.dr).city_journeys()
         # Click on a tile, should direct to the correct page while the other tiles grey out
         try:
-            CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
+            CP.WhatYouCanSeeMosaic(self.dr).random_selection(1)[0].go()
             # Some of them go to external sites which open in a new tab.
             self.dr.close_other_windows()
         except Exception as ex:
@@ -371,62 +371,62 @@ class AUS(unittest.TestCase):
 
         # Go to the Great Barrier Reef page
         try:
-            CP.NavMenu.PlacesToGo().open().great_barrier_reef().click()
+            CP.NavMenu.PlacesToGo(self.dr).open().great_barrier_reef().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.great_barrier_reef()
+            CP.BackupHrefs(self.dr).great_barrier_reef()
         # Click on a tile, should direct to the correct page, other tiles faded
-        CP.WhatYouCanSeeMosaic().random_selection(1)[0].go()
+        CP.WhatYouCanSeeMosaic(self.dr).random_selection(1)[0].go()
 
     def test_08_special_offers(self):
         """Tests the Special Offers page"""
         # Navigate to the Special Offers page
         try:
             if self.globs.cn_mode:
-                CP.NavMenu.ExploreAndPlan().open().specialoffers().click()
+                CP.NavMenu.ExploreAndPlan(self.dr).open().specialoffers().click()
             else:
-                CP.NavMenu.ThingsToDo().open().campaigns().click()
+                CP.NavMenu.ThingsToDo(self.dr).open().campaigns().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.offers()
+            CP.BackupHrefs(self.dr).offers()
         # Click on a Special Offers link
-        CP.SpecialOffer().view_more_information()
+        CP.SpecialOffer(self.dr).view_more_information()
 
     def test_09_brightcove(self):
         """Tests the Brightcove Video Player."""
         # Go to the Tasmania page
         try:
-            pla = CP.NavMenu.PlacesToGo().open()
+            pla = CP.NavMenu.PlacesToGo(self.dr).open()
             pla.states().click()
             pla.tas().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.tas()
+            CP.BackupHrefs(self.dr).tas()
         # Play the video.
-        vid = CP.Video()
+        vid = CP.Video(self.dr)
         vid.play()
 
     def test_10_banner_video(self):
         """Tests the Hero Banner With Video."""
         # Navigate to the Australia's Animals page
         if self.globs.cn_mode:
-            CP.NavMenu.PracticalInformation().open().australias_animals().click()
+            CP.NavMenu.PracticalInformation(self.dr).open().australias_animals().click()
         else:
-            CP.NavMenu.PlanYourTrip().open().facts().click()
-            CP.WhatYouCanSeeMosaic()["Australia's Animals"].go()
+            CP.NavMenu.PlanYourTrip(self.dr).open().facts().click()
+            CP.WhatYouCanSeeMosaic(self.dr)["Australia's Animals"].go()
         # Verify that the hero banner is animated. This seems to count?
-        self.assertTrue(CP.Video().is_playing())
+        self.assertTrue(CP.Video(self.dr).is_playing())
 
     def test_11_explore(self):
         """Tests the Explore component."""
         # Navigate to the Sydney page
         try:
-            CP.NavMenu.PlacesToGo().open().sydney().click()
+            CP.NavMenu.PlacesToGo(self.dr).open().sydney().click()
         except Exception as ex:
             self.add_error(ex)
-            CP.BackupHrefs.sydney()
+            CP.BackupHrefs(self.dr).sydney()
         # Click the Location Pin button on a the Explore component
-        cards = CP.Explore().cards
+        cards = CP.Explore(self.dr).cards
         for card in cards:
             card.flip()
         # Confirm that the card flipped
@@ -438,11 +438,11 @@ class AUS(unittest.TestCase):
         for card in cards:
             self.assertFalse(card.is_flipped())
         # Add some to favourites
-        count = CP.HeaderHeartIcon().favourites_count()
+        count = CP.HeaderHeartIcon(self.dr).favourites_count()
         for card in cards:
             card.add_to_favourites()
         # Confirm favourites incremented
-        self.dr.wait_until(lambda: count + 3 == CP.HeaderHeartIcon().favourites_count(),
+        self.dr.wait_until(lambda: count + 3 == CP.HeaderHeartIcon(self.dr).favourites_count(),
                            'count + 3 equals favourites.count.')
 
 if __name__ == '__main__':

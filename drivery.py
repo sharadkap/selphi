@@ -63,8 +63,10 @@ class Drivery:
         # To aid in checking for Page Loaded Status, track the last link clicked.
         self.last_link = ''
         self.base_url = globs['base_url']
-        self.auth = globs['auth']
         self.locale = globs['locale']
+        self.locale_url = self.base_url + self.locale
+        self.auth = globs['auth']
+        self.cn_mode = globs['cn_mode'] # yeah, but CP needs it apparently.
         # A workaround. Firefox gets suspicious when you hide a password in the url.
         if globs['browser'] == 'firefox':
             p = FirefoxProfile()
@@ -87,7 +89,7 @@ class Drivery:
 
     def open_home_page(self) -> None:
         """Opens the Welcome Page. Shortcut method."""
-        self.get(self.base_url + self.locale)
+        self.get(self.locale_url)
 
     def current_url(self) -> str:
         """Kind of a technicality. Returns the current url."""

@@ -25,13 +25,24 @@ one being dragged to the second. Note, Tuples can contain Lists too."""
 from collections import OrderedDict
 
 # Editing this is easier than using the command line.
-ENVS = ['https://poc-pub-elb-asp.tour-aus.aws.haylix.net',
-        'https://poc-pub-elb-asp.tour-aus.aws.haylix.net',
-        'https://poc-pub-elb-asp.tour-aus.aws.haylix.net',
-        'https://poc-pub-elb-asp.tour-aus.aws.haylix.net']
 
+        ### ### ### #### ### ### ###
+        ### Begin the Touch Zone ###
+        ### ### ### #### ### ### ###
+
+# The website domain to use in testing.
+# ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
+ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https:www.aussiespecialist.com'
+
+# The Username and Password to use in the Server Authentication, if necessary.
 AUTH = ['dev', 'bclvOP']
+# If not necessary, don't remove the entry, just leave the fields blank.
+# AUTH = ['', '']
 
+# Ehh, nothing major here, just, if you want differently-shaped timestamps?
 TIMEFORMAT = '%Y/%m/%d %H:%M'
 
 # Which users to log in with when testing through site.
@@ -90,9 +101,19 @@ MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_
 # +5 ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
 #+7('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
 
+
+
+
+
+
+
         ### ### ### ### ### ### ### ### ###
         ### Begin the Do Not Touch Zone ###
         ### ### ### ### ### ### ### ### ###
+
+
+
+
 
 MOD_1_SCRIPT = ['Button_728', \
 ['Button_902', 'Button_903', 'Button_953', 'Button_918', \

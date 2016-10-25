@@ -16,7 +16,7 @@ ausnames = OrderedDict(
 class AUS(unittest.TestCase):
     """The Test Suite for the AUS regression. Tests methods are numbered because HipTest."""
     def __init__(self, name, glob):
-        super(AUS, self, name).__init__()
+        super().__init__(methodName=name)
         self.globs = glob
 
     def setUp(self):
@@ -24,6 +24,7 @@ class AUS(unittest.TestCase):
         self.verificationErrors = []    # Keep a list of everything that went wrong.
         self.accept_next_alert = True
         self.dr = Drivery(self.globs)
+        self.dr.open_home_page()
 
     def tearDown(self):
         """Called after finishing each test, closes the browser and counts up the errors."""
@@ -36,12 +37,12 @@ class AUS(unittest.TestCase):
         """Adds an error to the errors list. Shortcut."""
         self.verificationErrors.append(error)
 
-    def test_01_social(self):
+    def test_01_social(self):   # Most of those branches are try/except. pylint: disable-msg=R0912
         """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.
         Does not test the QR code links, can't seem to do that."""
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)
         try:
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 CP.NavMenu.PracticalInformation(self.dr).open().getting_around().click()
             else:
                 CP.NavMenu.PlanYourTrip(self.dr).open().getting_around().click()
@@ -53,7 +54,7 @@ class AUS(unittest.TestCase):
             # Click the Share icon
             share = CP.ShareThis(self.dr)
             share.open_share()
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 # Two icons should slide out from under it
                 # Click the icon for WeChat (two chat balloon faces)
                 share.open_wechat()
@@ -95,7 +96,7 @@ class AUS(unittest.TestCase):
 
         # Footer bit:
         try:
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 # Click on the WeChat QR code/link in the footer
                 footer = CP.Footer(self.dr)
                 footer.wechat().click()
@@ -126,7 +127,7 @@ class AUS(unittest.TestCase):
 
         # Navigate to the Aquatics page
         try:
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 CP.NavMenu.ExploreAndPlan(self.dr).open().aquatic().click()
             else:
                 CP.NavMenu.ThingsToDo(self.dr).open().aquatic().click()
@@ -141,7 +142,7 @@ class AUS(unittest.TestCase):
         pan.once_off_start_video()
         # Open the Menu, might not need to do this if you are fast enough
         # pan.open_video_menu()
-        if self.globs.cn_mode:
+        if self.globs['cn_mode']:
             # Click the WeChat icon
             pan.wechat()
             # A QR code appears
@@ -171,7 +172,7 @@ class AUS(unittest.TestCase):
 
     def test_02_kdp(self):
         """Tests the KDP Partner Search functionality."""
-        if not self.globs.cn_mode:
+        if not self.globs['cn_mode']:
             self.skipTest('Only China has the KDP thing.')
         # Navigate to the KDP page
         try:
@@ -213,12 +214,12 @@ class AUS(unittest.TestCase):
             # Click the Australia.com logo in the header
             CP.NavMenu(self.dr).logo().click()
             # Should link to homepage
-            self.assertEqual(self.dr.current_url(), self.globs.base_url + self.globs.locale)
+            self.assertEqual(self.dr.current_url(), self.globs['locale_url'])
 
             # Click the Holiday In Australia link in the header
             CP.NavMenu(self.dr).holiday().click()
             # Should link to homepage.
-            self.assertEqual(self.dr.current_url(), self.globs.base_url + self.globs.locale)
+            self.assertEqual(self.dr.current_url(), self.globs['locale_url'])
 
             # Click the Business Events link in the header
             CP.NavMenu(self.dr).businessevents().click()
@@ -232,7 +233,7 @@ class AUS(unittest.TestCase):
 
         try:
             # Open the Explore section in the header
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 eap = CP.NavMenu.ExploreAndPlan(self.dr).open()
                 # Verify existence of the three Explore+Planning sections.
                 eap.aquatic()
@@ -250,7 +251,7 @@ class AUS(unittest.TestCase):
         ptg.sydney()
         ptg.great_barrier_reef()
         # China does not have the AUS.com map.
-        if not self.globs.cn_mode:
+        if not self.globs['cn_mode']:
             ptg.explore()
 
         # Click the States section switcher
@@ -262,7 +263,7 @@ class AUS(unittest.TestCase):
         """Tests the My Dream Trip functionality."""
         # Go to the Australia's Animals page
         try:
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 CP.NavMenu.PracticalInformation(self.dr).open().australias_animals().click()
             else:
                 CP.NavMenu.PlanYourTrip(self.dr).open().facts().click()
@@ -310,7 +311,7 @@ class AUS(unittest.TestCase):
         """Tests various things pertaining to Itinerary pages."""
         # Navigate to Whitsundays Sailing
         try:
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 CP.NavMenu.ExploreAndPlan(self.dr).open().coastal_journeys().click()
                 CP.WhatYouCanSeeMosaic(self.dr)['圣灵群岛航海游'].go()
             else:
@@ -353,7 +354,7 @@ class AUS(unittest.TestCase):
         """Tests the What You-Can-See-Mosaic-related functionality."""
         # Navigate to the Three Days Itineraries page
         try:
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 CP.NavMenu.ExploreAndPlan(self.dr).open().city_journeys().click()
             else:
                 CP.NavMenu.ThingsToDo(self.dr).open().city_journeys().click()
@@ -382,7 +383,7 @@ class AUS(unittest.TestCase):
         """Tests the Special Offers page"""
         # Navigate to the Special Offers page
         try:
-            if self.globs.cn_mode:
+            if self.globs['cn_mode']:
                 CP.NavMenu.ExploreAndPlan(self.dr).open().specialoffers().click()
             else:
                 CP.NavMenu.ThingsToDo(self.dr).open().campaigns().click()
@@ -409,7 +410,7 @@ class AUS(unittest.TestCase):
     def test_10_banner_video(self):
         """Tests the Hero Banner With Video."""
         # Navigate to the Australia's Animals page
-        if self.globs.cn_mode:
+        if self.globs['cn_mode']:
             CP.NavMenu.PracticalInformation(self.dr).open().australias_animals().click()
         else:
             CP.NavMenu.PlanYourTrip(self.dr).open().facts().click()

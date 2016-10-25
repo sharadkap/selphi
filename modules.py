@@ -16,8 +16,7 @@ from selenium.webdriver.remote.webdriver import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from modulescripts import (LANGS, MODULES, SCRIPTS, USERS, ENVS,
-                           AUTH, TIMEFORMAT)
+from modulescripts import (LANGS, MODULES, SCRIPTS, USERS, ENV, AUTH, TIMEFORMAT)
 
 RESET_MODULE = 'cpCmndGotoSlide=0'
 MINIWAIT = 0.5
@@ -41,7 +40,7 @@ def parseargs():
     SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
     RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
     MOD_STEM = ('{0}/content/sites/asp/{{0}}/assignments.resource.html/content/sites/asp'
-                '/resources/{{0}}/{{1}}'.format(ENVS[3]))
+                '/resources/{{0}}/{{1}}'.format(ENV))
 
 def main() -> None:
     """Run this if the modules suite is being executed as itself."""
@@ -105,10 +104,10 @@ def new_drag_drop(source: str, target: str) -> None:
     # IE WHY.    FIREFOX, ET TU?
     source, fource, target = getid(source), getid('re-{}c'.format(source)), getid(target)
     if not isinstance(DRIVER, Firefox):
-        DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return x.getBoundingClientRect'
-                              '().top;}),wp=window.top;wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 +'
-                              ' wp.$("iframe[src*=\'/content/\']").offset().top)',
-                              source, target)
+        DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return '
+                              'x.getBoundingClientRect().top;}),wp=window.top;'
+                              'wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 + '
+                              'wp.$("iframe[src*=\'/content/\']").offset().top)', source, target)
     ActionChains(DRIVER).click_and_hold(source).move_to_element(fource).release(target).perform()
     time.sleep(MINIWAIT)
 
@@ -134,9 +133,9 @@ def click_surely(ele: WebElement) -> None:
     If that doesn't work, manual override, it was probably just behind a blank textbox."""
     try:
         if not isinstance(DRIVER, Firefox):
-            DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
-                                  '-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']").offset().top)'
-                                  , ele)
+            DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect()'
+                                  '.top-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']")'
+                                  '.offset().top)', ele)
         ele.click()
     except WebDriverException:
         ActionChains(DRIVER).move_to_element(ele).click().perform()

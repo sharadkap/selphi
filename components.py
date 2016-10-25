@@ -7,13 +7,13 @@ import hashlib
 from types import MethodType
 from typing import Set, List, Tuple
 from selenium.webdriver.remote.webelement import WebElement
-from drivery import Drivery
+from drivery import Drivery, SHORT_WAIT
 
 class WrappedElement:
     """Superclass for the various helper classes here."""
     # This is a placeholder, don't actually try this.
     element = WebElement(parent=None, id_=None)
-    dr = Drivery
+    dr = Drivery(None)
 
     def click(self) -> 'WrappedElement':
         """Clicks on the element."""
@@ -295,9 +295,10 @@ class NavMenu(WrappedElement):
                                 'fraser-island', 'freycinet', 'gippsland', 'kakadu',
                                 'namadgi', 'ningaloo', 'tasmanian-wilderness',
                                 'australian-alps', 'kimberley', 'margaret-river',
-                                'explore',
+
                                 'act', 'nsw', 'nt', 'qld', 'sa', 'tas', 'vic', 'wa'],
                          selector='[href*="{0}.html"] p')
+            attach_links(self, ['explore'])
             attach_fancy_links(self, ['sydney', 'melbourne', 'brisbane', 'perth', 'red-centre',
                                       'great-barrier-reef', 'great-ocean-road', 'kangaroo-island'])
 
@@ -718,7 +719,7 @@ class InteractiveMap(WrappedElement):
                 self.dr = dr
                 self.pins = self.dr.flashy_find_elements(
                     '{} div.bulb:not(.Itineraries)'.format(
-                        '.MapPushpinBase' if self.dr.CN_MODE else '.marker'))
+                        '.MapPushpinBase' if self.dr.cn_mode else '.marker'))
                 self.element = self.dr.get_parent_element(self.dr.get_parent_element(self.pins[0]))
 
             def pick_random(self) -> str:
@@ -780,12 +781,12 @@ class InteractiveMap(WrappedElement):
         def zoom_in(self) -> None:
             """Clicks the Zoom In button."""
             self.dr.flashy_find_element('#zoomin', self.element).click()
-            time.sleep(self.dr.SHORT_WAIT)
+            time.sleep(SHORT_WAIT)
 
         def zoom_out(self) -> None:
             """Clicks the Zoom Out button."""
             self.dr.flashy_find_element('#zoomout', self.element).click()
-            time.sleep(self.dr.SHORT_WAIT)    # Otherwise it tries to click where the pin *was*.
+            time.sleep(SHORT_WAIT)    # Otherwise it tries to click where the pin *was*.
 
 class ContactUs(WrappedElement):
     """Represents the Contact Us page, which isn't a lot."""
@@ -807,7 +808,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
     def __setattr__(self, name, value):
         """If an unknown SET message is received, see if there's a field with that name."""
         # Really should have seen this coming.
-        if name == 'element':
+        if name in ('element', 'dr'):
             object.__setattr__(self, name, value)
             return
         elem = self.dr.flashy_find_element(
@@ -865,7 +866,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
         """Sets the Email Address and Verify Email fields to the given value. Blank default."""
         self.email = value
         # China does not have this email verification.
-        if not self.dr.CN_MODE:
+        if not self.dr.cn_mode:
             self.verifyemail = value
 
     def how_many_years(self) -> None:
@@ -1573,7 +1574,7 @@ class Explore(WrappedElement):
             """Clicks the Add To Dream Trip button."""
             self.dr.flashy_find_element('.bubble-colour-favourite', self.element).click()
 
-class BackupHrefs:
+class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: disable-msg=R0904
     """Call on this if an important component is missing, it has links to the pages."""
     def __init__(self, dr: Drivery):
         self.dr = dr
@@ -1620,7 +1621,7 @@ class BackupHrefs:
 
     def training(self):
         """Opens the Assignments page."""
-        self.dr.get(self.dr.base_url + '/content/sites/asp/' +
+        self.dr.get(self.dr.base_url + '/content/sites/asp' +
                     self.dr.locale + '/en/assignments.html')
 
     def travel(self):

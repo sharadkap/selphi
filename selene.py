@@ -33,7 +33,7 @@ def main():
     # KeyboardInterrupts don't actually break out of blocking-waits, so do this the hard way.
     try:
         asy = pool.map_async(launch_test, [(loc, bro, outdir, args.copy())
-                                          for loc in args['locales'] for bro in args['browsers']])
+                                           for loc in args['locales'] for bro in args['browsers']])
         while True:
             if asy.ready():
                 return
@@ -48,16 +48,17 @@ def launch_test(args) -> None:
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
     # Instantiate the test suites, and give them their process-unique globals
-    if globs['site'] == 'ASP':
+    site = globs['site']
+    if site == 'ASP':
         names = [ASP(aspnames[x], globs) for x in globs['tests'] or aspnames]
-    elif globs['site'] == 'AUS':
+    elif site == 'AUS':
         names = [AUS(ausnames[x], globs) for x in globs['tests'] or ausnames]
     # Do a bunch of method overrides to get it to work properly.
     perform_hacks()
     # Set up the run settings.
     globs['locale'] = locale
     globs['browser'] = browser
-    # If China Mode, do it in China, otherwise set the locale
+    # If China Mode, do it in China, otherwise, don't do it in China
     if locale == globs['cn_locale']:
         globs['cn_mode'] = True
         globs['base_url'] = globs['chenvironment']
@@ -65,29 +66,33 @@ def launch_test(args) -> None:
         # If a url was given, make that the default.
         globs['cn_mode'] = False
         globs['base_url'] = globs['environment']
+    globs['locale_url'] = globs['base_url'] + locale
 
     # Create the test runner, choose the output path: right next to the test script file.
-    buf = io.StringIO()
-    tap.runner._tracker = tap.tracker.Tracker()  # Reboot the test runner. pylint: disable-msg=W0212
-    runner = tap.TAPTestRunner()
-    runner.set_format('Result of: {method_name} - {short_description}')
-    runner.set_stream(True)
-    tap.runner._tracker.stream = buf    # bit of a hack, but how else? pylint: disable-msg=W0212
-    runner.stream.stream = sys.stdout    # why.
-    tests = unittest.TestSuite(names)
-    suite = unittest.TestSuite()
-    suite.addTests(tests)
-    runner.run(suite)
+    with io.StringIO() as buf:
+        # TAP uses Module State, have to reset it for each test.
+        tap.runner._tracker = tap.tracker.Tracker()     #pylint: disable-msg=W0212
+        runner = tap.TAPTestRunner()
+        runner.set_format('Result of: {method_name} - {short_description}')
+        runner.set_stream(True)
+        # Bit of a hack, but it doesn't support A Proper Way to reassign output, so.
+        tap.runner._tracker.stream = buf    # pylint: disable-msg=W0212
+        # For whatever reason, there are two output streams. Ignore this one, I guess.
+        runner.stream.stream = sys.stdout
+        tests = unittest.TestSuite(names)
+        suite = unittest.TestSuite()
+        suite.addTests(tests)
+        runner.run(suite)
 
-    # Give a unique name to the output file so you don't overwrite it every time!
-    try:
-        with open(os.path.join(outdir, 'REGR_{0}_{1}_{2}.tap'
-                               .format(locale.replace('/',''), browser, time.strftime('%Y%m%d_%H%M'))),
-                  mode='w', encoding='UTF-8') as newfil:
-            newfil.write(buf.getvalue())
-    except Exception as ex:
-        print(ex)
-    buf.close()
+        # Give a unique name to the output file so you don't overwrite it every time!
+        try:
+            with open(os.path.join( # Bleh.
+                outdir, 'REGR_{0}_{1}_{2}_{3}.tap'.format(
+                    locale.replace('/', ''), site, browser, time.strftime('%Y%m%d_%H%M'))),
+                      mode='w', encoding='UTF-8') as newfil:
+                newfil.write(buf.getvalue())
+        except Exception as ex:
+            print(ex)
 
 def perform_hacks():
     """Because not everything works the way it SHOULD, have to override a few methods."""
@@ -102,6 +107,15 @@ def perform_hacks():
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
 
+    # By default, it will print out the full list of test failures at the end of the test.
+    # This is a terrible idea, as that list tends to be longer than the cmd window buffer.
+    # Especially when multiple test runs are underway. Here, set to skip that step.
+    def newprinterrors(self):
+        """Print a newline to the stream if in dot-drawing mode. Do not print the error report."""
+        if self.dots or self.showAll:
+            self.stream.writeln()
+    unittest.TextTestResult.printErrors = newprinterrors
+
     # This one really is a mess. Had to copy the method verbatim and make the required changes.
     # The original method contains this unused argument, and yes, it isn't used there either.
     def newex(self, err, test):     # pylint: disable-msg=W0613
@@ -109,7 +123,7 @@ def perform_hacks():
         import traceback
         exctype, value, tb = err
         # Strip the traceback down to the innermost call.
-        tb_e = traceback.TracebackException(exctype, value, tb, limit=0,
+        tb_e = traceback.TracebackException(exctype, value, tb, limit=3,
                                             capture_locals=self.tb_locals)
         msgLines = list(tb_e.format())
 

@@ -56,10 +56,11 @@ def find_error_improver(func: FunctionType):
                 selector, self.current_url())) from None
     return actually_helpful
 
-class Drivery:
+class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint: disable-msg=R0904
     """Because Module-Level-State is apparently a terrible idea, have a class singleton.
     Wraps a WebDriver instance, and does a bunch of other useful things."""
     def __init__(self, globs: dict):
+        if globs is None: return    # Just to handle the CP thing declaration.
         # To aid in checking for Page Loaded Status, track the last link clicked.
         self.last_link = ''
         self.base_url = globs['base_url']
@@ -186,7 +187,7 @@ class Drivery:
 
     def fix_url(self, url: str) -> str:
         """Use this to remove that /content/asp/ stuff from URLs."""
-        return re.sub(r'(/\w\w)_(\w\w/)', r'\1-\2',
+        return re.sub(r'((/|^)\w\w)_(\w\w(/|$))', r'\1-\2',
                       (url or '').replace('/content/asp/', '/'), count=1)
 
     ###Some methods to shorten Element Manipulation/Verification.###
@@ -271,8 +272,8 @@ class Email:
     def __init__(self, globs: dict, dr: Drivery, userid: str):
         self.email = globs['email'].format(userid)
         self.cn_mode, self.imapsvr, self.usern, self.passw, self.froms = (
-            globs.cn_mode, globs.test_email_imap_server, globs.test_email_username,
-            globs.test_email_password, globs.asp_from_emails)
+            globs['cn_mode'], globs['test_email_imap_server'], globs['test_email_username'],
+            globs['test_email_password'], globs['asp_from_emails'])
         self.dr = dr
 
     def get_all_locales(self) -> Set[str]:     # pylint: disable-msg=E1126
@@ -328,7 +329,7 @@ class Email:
             self.email = bs4.BeautifulSoup(
                 Email(globs, dr, userid).get_new_messages()[0], 'html.parser')
             self.userid = userid
-            self.cn_mode = globs.cn_mode
+            self.cn_mode = globs['cn_mode']
 
     class RegistrationEmail(LocalizedEmail):    # pylint: disable-msg=R0903
         """Represents the Registration Email, if used correctly. Correctly here meaning:

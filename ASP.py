@@ -79,8 +79,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             video.play()
             # Video loads and plays. Again, there are still other things to test.
             try:
-                self.assertTrue(video.is_playing(), 'After clicking the Play button, '
-                                'the video should be playing.')
+                self.dr.wait_until(video.is_playing, 'After clicking Play, the video should play.')
             except Exception as ex:
                 self.add_error(ex)
         # Login and Register buttons should be present in the body content.
@@ -289,7 +288,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             # Click on the result's More Info link.
             result.view_more_information()
             # Should link to that result's More Info page.
-            self.assertEqual(result.SearchResultPage().get_title().casefold(), name,
+            self.assertEqual(result.SearchResultPage(self.dr).get_title().casefold(), name,
                              "The result's link should go to the relevant page.")
 
     def test_08_Interactive_Map(self) -> None:
@@ -450,9 +449,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.globs['userid'] = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
         self.globs['email'] = self.globs['email'].format(self.globs['userid'])
         # The Country Code
-        langcode, localecode = self.globs['locale'].split('-')
-                                                # It's a property that resolves to a str, it's fine.
-        environ = self.dr.current_url().split('/')[2].split('.')[0][0:3] # pylint: disable-msg=E1101
+        langcode, localecode = self.globs['locale'].replace('/', '').split('-')
+        environ = self.globs['base_url'].split('/')[2].split('.')[0][0:3] #pylint: disable-msg=E1101
         # Username stuff, add the Environment prefix to identify the user.
         # Different zip codes in different countries.
         zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345',
@@ -865,7 +863,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.dr.quietly_find_element(
             '.confirmation-page p:nth-child(3) a[href*="about/contact-us.htm"]')
 
-        #### TODO: Email validation? ####
+        #### Email validation to be done? Probably not, this is still verboten ####
         # Check your email client under the user's email address.
         # Should have received an email detailing the contents of the order
         # and the correct delivery address.
@@ -1048,7 +1046,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.add_error(ex)
         # Enter the user's email address into the Forgot Username form.
         forgus = CP.ForgottenForm(self.dr)
-        forgus.email(self.globs['email'].format(self.globs['userid']))
+        forgus.email(self.globs['email'])
         # Click the Submit button, a panel should appear confirming submission.
         forgus.submit()
         # An email should be received at the given address containing the Username.
@@ -1068,7 +1066,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.add_error(ex)
         # Enter the user's email address into the Forgot Password form.
         forgpa = CP.ForgottenForm(self.dr)
-        forgpa.email(self.globs['email'].format(self.globs['userid']))
+        forgpa.email(self.globs['email'])
         # Click the Submit button, a panel should appear confirming submission.
         forgpa.submit()
         # An email should be received at the given address containing the Username and new Password

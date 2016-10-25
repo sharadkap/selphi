@@ -269,7 +269,7 @@ class Email:
     which email is which, so to ensure schedule synchronicity, make sure
     get_new_messages is called every time an email is expected."""
     def __init__(self, globs: dict, dr: Drivery, userid: str):
-        self.email = globs.email.format(userid)
+        self.email = globs['email'].format(userid)
         self.cn_mode, self.imapsvr, self.usern, self.passw, self.froms = (
             globs.cn_mode, globs.test_email_imap_server, globs.test_email_username,
             globs.test_email_password, globs.asp_from_emails)

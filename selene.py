@@ -39,13 +39,9 @@ def main():
                 return
             time.sleep(1)   # Alright! Busy-Waiting! That can't possibly go awry!
 
-    except KeyboardInterrupt:
+    except:
         pool.terminate()
         raise
-
-def lunch_test(args) -> None:
-    """Dummy method."""
-    print(args)
 
 def launch_test(args) -> None:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
@@ -53,7 +49,6 @@ def launch_test(args) -> None:
     locale, browser, outdir, globs = args   # Unpack arguments.
     # Instantiate the test suites, and give them their process-unique globals
     if globs['site'] == 'ASP':
-        print(5, ASP(aspnames['FTR'], globs), 7)
         names = [ASP(aspnames[x], globs) for x in globs['tests'] or aspnames]
     elif globs['site'] == 'AUS':
         names = [AUS(ausnames[x], globs) for x in globs['tests'] or ausnames]
@@ -68,6 +63,7 @@ def launch_test(args) -> None:
         globs['base_url'] = globs['chenvironment']
     else:
         # If a url was given, make that the default.
+        globs['cn_mode'] = False
         globs['base_url'] = globs['environment']
 
     # Create the test runner, choose the output path: right next to the test script file.
@@ -84,11 +80,13 @@ def launch_test(args) -> None:
     runner.run(suite)
 
     # Give a unique name to the output file so you don't overwrite it every time!
-    with open(os.path.join(outdir, 'REGR_{0}_{1}_{2}.tap'
-                           .format(locale, browser, time.strftime('%Y%m%d_%H%M'))),
-              mode='w', encoding='UTF-8') as newfil:
-        newfil.write(buf.getvalue())
-    print(buf.getvalue() or 'It was blank')
+    try:
+        with open(os.path.join(outdir, 'REGR_{0}_{1}_{2}.tap'
+                               .format(locale.replace('/',''), browser, time.strftime('%Y%m%d_%H%M'))),
+                  mode='w', encoding='UTF-8') as newfil:
+            newfil.write(buf.getvalue())
+    except Exception as ex:
+        print(ex)
     buf.close()
 
 def perform_hacks():

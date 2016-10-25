@@ -13,7 +13,7 @@ class WrappedElement:
     """Superclass for the various helper classes here."""
     # This is a placeholder, don't actually try this.
     element = WebElement(parent=None, id_=None)
-    dr = Drivery(None)
+    dr = Drivery
 
     def click(self) -> 'WrappedElement':
         """Clicks on the element."""

@@ -448,6 +448,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.add_error(ex)
         # Random letters to make a unique username.
         self.globs['userid'] = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
+        self.globs['email'] = self.globs['email'].format(self.globs['userid'])
         # The Country Code
         langcode, localecode = self.globs['locale'].split('-')
                                                 # It's a property that resolves to a str, it's fine.

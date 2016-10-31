@@ -187,7 +187,7 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
 
     def fix_url(self, url: str) -> str:
         """Use this to remove that /content/asp/ stuff from URLs."""
-        return re.sub(r'((/|^)\w\w)_(\w\w(/|$))', r'\1-\2',
+        return re.sub(r'((/|^)\w\w)_(\w\w(/|$|.))', r'\1-\3',
                       (url or '').replace('/content/asp/', '/'), count=1)
 
     ###Some methods to shorten Element Manipulation/Verification.###

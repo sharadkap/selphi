@@ -5,7 +5,7 @@ import quopri
 import imaplib
 from types import FunctionType
 from typing import List, Set, Union, Any
-from selenium.webdriver import Chrome, Edge, Firefox, Ie, Opera, Safari
+from selenium.webdriver import Chrome, Edge, Firefox, Ie, Opera, Safari, FirefoxProfile
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -15,56 +15,18 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import bs4
 
     ###Some Magic Numbers, default values.###
-def reset_globals():
-    """Call this to reset all of the globals that can get overwritten to their default values."""
-    # pylint: disable-msg=W0603
-    global LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE
-    LONG_WAIT, SHORT_WAIT, CN_MODE, BASE_URL, CN_BASE_URL, LOCALE, EMAIL, BROWSER_TYPE = (
-        30, 2, False, 'https://www.aussiespecialist.com', 'https://www.aussiespecialist.cn',
-        '/en-gb', 'testeratta+{}@gmail.com', Chrome)
-# """The default time, in seconds, to search the DOM before declaring an Element Not Found."""
+# """How long, in seconds, to search the DOM before declaring an Element Not Found."""
 LONG_WAIT = 30
 # """Time in seconds to poll for something that should be absent or already here."""
 SHORT_WAIT = 2
 
-CN_MODE = False
-# """The root website domain to access."""
-BASE_URL = 'https://www.aussiespecialist.com'
-CN_BASE_URL = 'https://www.aussiespecialist.cn'
-# """The Language-Country Code of the locale to test.
-LOCALE = '/en-gb'
-CN_LOCALE = '/zh-cn'
-LOCALES = {'ca': '/en-ca', 'in': '/en-in', 'my': '/en-my', 'sg': '/en-sg', 'gb': '/en-gb',
-           'us': '/en-us', 'ehk': '/en-hk', 'zhk': '/zh-hk', 'id': '/id-id', 'jp': '/ja-jp',
-           'kr': '/ko-kr', 'br': '/pt-br', 'cl': '/es-cl', 'de': '/de-de', 'fr': '/fr-fr',
-           'it': '/it-it', 'cn': CN_LOCALE}
-# """To aid in checking for Page Loaded Status, note the last link clicked.
-LAST_LINK = ''
-
-# """The generic standard Test Account Password."""
-PASSWORD = 'Welcome1'
-# """The email address to be associated with the given user."""
-EMAIL = 'testeratta+{}@gmail.com'
-# Login details for the gmail IMAP server, if that ever becomes a thing.
-TEST_EMAIL_IMAP_SERVER = 'imap.gmail.com'
-TEST_EMAIL_USERNAME = 'testeratta@gmail.com'
-TEST_EMAIL_PASSWORD = 'WelcomeTest'
-ASP_EMAILS = ['no-reply@p19.neolane.net', 'tourism-au@updates.tourism.australia.com',
-              'asp-cn@tourism.australia.com']
+# Parameterise this word to remember the spelling.
 LATIN_EMAIL_ENCODING = 'windows-1252'
 
-# """The main WebDriver runner reference."""
-BROWSER_TYPE = Chrome    # Not really a Class, just a reference to one. pylint: disable-msg=C0103
+# A mapping of browser names to WebDriver Classes.
 BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox,
             'ie': Ie, 'opera': Opera, 'safari': Safari}
-DRIVER = Chrome        # Global variable placeholder
 
-# """A Set of the full list of options that should be in the splash page language selector."""
-LOCALE_SET = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", "/en-my.html",
-              "/en-sg.html", "/id-id.html", "/de-de.html", "/zh-hk.html", "/en-hk.html",
-              "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", "/pt-br.html",
-              "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html",
-              "https://www.aussiespecialist.cn/zh-cn"}
 # A script to scroll a single element into view proper, just in case.
 SCROLL_SCRIPT = ('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
                  '-wp.innerHeight/2)')
@@ -79,217 +41,240 @@ BLIP_SCRIPT = ('try{$("head").append("<style>@keyframes selhian{0%{outline: 0px 
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
 ELEMENT_LIST = List[WebElement] # pylint: disable-msg=E1126
 
-# Hold onto a list of exceptions, use this for nonfatal exceptions.
-verificationErrors = []
-
 def to_list(item) -> list:
     """Wraps the input into a list if it wasn't already one."""
     return item if isinstance(item, list) else [item]
 
-def begin() -> None:
-    """The test part calls this at the beginning of each test. Sets up DRIVER."""
-    global DRIVER    # pylint: disable-msg=W0603
-    # It's fine, the AUS.com tests use Global State. Static instance reference anyway.
-    DRIVER = BROWSER_TYPE()
-    DRIVER.implicitly_wait(LONG_WAIT)
-    DRIVER.maximize_window()
-
-def close() -> None:
-    """The testing bit calls this at the end of each test. Clears the session."""
-    DRIVER.quit()
-
-###Navigation Methods.###
-
-def splash_page() -> None:
-    """Navigates to the Splash Page."""
-    DRIVER.get(BASE_URL + '/splash.html')
-
-def open_home_page() -> None:
-    """Opens the Welcome Page. Shortcut method."""
-    DRIVER.get(BASE_URL + LOCALE)
-
-def current_url() -> str:
-    """Kind of a technicality. Returns the current url."""
-    return DRIVER.current_url
-
-def back() -> None:
-    """The rule is, only the drivery module is allowed to invoke DRIVER directly."""
-    DRIVER.back()
-
-def refresh() -> None:
-    """It's The Rules"""
-    DRIVER.refresh()
-
-def get(url: str) -> None:
-    """The Rules."""
-    DRIVER.get(url)
-
-def close_window() -> None:
-    """Closes the currently-focused window or tab. Try not to use this when only one is left."""
-    DRIVER.close()
-    switch_to_window(0)
-
-def close_other_windows() -> None:
-    """Closes all open tabs and windows except for the original one."""
-    while len(DRIVER.window_handles) != 1:
-        switch_to_window(1)
-        close_window()
-
-def current_scroll() -> int:
-    """Returns the window's vertical scroll position as stated by javascript's window.scrollY"""
-    return DRIVER.execute_script('return window.scrollY;')
-
-def wait_for_page() -> None:
-    """Holds up execution until the current page's url contains the Last Link value
-    and its    document.readyState is 'complete'. A decent approximation?"""
-    script = 'return document.readyState === "complete";'
-    try:
-        WebDriverWait(DRIVER, LONG_WAIT).until(lambda _: LAST_LINK in current_url())
-        WebDriverWait(DRIVER, LONG_WAIT).until(lambda _: DRIVER.execute_script(script))
-    except TimeoutException:
-        raise TimeoutException('Timed out waiting for {0} to load.'.format(LAST_LINK)) from None
-
-def wait_until_present(selector: str) -> WebElement:
-    """Holds up execution until the selectored elment is visibly present.
-    Use this instead of quietly_find if the target is in the DOM, but hidden."""
-    try:
-        return WebDriverWait(DRIVER, LONG_WAIT).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
-    except TimeoutException:
-        raise TimeoutException('Timed out waiting for {0} to appear.'.format(selector)) from None
-
-def wait_until_gone(selector: str) -> WebElement:
-    """Holds up execution until the selectored element is not visibly present.
-    EC doesn't seem to support local searches, so be sure the selector is page-unique."""
-    try:
-        # The poll_freq value is not the wait-til-fail time. Apparently.
-        DRIVER.implicitly_wait(0.5)
-        ret = WebDriverWait(DRIVER, LONG_WAIT).until(
-            EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
-        DRIVER.implicitly_wait(LONG_WAIT)
-        return ret
-    except TimeoutException:
-        raise TimeoutException('Timed out waiting for {0} to disappear.'.format(selector)) from None
-
-def wait_until(condition: FunctionType, desc: str) -> Any:
-    """Holds up execution, repeatedly calling the given function until it returns truthy.
-    The given condition lambda should have no inputs.
-    desc should explain what the lambda does, as the contents can't really be examined."""
-    try:
-        return WebDriverWait(DRIVER, LONG_WAIT).until(lambda _: condition())
-    except TimeoutException:
-        raise TimeoutException(
-            'Timed out waiting for condition: {0}'.format(desc)) from None
-
-def switch_to_window(window: int) -> None:
-    """Switch WebDriver's focus to the given open tab or window. Zero based indexing."""
-    # Disable warning on missing property. Pylint just can't find it. pylint: disable-msg=E1101
-    DRIVER.switch_to.window(DRIVER.window_handles[window])
-
-def switch_to_frame(selector: str) -> None:
-    """Switches WebDriver's focus into the given iframe."""
-    DRIVER.switch_to.frame(flashy_find_element(selector))    # pylint: disable-msg=E1101
-
-def fix_url(url: str) -> str:
-    """Use this to remove that /content/asp/ stuff from URLs."""
-    return re.sub(r'(/\w\w)_(\w\w/)', r'\1-\2', (url or '').replace('/content/asp/', '/'), count=1)
-
-###Some methods to shorten Element Manipulation/Verification.###
-
-def scroll_element(elle: WebElement) -> WebElement:
-    """Scrolls a single element into view, it wouldn't make sense to do multiple."""
-    DRIVER.execute_script(SCROLL_SCRIPT, elle)
-    return elle
-
-def blip_element(elle: ELEMENT_OR_LIST) -> ELEMENT_OR_LIST:
-    """Scrolls (an) element(s) into view, and highlights (i)t(hem).
-    Returns the found element(s) as well, just for chaining purposes."""
-    # Kick off the highlight animation, list-wrapped for the sake of only writing one handler.
-    DRIVER.execute_script(BLIP_SCRIPT, to_list(elle))
-    return elle
-
-def check_visible_quick(selector: str, within: WebElement=None) -> bool:
-    """Check for an element without potentially spending a lot of time polling the DOM.
-    Ususally used when asserting an element's absence, saves waiting the full timeout."""
-    within = within or DRIVER
-    DRIVER.implicitly_wait(SHORT_WAIT)
-    elements = within.find_elements_by_css_selector(selector)
-    DRIVER.implicitly_wait(LONG_WAIT)
-    return len(elements) != 0 and elements[0].is_displayed()
-
-def execute_mouse_over(element: WebElement) -> None:
-    """Simulates the mouse moving into an element."""
-    ActionChains(DRIVER).move_to_element(element).perform()
-
-def add_error(error: Exception) -> None:
-    """Appends an exception to the errors list. Bit of a shortcut."""
-    verificationErrors.append(error)
-
-def find_error_improver(func):
-    """A decorator to get the NoSuchElementException to actually tell you what the problem is."""
-    def actually_helpful(selector, within=None):
+def find_error_improver(func: FunctionType):
+    """A decorator, gets the NoSuchElementException to actually tell you what the problem is."""
+    def actually_helpful(self, selector, within=None):
         """Does a thing, and if it didn't work, tells you what was missing from where."""
         try:
-            return func(selector, within)
+            return func(self, selector, within)
         except NoSuchElementException:
             raise NoSuchElementException("Couldn't find selector '{0}' on page {1}".format(
-                selector, current_url())) from None
+                selector, self.current_url())) from None
     return actually_helpful
 
-@find_error_improver
-def quietly_find_element(selector: str, within: WebElement=None) -> WebElement:
-    """Finds a single element matching a CSS selector, optionally within a given element."""
-    within = within or DRIVER
-    return within.find_element_by_css_selector(selector)
+class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint: disable-msg=R0904
+    """Because Module-Level-State is apparently a terrible idea, have a class singleton.
+    Wraps a WebDriver instance, and does a bunch of other useful things."""
+    def __init__(self, globs: dict):
+        if globs is None: return    # Just to handle the CP thing declaration.
+        # To aid in checking for Page Loaded Status, track the last link clicked.
+        self.last_link = ''
+        self.base_url = globs['base_url']
+        self.locale = globs['locale']
+        self.locale_url = self.base_url + self.locale
+        self.auth = globs['auth']
+        self.cn_mode = globs['cn_mode'] # yeah, but CP needs it apparently.
+        # A workaround. Firefox gets suspicious when you hide a password in the url.
+        if globs['browser'] == 'firefox':
+            p = FirefoxProfile()
+            p.set_preference('network.http.phishy-userpass-length', 255)
+            self.driver = Firefox(p)
+        else:
+            self.driver = BROWSERS[globs['browser']]()
+        self.driver.implicitly_wait(LONG_WAIT)
+        self.driver.maximize_window()
 
-@find_error_improver
-def quietly_find_elements(selector: str, within: WebElement=None) -> ELEMENT_LIST:
-    """Finds multiple elements that match a CSS selector, optionally within a given element."""
-    within = within or DRIVER
-    return to_list(within.find_elements_by_css_selector(selector))
+    def close(self) -> None:
+        """The testing bit calls this at the end of each test. Clears the session."""
+        self.driver.quit()
 
-@find_error_improver
-def flashy_find_element(selector: str, within: WebElement=None) -> WebElement:
-    """Finds a single element matching a CSS selector, highlights it as well."""
-    within = within or DRIVER
-    return blip_element(within.find_element_by_css_selector(selector))
+    ###Navigation Methods.###
 
-@find_error_improver
-def flashy_find_elements(selector: str, within: WebElement=None) -> ELEMENT_LIST:
-    """Finds multiple elements that match a CSS selector, highlights them as well.
+    def splash_page(self) -> None:
+        """Navigates to the Splash Page."""
+        self.get(self.base_url + '/splash.html')
 
-    The browser-provided webdriver driver implementations seem to not return a
-    list when only one element matches, so fixing that here."""
-    within = within or DRIVER
-    return blip_element(to_list(within.find_elements_by_css_selector(selector)))
+    def open_home_page(self) -> None:
+        """Opens the Welcome Page. Shortcut method."""
+        self.get(self.locale_url)
 
-@find_error_improver
-def find_visible_element(selector: str, within: WebElement=None) -> WebElement:
-    """Given a selector that could match multiple different elements,
-    return the one that is currently visible, not the first one that matches."""
-    within = within or DRIVER
-    return blip_element([x for x in within.find_elements_by_css_selector(selector)
-                         if x.is_displayed()][0])
+    def current_url(self) -> str:
+        """Kind of a technicality. Returns the current url."""
+        return self.driver.current_url
 
-def get_parent_element(element: WebElement) -> WebElement:
-    """Gets the immediate parent of the given element."""
-    return element.find_element_by_xpath('..')
+    def back(self) -> None:
+        """The rule is, only the drivery module is allowed to invoke self.driver directly."""
+        self.driver.back()
 
-def bring_to_front(element: WebElement) -> WebElement:
-    """Uses a JS to ensure the selected element is at the front.
-    Usually in order to properly click() it."""
-    DRIVER.execute_script('arguments[0].style.zIndex = "10000";', element)
+    def refresh(self) -> None:
+        """It's The Rules"""
+        self.driver.refresh()
 
-def execute_script(script: str, *args) -> Any:
-    """Executes a javascript snippet, returning what the script returns."""
-    return DRIVER.execute_script(script, *args)
+    def get(self, url: str) -> None:
+        """For whatever reason, there is no Basic Authentication that works across all browsers.
+        This has workarounds for each. Ironically, only IE supports the correct method."""
+        isie = isinstance(self.driver, Ie)
+        if not isie and self.auth:
+            url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*self.auth), url)
+        self.driver.get(url)
+        if isie and self.auth:
+            self.driver.switch_to.alert.authenticate(*self.auth)
+
+    def close_window(self) -> None:
+        """Closes the currently-focused window or tab. Try not to use this when only one is left."""
+        self.driver.close()
+        self.switch_to_window(0)
+
+    def close_other_windows(self) -> None:
+        """Closes all open tabs and windows except for the original one."""
+        while len(self.driver.window_handles) != 1:
+            self.switch_to_window(1)
+            self.close_window()
+
+    def current_scroll(self) -> int:
+        """Returns the window's vertical scroll position as stated by javascript's window.scrollY"""
+        return self.driver.execute_script('return window.scrollY;')
+
+    def wait_for_page(self) -> None:
+        """Holds up execution until the current page's url contains the Last Link value
+        and its    document.readyState is 'complete'. A decent approximation?"""
+        script = 'return document.readyState === "complete";'
+        try:
+            WebDriverWait(self.driver, LONG_WAIT).until(
+                lambda _: self.last_link in self.current_url())
+            WebDriverWait(self.driver, LONG_WAIT).until(
+                lambda _: self.driver.execute_script(script))
+        except TimeoutException:
+            raise TimeoutException(
+                'Timed out waiting for {0} to load.'.format(self.last_link)) from None
+
+    def wait_until_present(self, selector: str) -> WebElement:
+        """Holds up execution until the selectored elment is visibly present.
+        Use this instead of quietly_find if the target is in the DOM, but hidden."""
+        try:
+            return WebDriverWait(self.driver, LONG_WAIT).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+        except TimeoutException:
+            raise TimeoutException(
+                'Timed out waiting for {0} to appear.'.format(selector)) from None
+
+    def wait_until_gone(self, selector: str) -> WebElement:
+        """Holds up execution until the selectored element is not visibly present.
+        EC doesn't seem to support local searches, so be sure the selector is page-unique."""
+        try:
+            # The poll_freq value is not the wait-til-fail time. Apparently.
+            self.driver.implicitly_wait(0.5)
+            ret = WebDriverWait(self.driver, LONG_WAIT).until(
+                EC.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
+            self.driver.implicitly_wait(LONG_WAIT)
+            return ret
+        except TimeoutException:
+            raise TimeoutException(
+                'Timed out waiting for {0} to disappear.'.format(selector)) from None
+
+    def wait_until(self, condition: FunctionType, desc: str) -> Any:
+        """Holds up execution, repeatedly calling the given function until it returns truthy.
+        The given condition lambda should have no inputs.
+        desc should explain what the lambda does, as the contents can't really be examined."""
+        try:
+            return WebDriverWait(self.driver, LONG_WAIT).until(lambda _: condition())
+        except TimeoutException:
+            raise TimeoutException(
+                'Timed out waiting for condition: {0}'.format(desc)) from None
+
+    def switch_to_window(self, window: int) -> None:
+        """Switch WebDriver's focus to the given open tab or window. Zero based indexing."""
+        # Disable warning on missing property. Pylint just can't find it. pylint: disable-msg=E1101
+        self.driver.switch_to.window(self.driver.window_handles[window])
+
+    def switch_to_frame(self, selector: str) -> None:
+        """Switches WebDriver's focus into the given iframe."""
+        self.driver.switch_to.frame(self.flashy_find_element(selector))  # pylint: disable-msg=E1101
+
+    def fix_url(self, url: str) -> str:
+        """Use this to remove that /content/asp/ stuff from URLs."""
+        return re.sub(r'((/|^)\w\w)_(\w\w(/|$|.))', r'\1-\3',
+                      (url or '').replace('/content/asp/', '/'), count=1)
+
+    ###Some methods to shorten Element Manipulation/Verification.###
+
+    def scroll_element(self, elle: WebElement) -> WebElement:
+        """Scrolls a single element into view, it wouldn't make sense to do multiple."""
+        self.driver.execute_script(SCROLL_SCRIPT, elle)
+        return elle
+
+    def blip_element(self, elle: ELEMENT_OR_LIST) -> ELEMENT_OR_LIST:
+        """Scrolls (an) element(s) into view, and highlights (i)t(hem).
+        Returns the found element(s) as well, just for chaining purposes."""
+        # Kick off the highlight animation, list-wrapped for the sake of only writing one handler.
+        self.driver.execute_script(BLIP_SCRIPT, to_list(elle))
+        return elle
+
+    def check_visible_quick(self, selector: str, within: WebElement=None) -> bool:
+        """Check for an element without potentially spending a lot of time polling the DOM.
+        Ususally used when asserting an element's absence, saves waiting the full timeout."""
+        within = within or self.driver
+        self.driver.implicitly_wait(SHORT_WAIT)
+        elements = within.find_elements_by_css_selector(selector)
+        self.driver.implicitly_wait(LONG_WAIT)
+        return len(elements) != 0 and elements[0].is_displayed()
+
+    def execute_mouse_over(self, element: WebElement) -> None:
+        """Simulates the mouse moving into an element."""
+        ActionChains(self.driver).move_to_element(element).perform()
+
+    @find_error_improver
+    def quietly_find_element(self, selector: str, within: WebElement=None) -> WebElement:
+        """Finds a single element matching a CSS selector, optionally within a given element."""
+        within = within or self.driver
+        return within.find_element_by_css_selector(selector)
+
+    @find_error_improver
+    def quietly_find_elements(self, selector: str, within: WebElement=None) -> ELEMENT_LIST:
+        """Finds multiple elements that match a CSS selector, optionally within a given element."""
+        within = within or self.driver
+        return to_list(within.find_elements_by_css_selector(selector))
+
+    @find_error_improver
+    def flashy_find_element(self, selector: str, within: WebElement=None) -> WebElement:
+        """Finds a single element matching a CSS selector, highlights it as well."""
+        within = within or self.driver
+        return self.blip_element(within.find_element_by_css_selector(selector))
+
+    @find_error_improver
+    def flashy_find_elements(self, selector: str, within: WebElement=None) -> ELEMENT_LIST:
+        """Finds multiple elements that match a CSS selector, highlights them as well.
+
+        The browser-provided webdriver self.driver implementations seem to not return a
+        list when only one element matches, so fixing that here."""
+        within = within or self.driver
+        return self.blip_element(to_list(within.find_elements_by_css_selector(selector)))
+
+    @find_error_improver
+    def find_visible_element(self, selector: str, within: WebElement=None) -> WebElement:
+        """Given a selector that could match multiple different elements,
+        return the one that is currently visible, not the first one that matches."""
+        within = within or self.driver
+        return self.blip_element([x for x in within.find_elements_by_css_selector(selector)
+                                  if x.is_displayed()][0])
+
+    def get_parent_element(self, element: WebElement) -> WebElement:
+        """Gets the immediate parent of the given element."""
+        return element.find_element_by_xpath('..')
+
+    def bring_to_front(self, element: WebElement) -> WebElement:
+        """Uses a JS to ensure the selected element is at the front.
+        Usually in order to properly click() it."""
+        self.driver.execute_script('arguments[0].style.zIndex = "10000";', element)
+
+    def execute_script(self, script: str, *args) -> Any:
+        """Executes a javascript snippet, returning what the script returns."""
+        return self.driver.execute_script(script, *args)
 
 class Email:
     """Handler for the email checks. Due to languages, there's really no way to tell
     which email is which, so to ensure schedule synchronicity, make sure
     get_new_messages is called every time an email is expected."""
-    def __init__(self, userid):
-        self.email = EMAIL.format(userid)
+    def __init__(self, globs: dict, dr: Drivery, userid: str):
+        self.email = globs['email'].format(userid)
+        self.cn_mode, self.imapsvr, self.usern, self.passw, self.froms = (
+            globs['cn_mode'], globs['test_email_imap_server'], globs['test_email_username'],
+            globs['test_email_password'], globs['asp_from_emails'])
+        self.dr = dr
 
     def get_all_locales(self) -> Set[str]:     # pylint: disable-msg=E1126
         """Collects all of the emails received by this email subaddress,
@@ -298,7 +283,7 @@ class Email:
         ems = [bs4.BeautifulSoup(x, 'html.parser')
                for x in self.get_new_messages(really_get_new=False)]
         for ema in ems:
-            if CN_MODE:    # China does not have locale-tagged links.
+            if self.cn_mode:    # China does not have locale-tagged links.
                 links = ema.select('a[href*="t.dpc.rimanggis.com"]')
                 hrefs = {x['href'].split('.')[-1] for x in links}
                 locs = locs.union({'zh-cn'} if hrefs == {'json'} else hrefs)
@@ -312,11 +297,11 @@ class Email:
         """Polls the IMAP server untill a (maybe) new email(s) are found, then
         attempts to make sense of their ridiculous transmission formatting."""
         results = []
-        with imaplib.IMAP4_SSL(TEST_EMAIL_IMAP_SERVER) as imap:
-            imap.login(TEST_EMAIL_USERNAME, TEST_EMAIL_PASSWORD)
+        with imaplib.IMAP4_SSL(self.imapsvr) as imap:
+            imap.login(self.usern, self.passw)
             imap.select()
-            nums = wait_until(lambda: self.email_loop(imap, really_get_new),
-                              'Waiting for emails to be found, calls self.email_loop.')
+            nums = self.dr.wait_until(lambda: self.email_loop(imap, really_get_new),
+                                      'Waiting for emails to be found, calls self.email_loop.')
             # The Latin Character Set emails have two parts, the second of which is the html part.
             got, ems = imap.fetch(nums, 'body[2]')
             if got == 'NO':    # The others do not have two parts.
@@ -334,15 +319,17 @@ class Email:
         # Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.
         # Containing a single bytestring of space-separated return values.
         # And IMAP requires that imput values be comma separated.         Because why not.
-        return b','.join(imap.search(      # Search from all addresses, it could be any of them.
-            None, ' OR FROM '.join(['', *ASP_EMAILS[:-1]]).strip(), 'FROM', ASP_EMAILS[-1],
+        return b','.join(imap.search(     # Search from all addresses, it could be any of them.
+            None, ' OR FROM '.join(['', *self.froms[:-1]]).strip(), 'FROM', self.froms[-1],
             'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
     class LocalizedEmail():    # Oh, whatever. pylint: disable-msg=R0903
         """Superclass for the various emails."""
-        def __init__(self, userid: str):
-            self.email = bs4.BeautifulSoup(Email(userid).get_new_messages()[0], 'html.parser')
+        def __init__(self, globs: dict, dr: Drivery, userid: str):
+            self.email = bs4.BeautifulSoup(
+                Email(globs, dr, userid).get_new_messages()[0], 'html.parser')
             self.userid = userid
+            self.cn_mode = globs['cn_mode']
 
     class RegistrationEmail(LocalizedEmail):    # pylint: disable-msg=R0903
         """Represents the Registration Email, if used correctly. Correctly here meaning:
@@ -350,7 +337,7 @@ class Email:
         an email sub-address with no existing unread messages."""
         def activation_link(self) -> str:
             """Returns the address of the Click Here To Activate Your Account link."""
-            if CN_MODE:    # China does not have that format of link.
+            if self.cn_mode:    # China does not have that format of link.
                 return self.email.a['href']
             else:
                 return self.email.select('a[href*="activation"]')[0]['href']

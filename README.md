@@ -16,22 +16,21 @@ Placeholder for Python Selenium scripts
 
 ## Execution
 The test suite can be executed either by double-clicking the file or via the command line:
-* Running the script from Windows Explorer will begin an End To End run with a new user in GB Production using Chrome.
-* Recently, a couple of versions of Firefox have a bug with webdriver, but the most recent one is fine, be sure to update that.
-* To customise the test suite, run from the command line (the cmd.exe terminal) as `selene.py` with the `-l` and/or `-t` options.
-* Run as `selene.py -h` to see the full set of options available.
-The ASP Modules test suite can also be run at the Command-Line:
-* Opening the script from Windows Explorer, or with no arguments, will begin a test of all modules in all locales, in PROD, accessing the modules within the website, using Chrome.
-* To customise the suite of tests, run from the command line, (with `modules.py`) using the `-l`/`--locales` and `-m`/`--modules` options.
+* Both methods will begin a test run with the settings as defined in the `test.properties` file, but running from the command line will give a small progress indicator.
+* Recently, Firefox has discontinued support for the old firefox driver, requiring instead the new marrionette driver. However, this new version doesn't actually work. You may have to experiment with older versions of firefox or selenium to find one that does. (FF 46, selenium 2.52.0 seems to be good.)
+* To customise the test suite, edit the `test.properties` file, there should be examples and explanations already in there.
+The ASP Modules test suite can also be run in either mode:
+* The `modulescripts.py` file contains the customisable values, rather more involved, due to the complexity of module hosting. However, the modules to test, which locales to test in, and the browsers to use are currently still command line arguments.
+* To customise the suite of tests, run from the command line, (with `modules.py`) using the `-l`/`--locales`, `-m`/`--modules`, and `-b`/`--browsers` options.
 * Use the `-h` option to get the list of possible values.
 
 A dialog box with a series of buttons and/or checkboxes may follow.
 
 ## Results
 ### Website
-When the entire test suite has finished, the results will be printed in the terminal, as well as written to a `REGR_locale_browser_time.tap` file, in TAP format, named with the testing settings and the time of completion. Some knowledge of the structure of the test suite and the websites' CSS design may be required to decipher it.
+When the entire test suite has finished, the results will be printed in the terminal, as well as written to a `REGR_locale_site_browser_time.tap` file, in TAP format, named with the testing settings and the time of completion. Some knowledge of the structure of the test suite and the websites' CSS design may be required to decipher it.
 
-This can then be formatted and uploaded to HipTest by:
+This can then be uploaded to HipTest and viewed in a more readable format by:
 1. Creating a new test run, selecting the Create As Empty For The Purpose Of Uploading Results option
 2. Clicking the Push Results button in the new run to open the Push Results pane
 3. Executing the following javascript (formatted as a bookmarklet for convenience): `javascript:!function(){var t=$("pre").text().match(/http.+?\/tap/)[0];$(".ember-view.modal-footer").append('<form method="post" enctype="multipart/form-data" action="'+t+'"><input type="file" name="file"><input type="submit"></form>')}();` to actually add the Upload File Form, just on the off chance that you don't already have cURL installed.

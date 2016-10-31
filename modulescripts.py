@@ -1,6 +1,8 @@
 """Moved all these scripts to a separate file.
 Because scrolling through all this really was tiresome.
 
+You can basically treat the first part of this as a properties file.
+
 Legend:
 Each new line represents a different slide, unless it is indented, in which case
 the line was just too long, and was wrapped to improve readability.
@@ -22,56 +24,96 @@ one being dragged to the second. Note, Tuples can contain Lists too."""
 
 from collections import OrderedDict
 
-USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
-'sg': 'sgprodyyw', 'gb': 'gbwwwvjvz', 'us': 'usprokcmi', \
-'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
+# Editing this is easier than using the command line.
+
+        ### ### ### #### ### ### ###
+        ### Begin the Touch Zone ###
+        ### ### ### #### ### ### ###
+
+# The website domain to use in testing.
+# ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
+ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https:www.aussiespecialist.com'
+
+# The Username and Password to use in the Server Authentication, if necessary.
+AUTH = ['dev', 'bclvOP']
+# If not necessary, don't remove the entry, just leave the fields blank.
+# AUTH = ['', '']
+
+# Ehh, nothing major here, just, if you want differently-shaped timestamps?
+TIMEFORMAT = '%Y/%m/%d %H:%M'
+
+# Which users to log in with when testing through site.
+USERS = {'ca': 'cadevZXYI', 'in': 'indevKWFR', 'my': 'mydevVOXU', \
+'sg': 'sgdevTDBZ', 'gb': 'gbpocuxem', 'us': 'uspocwgau', \
+'ehk': 'hkdevXEOS', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
 'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
 'cn': 'cnwwwAYYC'}
+# Backup
+# USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
+# 'sg': 'sgprodyyw', 'gb': 'gbpoccgvn''gbwwwvjvz', 'us': 'usprokcmi', \
+# 'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
+# 'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
+# 'cn': 'cnwwwAYYC'}
 
-LANGS_D = {'ca': 'en_ca/ca_en', 'in': 'en_in/in_en', 'my': 'en_my/my_en', \
-    'sg': 'en_sg/sg_en', 'gb': 'en_uk/uk_en', 'us': 'en_us/us_en', \
-'ehk':'en_hk/hk_en', 'zhk':'zh_hk/hk_zh', 'id': 'id_id/id_id', \
-    'jp': 'ja_jp/jp_ja', 'kr': 'ko_kr/kr_ko', \
-'br': 'pt_br/br_pt', 'cl': 'es_cl/cl_es', 'de': 'de_de/de_de', \
-    'fr': 'fr_fr/fr_fr', 'it': 'it_it/it_it', \
-'cn': 'zh_cn'}
+# List of locale codes.
+LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), \
+    'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), \
+'ehk': ('en-hk', 'hk_en'), 'zhk': ('zh-hk', 'hk_zh'), 'id': ('id-id', 'id_id'), \
+    'jp': ('ja-jp', 'jp_ja'), 'kr': ('ko-kr', 'kr_ko'), \
+'br': ('pt-br', 'br_pt'), 'cl': ('es-cl', 'cl_es'), 'de': ('de-de', 'de_de'), \
+    'fr': ('fr-fr', 'fr_fr'), 'it': ('it-it', 'it_it'), \
+'cn': ('zh-cn', 'cn_zh')}
 
-LANGS = {'ca': 'en-ca', 'in': 'en-in', 'my': 'en-my', 'sg': 'en-sg', \
-    'gb': 'en-gb', 'us': 'en-us', \
-'ehk': 'en-hk', 'zhk': 'zh-hk', 'id': 'id-id', 'jp': 'ja-jp', 'kr': 'ko-kr', \
-'br': 'pt-br', 'cl': 'es-cl', 'de': 'de-de', 'fr': 'fr-fr', 'it': 'it-it', \
-'cn': 'zh-cn'}
+# GB POC
+MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_7')), \
+        ('3', ('res2', 'core_mod3_7')), \
+    ('act', ('res13', 'sto_act_0407')), ('nsw', ('res4', 'sto_nsw_ali')), \
+        ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res7', 'sto_qld_ali')), \
+        ('sa', ('res9', 'sto_sa_ali')), ('tas', ('res10', 'sto_tas_ali0321')), \
+        ('vic', ('res8', 'sto_vic_ali')), ('wa', ('res11', 'sto_wa_ali')), \
+    ('aboriginal', ('res16', 'Aboriginal_Exp_HO_ali')), \
+        ('golf', ('res6', 'niche_golf_ali')), ('lodges', ('res15', 'niche_lodges_ali')), \
+        ('ra', ('res14', 'niche_ra_ali')), ('walks', ('res17', 'niche_walks_ali')), \
+        ('wine', ('res18', 'niche_wine_ali')), ('aquatic', ('res19', 'niche_coastal_ali'))])
 
-MODULES_D = OrderedDict([('1', 'core_mod1'), ('2', 'core_mod2'), ('3', 'core_mod3'), \
-    ('act', 'sto_act'), ('nsw', 'sto_nsw'), ('nt', 'sto_nt'), ('qld', 'sto_qld'), \
-        ('sa', 'sto_sa'), ('tas', 'sto_tas'), ('vic', 'sto_vic'), ('wa', 'sto_wa'), \
-    ('aboriginal', 'niche_aboriginal'), ('golf', 'niche_golf'), ('lodges', 'niche_lodges'), \
-        ('ra', 'niche_ra'), ('walks', 'niche_walks'), ('wine', 'niche_wine'), \
-        ('aquatic', 'niche_coastal')])
+# # US POC
+# MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res7', 'core_mod2_7')), \
+#         ('3', ('res8', 'core_mod3_7')), \
+#     ('act', ('res3', 'sto_act_0407')), ('nsw', ('res11', 'sto_nsw_ali')), \
+#         ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res13', 'sto_qld_ali')), \
+#         ('sa', ('res14', 'sto_sa_ali')), ('tas', ('res15', 'sto_tas_ali0321')), \
+#         ('vic', ('res16', 'sto_vic_ali')), ('wa', ('res17', 'sto_wa_ali')), \
+#     ('aboriginal', ('res1', 'Aboriginal_Exp_HO_ali')), \
+#         ('golf', ('res4', 'niche_golf_ali')), ('lodges', ('res6', 'niche_lodges_ali')), \
+#         ('ra', ('res9', 'niche_ra_ali')), ('walks', ('res5', 'niche_walks_ali')), \
+#         ('wine', ('res10', 'niche_wine_ali')), ('aquatic', ('res2', 'niche_coastal_ali'))])
+# MODULES = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
+#         ('3', ('core_3', 'core_mod3_ali')), \
+#     ('act', ('_1', 'sto_act_0407')), ('nsw', ('_20', 'sto_nsw_ali')), \
+#         ('nt', ('nt', 'sto_nt_ali')), ('qld', ('qld', 'sto_qld_ali')), \
+#         ('sa', ('sa', 'sto_sa_ali')), ('tas', ('_18', 'sto_tas_ali0321')), \
+#         ('vic', ('_17', 'sto_vic_ali')), ('wa', ('wa', 'sto_wa_ali')), \
+#     ('aboriginal', ('niche_aboriginal', 'Aboriginal_Exp_HO_ali')), \
+# +5 ('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
+# +5 ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
+#+7('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
 
-# uuuuugggh
-MODULES_C = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
-        ('3', ('core_3', 'core_mod3_ali')), \
-    ('act', ('_1', 'sto_act_0407')), ('nsw', ('_20', 'sto_nsw_ali')), \
-        ('nt', ('nt', 'sto_nt_ali')), ('qld', ('qld', 'sto_qld_ali')), \
-        ('sa', ('sa', 'sto_sa_ali')), ('tas', ('_18', 'sto_tas_ali0321')), \
-        ('vic', ('_17', 'sto_vic_ali')), ('wa', ('wa', 'sto_wa_ali')), \
-    ('aboriginal', ('niche_aboriginal', 'Aboriginal_Exp_HO_ali')), \
-        ('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
-        ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
-        ('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
 
-# So this happened.
-M = 'mandatory-modules/core-module'
-OPT = 'optional-modules/'
-S = OPT + 'state-and-territory/sto_'
-N = OPT + 'niche/niche_'
-MODULES = OrderedDict([('1', M + '1'), ('2', M + '2'), ('3', M + '3'), \
-        ('act', S + 'act'), ('nsw', S + 'nsw'), ('nt', S + 'nt'), ('qld', S + 'qld'), \
-        ('sa', S + 'sa'), ('tas', S + 'tas'), ('vic', S + 'vic'), ('wa', S + 'wa'), \
-    ('aboriginal', N + 'aboriginal'), ('golf', N + 'golf'), ('lodges', N + 'lodges'), \
-        ('ra', N + 'ra'), ('walks', N + 'walks'), ('wine', N + 'winery'), \
-        ('aquatic', N + 'coastal')])
+
+
+
+
+
+        ### ### ### ### ### ### ### ### ###
+        ### Begin the Do Not Touch Zone ###
+        ### ### ### ### ### ### ### ### ###
+
+
+
+
 
 MOD_1_SCRIPT = ['Button_728', \
 ['Button_902', 'Button_903', 'Button_953', 'Button_918', \

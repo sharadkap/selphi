@@ -702,11 +702,11 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # I did say that implementation details are to be done elsewhere.
         # But error handling is to be done here, and that takes priority.
         modules.module_one()
-        do_mod_then_back('1', 4)
+        do_mod_then_back('mod1', 4)
         modules.module_two()
-        do_mod_then_back('2', 4)
+        do_mod_then_back('mod2', 4)
         modules.module_three()
-        do_mod_then_back('3', 6)
+        do_mod_then_back('mod3', 6)
 
         # Should receive a halfway email here.
         try:

@@ -22,6 +22,7 @@ Open Menu Button, so the z-index is added to be more specific.
 A Tuple, like ('s15_GBR', 'gbr_drop') signifies a Drag And Drop, with the first
 one being dragged to the second. Note, Tuples can contain Lists too."""
 
+import json
 from collections import OrderedDict
 
 # Editing this is easier than using the command line.
@@ -68,53 +69,22 @@ LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my
     'fr': ('fr-fr', 'fr_fr'), 'it': ('it-it', 'it_it'), \
 'cn': ('zh-cn', 'cn_zh')}
 
-# in stage
-MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_7')), \
-        ('3', ('res2', 'core_mod3_7')), \
-    ('act', ('res10', 'sto_act_0407')), ('nsw', ('res4', 'sto_nsw_ali')), \
-        ('nt', ('res9', 'sto_nt_ali')), ('qld', ('res5', 'sto_qld_ali')), \
-        ('sa', ('res6', 'sto_sa_ali')), ('tas', ('res7', 'sto_tas_ali0321')), \
-        ('vic', ('res3', 'sto_vic_ali')), ('wa', ('res8', 'sto_wa_ali')), \
-    ('aboriginal', ('res13', 'Aboriginal_Exp_HO_ali')), \
-        ('golf', ('res14', 'niche_golf_ali')), ('lodges', ('res12', 'niche_lodges_ali')), \
-        ('ra', ('res11', 'niche_ra_ali')), ('walks', ('res15', 'niche_walks_ali')), \
-        ('wine', ('res16', 'niche_wine_ali')), ('aquatic', ('res17', 'niche_coastal_ali'))])
+# Remember to download a fresh modules json for each environment.
+# Find them at {author-url}/content/sites/asp/resources.2.json
+MODULES = OrderedDict([('mod1', {}), ('mod2', {}), ('mod3', {}), ('act', {}), ('nsw', {}),
+                       ('nt', {}), ('qld', {}), ('sa', {}), ('tas', {}),('vic', {}), ('wa', {}),
+                       ('aboriginal', {}), ('golf', {}), ('lodges', {}), ('ra', {}),
+                       ('walks', {}), ('wine', {}), ('coastal', {})])
 
-# GB POC
-# MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_7')), \
-#         ('3', ('res2', 'core_mod3_7')), \
-#     ('act', ('res13', 'sto_act_0407')), ('nsw', ('res4', 'sto_nsw_ali')), \
-#         ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res7', 'sto_qld_ali')), \
-#         ('sa', ('res9', 'sto_sa_ali')), ('tas', ('res10', 'sto_tas_ali0321')), \
-#         ('vic', ('res8', 'sto_vic_ali')), ('wa', ('res11', 'sto_wa_ali')), \
-#     ('aboriginal', ('res16', 'Aboriginal_Exp_HO_ali')), \
-#         ('golf', ('res6', 'niche_golf_ali')), ('lodges', ('res15', 'niche_lodges_ali')), \
-#         ('ra', ('res14', 'niche_ra_ali')), ('walks', ('res17', 'niche_walks_ali')), \
-#         ('wine', ('res18', 'niche_wine_ali')), ('aquatic', ('res19', 'niche_coastal_ali'))])
-
-# # US POC
-# MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res7', 'core_mod2_7')), \
-#         ('3', ('res8', 'core_mod3_7')), \
-#     ('act', ('res3', 'sto_act_0407')), ('nsw', ('res11', 'sto_nsw_ali')), \
-#         ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res13', 'sto_qld_ali')), \
-#         ('sa', ('res14', 'sto_sa_ali')), ('tas', ('res15', 'sto_tas_ali0321')), \
-#         ('vic', ('res16', 'sto_vic_ali')), ('wa', ('res17', 'sto_wa_ali')), \
-#     ('aboriginal', ('res1', 'Aboriginal_Exp_HO_ali')), \
-#         ('golf', ('res4', 'niche_golf_ali')), ('lodges', ('res6', 'niche_lodges_ali')), \
-#         ('ra', ('res9', 'niche_ra_ali')), ('walks', ('res5', 'niche_walks_ali')), \
-#         ('wine', ('res10', 'niche_wine_ali')), ('aquatic', ('res2', 'niche_coastal_ali'))])
-# MODULES = OrderedDict([('1', ('core_1', 'core_mod1_ali')), ('2', ('_19', 'core_mod2_ali')), \
-#         ('3', ('core_3', 'core_mod3_ali')), \
-#     ('act', ('_1', 'sto_act_0407')), ('nsw', ('_20', 'sto_nsw_ali')), \
-#         ('nt', ('nt', 'sto_nt_ali')), ('qld', ('qld', 'sto_qld_ali')), \
-#         ('sa', ('sa', 'sto_sa_ali')), ('tas', ('_18', 'sto_tas_ali0321')), \
-#         ('vic', ('_17', 'sto_vic_ali')), ('wa', ('wa', 'sto_wa_ali')), \
-#     ('aboriginal', ('niche_aboriginal', 'Aboriginal_Exp_HO_ali')), \
-# +5 ('golf', ('niche_golf', 'niche_golf_ali')), ('lodges', ('niche_lodges', 'niche_lodges_ali')), \
-# +5 ('ra', ('niche_ra', 'niche_ra_ali')), ('walks', ('niche_walks', 'niche_walks_ali')), \
-#+7('wine', ('niche_wine', 'niche_wine_ali')), ('aquatic', ('niche_coastal', 'niche_coastal_ali'))])
-
-
+with open('mods.json') as fil:
+    thelist = json.load(fil)
+for lang in LANGS:
+    lan = LANGS[lang][0].replace('-', '_')
+    if lan in thelist:
+        for mod in thelist[lan]:
+            if mod.startswith('res'):
+                modid = thelist[lan][mod]['id'].split('_')[-1]
+                MODULES[modid][lang] = mod
 
 
 
@@ -901,7 +871,7 @@ WINE_SCRIPT = ['Button_33', \
 's38_tf2', 'Button_489', 'Button_484', \
 'Button_525']
 
-AQUATIC_SCRIPT = ['Button_5', \
+COASTAL_SCRIPT = ['Button_5', \
 'Button_12', 'Button_13', 'Button_14', 'Button_9', \
 'Button_20', \
 'Button_215', 'Button_731', 'Button_282', 'Button_281', 'Button_212', \
@@ -976,4 +946,4 @@ SCRIPTS = {'1': MOD_1_SCRIPT, '2': MOD_2_SCRIPT, '3': MOD_3_SCRIPT, \
 'act': ACT_SCRIPT, 'nsw': NSW_SCRIPT, 'nt': NT_SCRIPT, 'qld': QLD_SCRIPT, \
 'sa': SA_SCRIPT, 'tas': TAS_SCRIPT, 'vic': VIC_SCRIPT, 'wa': WA_SCRIPT, \
 'aboriginal': ABORIGINAL_SCRIPT, 'golf': GOLF_SCRIPT, 'lodges': LODGES_SCRIPT, \
-'ra': RA_SCRIPT, 'walks': WALKS_SCRIPT, 'wine': WINE_SCRIPT, 'aquatic': AQUATIC_SCRIPT}
+'ra': RA_SCRIPT, 'walks': WALKS_SCRIPT, 'wine': WINE_SCRIPT, 'coastal': COASTAL_SCRIPT}

@@ -25,8 +25,8 @@ LIST_STR = List[str]    # pylint: disable-msg=E1126
 def do_module(driver: WebDriver, module: str) -> None:
     """Run this one if this is being imported as part of the Reg tests.
     Be sure to have already navigated to the module page, pass in the driver
-    to be used, tell it which module this is and stand back. Names are:
-    1, 2, 3, act, qld, nsw, nt, sa, tas, vic, wa, aboriginal, golf, lodges, ra, walks, wine"""
+    to be used, tell it which module this is and stand back. Names are: mod1, mod2, mod3,
+    act, qld, nsw, nt, sa, tas, vic, wa, aboriginal, golf, lodges, ra, walks, wine"""
     global DRIVER    # pylint: disable-msg=W0601
     DRIVER = driver
     for elem in SCRIPTS[module]:
@@ -90,19 +90,22 @@ def new_drag_drop(source: str, target: str) -> None:
     """Like the ActionChains drag and drop,
     but updates the mouse position just after mousedown."""
     # Command.MOVE_TO, desite taking a css id string, does not actually perform a DOM lookup.
-    def getid(loc) -> WebElement:
-        """Interpret whether input is a locator or a series or alternate locators."""
+    def getid(loc: str, frame: str='{}') -> WebElement:
+        """Interpret whether input is a locator or a series or alternate locators.
+        If there is a decorated clone, like in drag-drops, use frame to apply a format string."""
         if isinstance(loc, str):
+            loc = frame.format(loc)
             try:
                 return DRIVER.find_element_by_id(loc)
             except NoSuchElementException:
                 raise NoSuchElementException("Didn't find {0}".format(loc)) from None
         elif isinstance(loc, list):
+            loc = [frame.format(l) for l in loc]
             return pick_from_possibilities(loc)
         else:
             raise TypeError('You broke it. String, or List only.')
     # IE WHY.    FIREFOX, ET TU?
-    source, fource, target = getid(source), getid('re-{}c'.format(source)), getid(target)
+    source, fource, target = getid(source), getid(source, 're-{}c'), getid(target)
     if not isinstance(DRIVER, Firefox):
         DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return '
                               'x.getBoundingClientRect().top;}),wp=window.top;'
@@ -186,26 +189,16 @@ def do_locale(args):
     parseargs()
     # Reset the driver between rounds
     restart_driver(browser)
+    # Log into the site, so you can access the modules.
+    log_in(lang)
     # Start recording results.
     result = '_'.join([lang.upper(), brname.upper()])
     for mod in modfilter:
         try:
             # Figure out the locale coding.
-            url = stem.format(langs[lang][0].replace('-', '_'),
-                              MODULES[mod][0], MODULES[mod][1], langs[lang][1])
-            # Deal with Basic Server Authentication
-            isie = isinstance(DRIVER, Ie)
-            # Chrome and Firefox know how to use http headers.
-            if not isie and AUTH:
-                url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*AUTH), url)
-            # IE knows how to write to popups.
-            if isie and AUTH:
-                try:
-                    DRIVER.switch_to.alert.authenticate(*AUTH)
-                except WebDriverException:  # If you're already logged in, never mind.
-                    pass
+            url = stem.format(langs[lang][0].replace('-', '_'), MODULES[mod][lang])
             DRIVER.get(url)
-            log_in_first(lang)
+            begin_module()
             # Try to do the module
             for elem in SCRIPTS[mod]:
                 domo(elem)
@@ -227,24 +220,35 @@ def switch_into_module(driver: WebDriver) -> None:
     iframe = driver.find_element_by_css_selector('frame#ScormContent')
     driver.switch_to.frame(iframe)
 
-def log_in_first(lang: str) -> None:
+def log_in(lang: str) -> None:
     """If testing with login, first, have to go and log in and everything.
-    As it happens, restarting the module will also fix the Loading Forever bug."""
-    DRIVER.implicitly_wait(MINIWAIT)
-    lo = DRIVER.find_elements_by_id('link-logout')
-    li = DRIVER.find_elements_by_css_selector('.link-signin-text')
-    # Try to log in, if you aren't already logged in.
-    if (len(lo) == 0 or not lo[0].is_displayed()) and len(li) != 0 and li[0].is_displayed():
+    Log in to ASP and to the server auth."""
+    url = '{0}/{1}'.format(ENV, LANGS[lang][0])
+    # Deal with Basic Server Authentication
+    isie = isinstance(DRIVER, Ie)
+    # Chrome and Firefox know how to use http headers.
+    if not isie and AUTH:
+        url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*AUTH), url)
+    # IE knows how to write to popups.
+    if isie and AUTH:
         try:
-            li[0].click()
-            DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
-            DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
-            DRIVER.find_element_by_id('usersignin').click()
-        except NoSuchElementException as ex:
-            DRIVER.implicitly_wait(IMPLICITLY_WAIT) # Just in case the other one gets missed.
-            raise NoSuchElementException('Login failed, something was missing from the '
-                                         'login panel.\n\n' + ex.msg) from None
-    DRIVER.implicitly_wait(IMPLICITLY_WAIT)
+            DRIVER.switch_to.alert.authenticate(*AUTH)
+        except WebDriverException:  # If you're already logged in, never mind.
+            pass
+    DRIVER.get(url)
+    # Try to log in
+    try:
+        DRIVER.find_element_by_css_selector('.link-signin-text').click()
+        DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
+        DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
+        DRIVER.find_element_by_id('usersignin').click()
+    except NoSuchElementException as ex:
+        raise NoSuchElementException('Login failed, something was missing from the '
+                                     'login panel.\n\n' + ex.msg) from None
+
+def begin_module():
+    """Switch into the module frame, wait for it to load, and reset the module.
+    As it happens, restarting the module will also fix the Loading Forever bug."""
     try:
         switch_into_module(DRIVER)
     except NoSuchElementException as ex:

@@ -43,9 +43,10 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
                          ' assertions. Hopefully the custom messages are helpful enough.')
 
-    def add_error(self, error) -> None:
+    def add_error(self) -> None:
         """Adds an error to the errors list. Shortcut."""
-        self.verificationErrors.append(error)
+        from selene import tidy_error
+        self.verificationErrors.append(tidy_error())
 
     # Tests start here.
     def test_01_Splash_Page(self) -> None:
@@ -57,13 +58,13 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         try:
             self.assertSetEqual(langsel.locale_set, langsel.get_values(),
                                 'The language selector should contain all locales.')
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Select the country from the dropdown.
         langsel.choose_locale()
         # Page should redirect to its respective locale.
         self.dr.wait_for_page()
-        self.assertIn(self.globs['locale'], self.dr.current_url(),
+        self.assertIn(self.globs['locale'], self.dr.fix_url(self.dr.current_url()),
                       'The selected locale should link to that locale.')
 
     def test_02_Homepage(self) -> None:
@@ -72,22 +73,22 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Video should be present. But its absence isn't worth aborting the test over.
         try:
             video = CP.WelcomeVideo(self.dr)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         else:
             # Play the video.
             video.play()
             # Video loads and plays. Again, there are still other things to test.
             try:
                 self.dr.wait_until(video.is_playing, 'After clicking Play, the video should play.')
-            except Exception as ex:
-                self.add_error(ex)
+            except Exception:
+                self.add_error()
         # Login and Register buttons should be present in the body content.
         try:
             CP.BodyLoginButton(self.dr)
             CP.BodyRegisterButton(self.dr)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # The What You Can See Mosaic is displayed, contains five tiles.
         mosaic = CP.WhatYouCanSeeMosaic(self.dr)
         self.assertEqual(mosaic.tile_count(), 5,
@@ -106,8 +107,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             about.how_to_use_the_site()
             about.program_faq()
             about.contact_us()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
         # Click on 'Sales Resources' in the Mega Menu.
         try:
@@ -123,32 +124,32 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             sales.useful_sites()
             sales.destination_faq()
             sales.image_and_video_galleries()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
         # Click on 'Training' in the Mega Menu.
         try:
             train = CP.NavMenu.Training(self.dr).open()
             # The Training section should have: *Training (Landing page only)
             train.training()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
         # Click on 'News & Products' in the Mega Menu.
         try:
             news = CP.NavMenu.NewsAndProducts(self.dr).open()
             # The News section should have: *News and Product Updates (Landing page only)
             news.news_and_product_updates()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
         # Click on 'Aussie Specialist Club' in the Mega Menu.
         try:
             club = CP.NavMenu.AussieSpecialistClub(self.dr).open()
             # The Club section should have: *Aussie Specialist Club (Landing page only)
             club.aussie_specialist_club()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
     def test_04_Footer(self) -> None:
         """Checks the content of the Footer."""
@@ -158,8 +159,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             # China is different, of course.
             try:
                 footer.wechat()
-            except Exception as ex:
-                self.add_error(ex)
+            except Exception:
+                self.add_error()
         else:
             # The Footer should have: Find us on: Social icons and links.
             try:
@@ -168,8 +169,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 footer.plus_google()
                 footer.instagram()
                 footer.youtube()
-            except Exception as ex:
-                self.add_error(ex)
+            except Exception:
+                self.add_error()
         # About this site: links through to relevant pages
         try:
             footer.sitemap()
@@ -177,16 +178,16 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             footer.terms_and_conditions()
             footer.terms_of_use()
             footer.contact_us()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Other sites: Links through to Aus.com, Corporate site and Business Events.
         try:
             footer.australia()
             footer.businessevents_australia()
             if not self.globs['cn_mode']:    # China doesn't have this one.
                 footer.tourism_australia()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Click the Change Your Country link.
         footer.splash().click()
         # Should link back to the Splash page.
@@ -204,9 +205,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.dr.wait_for_page()
             self.assertIn('/sitemap.html', self.dr.current_url(), 'The Sitemap link should link '
                           'to the Sitemap page.')
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).sitemap()
-            self.add_error(ex)
         # Sitemap page should have links to each of the pages in the Nav Menu
         sitemap = CP.Sitemap(self.dr)
         try:
@@ -214,8 +215,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             sitemap_links = sitemap.get_all_links()
             self.assertTrue(nav_links.issubset(sitemap_links),
                             'The sitemap should contain each of the links in the Nav Menu.')
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         try:
             # And should also have Change Password, Unsubscribe, and Coming Soon links.
             # But China doesn't.
@@ -223,8 +224,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 sitemap.change()
                 sitemap.newsletter_unsubscribe()
                 sitemap.coming_soon()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
     def test_06_Filtered_Search_Itineraries(self) -> None:
         """Checks the Itineraries Search."""
@@ -232,9 +233,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to Sales Resources > Itinerary Suggestions.
         try:
             CP.NavMenu.SalesResources(self.dr).open().itineraries_search_and_feature().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).itineraries()
-            self.add_error(ex)
         # Do a random search and validate the results.
         search = CP.FilteredSearch(self.dr)
         search.random_search()
@@ -246,16 +247,16 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to Sales Resources > Fact Sheets.
         try:
             CP.NavMenu.SalesResources(self.dr).open().fact_sheets_overview().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).factsheets()
-            self.add_error(ex)
         # Do a random search. (In Fact Sheet +PDFs Mode) Then validate the results.
         search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
         search.random_search()
         try:
             self.look_at_search_results(search)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Alright, done there back up.
         self.dr.back()
         # Because the page was reloaded, have to refresh the references.
@@ -297,17 +298,17 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.dr.open_home_page()
         try:
             CP.HeaderMapIcon(self.dr).click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).map()
-            self.add_error(ex)
         # (Switches into the Map Iframe.)
         imap = CP.InteractiveMap(self.dr)
         # Map Menu should have: Cities, Iconic Destinaions, Itineraries, and Flight Times.
         controls = imap.Controls(self.dr)
         try:
             cities = controls.Cities(self.dr)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         else:
             try:
                 # Open the Cities menu, the Cities list should be shown.
@@ -317,12 +318,12 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 pin = imap.MapArea.MapPins(self.dr).pick_random()
                 # That City's Info Panel should be shown. Go examine it.
                 self.map_info_panel(pin)
-            except Exception as ex:
-                self.add_error(ex)
+            except Exception:
+                self.add_error()
         try:
             icons = controls.IconicDestinations(self.dr)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         else:
             try:
                 # Open the Iconic Destinations menu
@@ -332,16 +333,16 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 pin = imap.MapArea.MapPins(self.dr).pick_random()
                 # That Icon's Info Panel should be shown, verify all that.
                 self.map_info_panel(pin)
-            except Exception as ex:
-                self.add_error(ex)
+            except Exception:
+                self.add_error()
         try:
             controls.Itineraries(self.dr)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         try:
             flights = controls.FlyingTimes(self.dr)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         else:
             # Open the Flying Times section, the Flying Times device appears.
             flights.open_menu()
@@ -373,8 +374,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                           'The More Info link should remain within the same locale.')
             self.assertEqual(fomlink, panel.view_highlights(),
                              'Both of the More Info Links should go to the same page.')
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Click the Photos
         try:
             imgnum = panel.count_photos()
@@ -394,8 +395,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                                     'Two image should also be distinct from the nexter.')
             # Close the Photo Viewer
             photos.close()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Click on one of the Itinerary Suggestion links
         try:
             itiname = panel.random_itinerary()
@@ -418,8 +419,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 # An info box should appear at the pin.
                 CP.InteractiveMap.MapArea.InfoPopup(self.dr)
             # Click the Back To Menu Button, the panel should spin back to the Main Map Menu
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         finally:
             panel.back_to_menu()
 
@@ -429,9 +430,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to About > Contact Us.
         try:
             CP.NavMenu.About(self.dr).open().contact_us().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).contact()
-            self.add_error(ex)
         # "Click the Contact Us link, Default email client should open, with the To field populated
         #   with the relevant contact." Can't actually test that, so a 'mailto:' will have to do.
         CP.ContactUs(self.dr)
@@ -442,9 +443,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to the Registration Page
         try:
             CP.BodyRegisterButton(self.dr).click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).register()
-            self.add_error(ex)
         # Random letters to make a unique username.
         self.globs['userid'] = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
         self.globs['email'] = self.globs['email'].format(self.globs['userid'])
@@ -501,29 +502,29 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         try:
             self.assertIn(self.globs['locale'] + '/secure.html', self.dr.current_url(),
                           'After logging in, should redirect to a/the secure page.')
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Check the Nav Menu
         # The Sales section should now have the My Sales Tools link
         try:
             CP.NavMenu.SalesResources(self.dr).open().my_sales_tools()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # The Training Section should now have the Training Summary and Webinars links.
         try:
             train = CP.NavMenu.Training(self.dr).open()
             train.webinars()
             train.training_summary()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # The News & Updates section should have the Latest News Link
         # The News section should now  have the Product Updates link.
         try:
             news = CP.NavMenu.NewsAndProducts(self.dr).open()
             news.latest_news()
             news.product_videos()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # China shows most of its ASC stuff to unqualified users, yes.
         if self.globs['cn_mode']:
             club = CP.NavMenu.AussieSpecialistClub(self.dr).open()
@@ -537,27 +538,26 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
     def test_12_Favourites(self):
         """Tests the Sales Tools functionality."""
         favtitles = set()
-        def mosaicad(num):
+        def mosaicad(num: int):
             """Opens a mosaic, checks it, and adds it to sales tools"""
             nonlocal favtitles
             # Click on some of the Mosaic panels.
             try:
-                for tile in CP.WhatYouCanSeeMosaic(self.dr).random_selection(num):
-                    tile.open()
-                    # The Panels should unfold, showing a description, More Info link, heart button.
-                    # They aren't too well labelled though, so you might want to watch the playback.
-                    self.assertTrue(tile.get_description().is_displayed(),
-                                    'Open Mosaic tiles should have a description visible.')
-                    self.assertTrue(tile.get_link().is_displayed(),
-                                    'Open Mosaic tiles should have a More Info link.')
+                tiles = CP.WhatYouCanSeeMosaic(self.dr).random_selection(num)
+                for i in [tile.get_title() for tile in tiles]:
+                    tile = CP.WhatYouCanSeeMosaic(self.dr)[i]
+                    # The Panels direct to their page when clicked.
+                    tile.go()
                     # Click on the Heart buttons of those mosaics.
-                    tile.add_to_favourites()
-                    favtitles.add(tile.get_title())
+                    hero = CP.Hero(self.dr)
+                    hero.add()
+                    favtitles.add(hero.get_title())
                     # The Heart Icon in the header should pulse and have a number incremented.
                     self.assertEqual(len(favtitles), CP.HeaderHeartIcon(self.dr).favourites_count(),
                                      'Adding to favourites should increment favourites count.')
-            except Exception as ex:
-                self.add_error(ex)
+                    self.dr.back()
+            except Exception:
+                self.add_error()
 
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
@@ -570,25 +570,25 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to the About page.
         try:
             CP.NavMenu.About(self.dr).open().about().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).about()
-            self.add_error(ex)
         # Add some of the mosaics to Sales Tools
         mosaicad(3)
         # Navigate to Sales Resources > Australian Events.
         try:
             CP.NavMenu.SalesResources(self.dr).open().events().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).events()
-            self.add_error(ex)
         # Click the Add To Sales Tools buttons of some of the Event Mosaics.
         mosaicad(6)
         # Navigate to Sales Resources > Fact Sheets.
         try:
             CP.NavMenu.SalesResources(self.dr).open().fact_sheets_overview().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).factsheets()
-            self.add_error(ex)
         # Click the Add To Sales Tools buttons on a few of the results.
         try:
             search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
@@ -597,14 +597,14 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 favtitles.add(result.get_title())
                 self.assertEqual(len(favtitles), CP.HeaderHeartIcon(self.dr).favourites_count(),
                                  'Adding to favourites should increment favourites count.')
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Click the Heart Icon in the header, the My Sales Tools page should be displayed.
         try:
             CP.HeaderHeartIcon(self.dr).click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).favourites()
-            self.add_error(ex)
         # The My Sales Tools page should have an entry for each of the pages added previously.
         tools = CP.MySalesTools(self.dr)
         faves = tools.get_favourites()
@@ -612,8 +612,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         try:
             self.assertTrue(favtitles.issubset(favpagetitles),
                             'The Sales Tools should contain every item previously added.')
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Entries should have an X button, a Title, a Description, and a More Info link.
         try:
             for fave in faves:
@@ -622,8 +622,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                 fave.get_link()
                 # Click several of the listed items' X buttons.
                 fave.close()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # There will now be a set of buttons present instead of the favourites list.
         tools.home_search()
         # The entries should be removed from the list.
@@ -638,9 +638,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to the Profile page.
         try:
             CP.NavMenu(self.dr).profile().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).profile()
-            self.add_error(ex)
         profile = CP.Profile(self.dr)
         # Modify the values of several of the fields, but leave TEST in the names.
         words = "A Series Of Random Words To Use For Sampling Or Some Such Thing".split()
@@ -654,8 +654,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             if self.globs['cn_mode']: partner = profile.set_partner()
             profile.bio = bio
             profile.lname = lastname
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Click the Save Changes button, a panel confirming changes saved should appear.
         profile.save_changes()
         # Refresh the page.
@@ -677,16 +677,16 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             No guarantee that the testing is going on in LIVE, so go back manually."""
             nonlocal modules
             try:
-                MOD.do_module(self.dr, mod)
-            except Exception as ex:
+                MOD.do_module(self.dr.driver, mod)  # Cheating a little, but w/e
+            except Exception:
+                self.add_error()
                 self.dr.execute_script('cpCmndGotoSlide=cpInfoSlideCount-{}'.format(offset))
-                self.add_error(ex)
             self.dr.back()
             try:
                 CP.NavMenu.Training(self.dr).open().training_summary().click()
-            except Exception as ex:
+            except Exception:
+                self.add_error()
                 CP.BackupHrefs(self.dr).training()
-                self.add_error(ex)
             modules = CP.TrainingSummary(self.dr)
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
@@ -694,9 +694,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to Training > Training Summary.
         try:
             CP.NavMenu.Training(self.dr).open().training_summary().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).training()
-            self.add_error(ex)
         modules = CP.TrainingSummary(self.dr)
         # Go do a few of the modules.
         # I did say that implementation details are to be done elsewhere.
@@ -711,20 +711,20 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Should receive a halfway email here.
         try:
             Email.LocalizedEmail(self.globs, self.dr, self.globs['userid'])
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
-        modules.module_nsw()
-        do_mod_then_back('nsw', 4)
+        modn = modules.module_nsw()
+        do_mod_then_back(modn, 4)
 
         # Open this one, but don't finish it.
         try:
             modules.module_vic()
             modules.wait_for_module()
             CP.NavMenu.Training(self.dr).open().training_summary().click()
-        except Exception as ex:
-            CP.BackupHrefs.training(self.dr)
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
+            CP.BackupHrefs(self.dr).training()
         # Unstarted Modules should have a New label
         # Started-Not-Finished Modules should have an Incomplete label
         # Completed Modules should have the Complete label.
@@ -732,27 +732,27 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         try:
             modules.optional_path()
             modules.completion_types()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
-        modules.module_qld()
-        do_mod_then_back('qld', 4)
+        modq = modules.module_qld()
+        do_mod_then_back(modq, 4)
 
         # Should receive the qualification email here.
         try:
             Email.LocalizedEmail(self.globs, self.dr, self.globs['userid'])
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
         # Go back to the Profile page.
         try:
             CP.NavMenu(self.dr).profile().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).profile()
-            self.add_error(ex)
         # The Modules' Completion Badges should be in the Recent Achievements list.
         profile = CP.Profile(self.dr)
-        self.assertSetEqual({'mod1', 'mod2', 'mod3', 'nsw', 'qld'}, profile.module_badges(),
+        self.assertSetEqual({'mod1', 'mod2', 'mod3', modn, modq}, profile.module_badges(),
                             'The Profile should contain the badges of the modules just completed.')
 
     def test_15_Aussie_Specialist_Club(self):
@@ -783,9 +783,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to ASC > Travel Club
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().travel_club().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).travel()
-            self.add_error(ex)
         # Search for results, changing the terms if none.
         travelsearch = CP.FilteredSearch(self.dr)
         travelsearch.random_search()
@@ -800,9 +800,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to ASC > Famils
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().famils().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).famils()
-            self.add_error(ex)
         # Maybe not available in all locales?
         # Should Display Famils page content.
         CP.Famils(self.dr)
@@ -815,9 +815,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to ASC > AS Photos
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().aussie_specialist_photos().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).photos()
-            self.add_error(ex)
         # Should display Instagram Image Tiles, with links and descriptions
         for pic in CP.AussieSpecialistPhotos(self.dr).random_images(10):
             pic.open()
@@ -950,9 +950,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Preamblic mess.
         try:
             CP.NavMenu(self.dr).profile().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).profile()
-            self.add_error(ex)
         def xandxplusy(x: str, y: str=', '):
             """Basically, if X is not blank, append Y to it."""
             return x and x + y
@@ -965,25 +965,25 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                             xandxplusy(profile.address3)).strip() + '\n' + profile.town +
                            '\n' + profile.get_state() + ', ' + profile.zip + '\n' +
                            profile.country + '\n' + profile.countrycode + profile.phone)
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             gotprof = False
-            self.add_error(ex)
         else:
             gotprof = True
         # Navigate to ASC > Aussie Store
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().aussie_store().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).store()
-            self.add_error(ex)
         # Click the Cart button
         try:
             store = CP.AussieStore(self.dr)
             store.my_cart()
             # Should get a popup message about the Cart being Empty.
             store.empty_cart_notice()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # Click on one of the Product Images
         try:
             productname = CP.AussieStore.ProductGrid(self.dr).random_product()
@@ -1004,8 +1004,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                                  "The Cart contact details should contain no 'null' values.")
             # Tidy up the cart before going into the large test.
             cart.remove_all()
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
         # For each of the categories, (except All Products), go through it,
         productcount = 0
         productnames = set()
@@ -1014,8 +1014,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             for cat in range(catnum)[1:]:
                 # And do the stuff. And stop doing the stuff if the cart tops out.
                 examine_products(cat)
-        except Exception as ex:
-            self.add_error(ex)
+        except Exception:
+            self.add_error()
 
     def test_21_Premier_Badge(self):
         """Checks that the Profile Page has a Premier Badge. Expect this one to fail."""
@@ -1025,9 +1025,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Navigate to the Profile Page.
         try:
             CP.NavMenu(self.dr).profile().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).profile()
-            self.add_error(ex)
         # The Status Badge area shows the Premier Aussie Specialist Icon.
         profile = CP.Profile(self.dr)
         self.assertEqual(profile.user_level(), CP.Profile.PREMIER,
@@ -1041,9 +1041,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # In the Sign In panel, click the Forgotten Username link.
         try:
             CP.SignIn(self.dr).forgotten_username().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).username()
-            self.add_error(ex)
         # Enter the user's email address into the Forgot Username form.
         forgus = CP.ForgottenForm(self.dr)
         forgus.email(self.globs['email'])
@@ -1061,9 +1061,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # In the Sign In panel, click the Forgotten Password link.
         try:
             CP.SignIn(self.dr).forgotten_password().click()
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).password()
-            self.add_error(ex)
         # Enter the user's email address into the Forgot Password form.
         forgpa = CP.ForgottenForm(self.dr)
         forgpa.email(self.globs['email'])
@@ -1085,9 +1085,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             CP.SignIn(self.dr).sign_in(
                 self.globs['username'], self.globs['temp_pass'], new_password=True)
             change = CP.ChangePassword(self.dr)
-        except Exception as ex:
+        except Exception:
+            self.add_error()
             CP.BackupHrefs(self.dr).change()
-            self.add_error(ex)
             change = CP.ChangePassword(self.dr)
         # Fill out the Change Password Form with the Current Password and a New Password.
         change.current_password(self.globs['temp_pass'])

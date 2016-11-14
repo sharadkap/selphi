@@ -103,7 +103,7 @@ def perform_hacks():
         try:
             oldclick(*args, **kwargs)
         except MOD.WebDriverException:  # args[0] will be the 'self' argument, so, the WebElement.
-            args[0].parent().execute_script(DR.SCROLL_SCRIPT, args[0])
+            args[0].parent.execute_script(DR.SCROLL_SCRIPT, args[0])
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
 
@@ -116,29 +116,11 @@ def perform_hacks():
             self.stream.writeln()
     unittest.TextTestResult.printErrors = newprinterrors
 
-    # This one really is a mess. Had to copy the method verbatim and make the required changes.
+    # Striiped this entire method right out.
     # The original method contains this unused argument, and yes, it isn't used there either.
     def newex(self, err, test):     # pylint: disable-msg=W0613
         """Converts a sys.exc_info()-style tuple of values into a string."""
-        import traceback
-        exctype, value, tb = err
-        # Strip the traceback down to the innermost call.
-        tb_e = traceback.TracebackException(exctype, value, tb, limit=3,
-                                            capture_locals=self.tb_locals)
-        msgLines = list(tb_e.format())
-
-        if self.buffer:
-            output = sys.stdout.getvalue()
-            error = sys.stderr.getvalue()
-            if output:
-                if not output.endswith('\n'):
-                    output += '\n'
-                msgLines.append('\nStdout:\n%s' % output)
-            if error:
-                if not error.endswith('\n'):
-                    error += '\n'
-                msgLines.append('\nStderr:\n%s' % error)
-        return ''.join(msgLines)
+        return tidy_error(err)
     # And, override the existing method.
     # I do need to access this private property to correctly HAX it into working.
     # pylint: disable-msg=W0212
@@ -146,12 +128,27 @@ def perform_hacks():
     # Also, tap has its own renderer as well, so have to overwrite that too.
     def newf(exc):
         """Rewrite this method so as to remove the traceback."""
-        import traceback
-        # Changed this bit, added the limit.
-        exception_lines = traceback.format_exception(*exc, limit=0)
-        lines = ''.join(exception_lines).splitlines(True)
+        lines = tidy_error(exc).splitlines(True)
         return tap.formatter.format_as_diagnostics(lines)
     tap.formatter.format_exception = newf
+
+def tidy_error(ex=None) -> str:
+    """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI"""
+    from os.path import join, abspath, dirname
+    from traceback import extract_tb, format_list, format_exception_only
+
+    show = join(dirname(abspath(__file__)), '')
+
+    def _check_file(name):
+        return name and name.startswith(show)
+
+    def _print(typ, value, tb):
+        show = (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
+        fmt = format_list(show) + format_exception_only(typ, value)
+        return ''.join(fmt)
+
+    args = ex or sys.exc_info()
+    return _print(*args)
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""

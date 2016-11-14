@@ -33,8 +33,9 @@ from collections import OrderedDict
 # The website domain to use in testing.
 # ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
-ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
+ENV = 'https://unifiedstaging.aussiespecialist.com'
 # ENV = 'https:www.aussiespecialist.com'
 
 # The Username and Password to use in the Server Authentication, if necessary.
@@ -46,7 +47,7 @@ AUTH = ['dev', 'bclvOP']
 TIMEFORMAT = '%Y/%m/%d %H:%M'
 
 # Which users to log in with when testing through site.
-USERS = {'ca': 'cadevZXYI', 'in': 'indevKWFR', 'my': 'mydevVOXU', \
+USERS = {'ca': 'cadevZXYI', 'in': 'instauoet', 'my': 'mydevVOXU', \
 'sg': 'sgdevTDBZ', 'gb': 'gbpocuxem', 'us': 'uspocwgau', \
 'ehk': 'hkdevXEOS', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
 'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
@@ -67,17 +68,29 @@ LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my
     'fr': ('fr-fr', 'fr_fr'), 'it': ('it-it', 'it_it'), \
 'cn': ('zh-cn', 'cn_zh')}
 
-# GB POC
+# in stage
 MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_7')), \
         ('3', ('res2', 'core_mod3_7')), \
-    ('act', ('res13', 'sto_act_0407')), ('nsw', ('res4', 'sto_nsw_ali')), \
-        ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res7', 'sto_qld_ali')), \
-        ('sa', ('res9', 'sto_sa_ali')), ('tas', ('res10', 'sto_tas_ali0321')), \
-        ('vic', ('res8', 'sto_vic_ali')), ('wa', ('res11', 'sto_wa_ali')), \
-    ('aboriginal', ('res16', 'Aboriginal_Exp_HO_ali')), \
-        ('golf', ('res6', 'niche_golf_ali')), ('lodges', ('res15', 'niche_lodges_ali')), \
-        ('ra', ('res14', 'niche_ra_ali')), ('walks', ('res17', 'niche_walks_ali')), \
-        ('wine', ('res18', 'niche_wine_ali')), ('aquatic', ('res19', 'niche_coastal_ali'))])
+    ('act', ('res10', 'sto_act_0407')), ('nsw', ('res4', 'sto_nsw_ali')), \
+        ('nt', ('res9', 'sto_nt_ali')), ('qld', ('res5', 'sto_qld_ali')), \
+        ('sa', ('res6', 'sto_sa_ali')), ('tas', ('res7', 'sto_tas_ali0321')), \
+        ('vic', ('res3', 'sto_vic_ali')), ('wa', ('res8', 'sto_wa_ali')), \
+    ('aboriginal', ('res13', 'Aboriginal_Exp_HO_ali')), \
+        ('golf', ('res14', 'niche_golf_ali')), ('lodges', ('res12', 'niche_lodges_ali')), \
+        ('ra', ('res11', 'niche_ra_ali')), ('walks', ('res15', 'niche_walks_ali')), \
+        ('wine', ('res16', 'niche_wine_ali')), ('aquatic', ('res17', 'niche_coastal_ali'))])
+
+# GB POC
+# MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res1', 'core_mod2_7')), \
+#         ('3', ('res2', 'core_mod3_7')), \
+#     ('act', ('res13', 'sto_act_0407')), ('nsw', ('res4', 'sto_nsw_ali')), \
+#         ('nt', ('res12', 'sto_nt_ali')), ('qld', ('res7', 'sto_qld_ali')), \
+#         ('sa', ('res9', 'sto_sa_ali')), ('tas', ('res10', 'sto_tas_ali0321')), \
+#         ('vic', ('res8', 'sto_vic_ali')), ('wa', ('res11', 'sto_wa_ali')), \
+#     ('aboriginal', ('res16', 'Aboriginal_Exp_HO_ali')), \
+#         ('golf', ('res6', 'niche_golf_ali')), ('lodges', ('res15', 'niche_lodges_ali')), \
+#         ('ra', ('res14', 'niche_ra_ali')), ('walks', ('res17', 'niche_walks_ali')), \
+#         ('wine', ('res18', 'niche_wine_ali')), ('aquatic', ('res19', 'niche_coastal_ali'))])
 
 # # US POC
 # MODULES = OrderedDict([('1', ('res', 'core_mod1_7')), ('2', ('res7', 'core_mod2_7')), \

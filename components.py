@@ -55,11 +55,11 @@ class SplashSelect(WrappedElement):
         self.element = self.dr.flashy_find_element('.dropdown-select-language1')
 
     # A Set of the full list of options that should be in the splash page language selector.
-    locale_set = {"/en-gb.html", "/en-us.html", "/en-ca.html", "/en-in.html", "/en-my.html",
-                  "/en-sg.html", "/id-id.html", "/de-de.html", "/zh-hk.html", "/en-hk.html",
-                  "/zh-hk.html", "/en-hk.html", "/ja-jp.html", "/ko-kr.html", "/pt-br.html",
-                  "/de-de.html", "/de-de.html", "/fr-fr.html", "/it-it.html",
-                  "https://www.aussiespecialist.cn/zh-cn"}
+    locale_set = {'/en-gb.html', '/en-us.html', '/en-ca.html', '/en-in.html', '/en-my.html',
+                  '/en-sg.html', '/id-id.html', '/de-de.html', '/zh-hk.html', '/en-hk.html',
+                  '/zh-hk.html', '/en-hk.html', '/ja-jp.html', '/ko-kr.html', '/pt-br.html',
+                  '/de-de.html', '/de-de.html', '/fr-fr.html', '/it-it.html',
+                  'https://www.aussiespecialist.cn/zh-cn', 'http://www1.aussiespecialist.com/'}
 
     def get_values(self) -> Set[str]:
         """Gets a set containing the URLs of all the Language Options."""
@@ -69,7 +69,8 @@ class SplashSelect(WrappedElement):
     def choose_locale(self) -> None:
         """Selects the Language Option representing the current locale."""
         option = self.dr.quietly_find_element(
-            'option[value*="{}"]'.format(self.dr.locale), self.element)
+            'option[value*="{0}"],option[value*="{1}"]'.format(
+                self.dr.locale, self.dr.locale.replace('-', '_')), self.element)
         self.dr.LAST_LINK = option.get_attribute('value')
         option.click()
 
@@ -77,17 +78,32 @@ class WelcomeVideo(WrappedElement):
     """Represents the main Video on the home page."""
     def __init__(self, dr: Drivery):
         self.dr = dr
-        self.element = self.dr.flashy_find_element('.hero')
+        self.element = self.dr.quietly_find_element('.hero')
 
     def play(self) -> None:
         """Clicks the video's Play button."""
-        self.dr.flashy_find_element('.cts-icon-play', self.element).click()
+        self.dr.quietly_find_element('.cts-icon-play', self.element).click()
         if self.dr.cn_mode:    # In China, you have to click it twice.
-            self.dr.flashy_find_element('.vjs-poster', self.element).click()
+            self.dr.quietly_find_element('.vjs-poster', self.element).click()
 
     def is_playing(self) -> bool:
         """Checks whether the video is playing."""
         return self.dr.quietly_find_element('.vjs-play-control', self.element).is_displayed()
+
+class Hero(WrappedElement):
+    """Represents the Hero Banner of ASP pages, and its Add To Sales Tools button."""
+    def __init__(self, dr: Drivery):
+        self.dr = dr
+        self.element = self.dr.flashy_find_element('.hero-video-copy')
+
+    def add(self):
+        """Clicks the Add To Sales Tools button, and waits until the animation is done."""
+        self.dr.flashy_find_element('#favouriteComp', self.element).click()
+        self.dr.wait_until_gone('.is-touched')
+
+    def get_title(self) -> str:
+        """Returns the page's title, as shown in the hero banenr."""
+        return self.dr.flashy_find_element('.home-hero-title', self.element).text
 
 class Video(WrappedElement):
     """Generically represents either a Brightcove Video or a Youku video."""
@@ -184,7 +200,11 @@ class WhatYouCanSeeMosaic(WrappedElement):
         """Given a number, gets that many randomly selected tiles from the mosaic."""
         return [self.MosaicTile(self.dr, tile) for tile in random.sample(self.tiles, num)]
 
-    def __getitem__(self, title):
+    def __len__(self) -> int:
+        """Returns the number of tiles in the mosaic."""
+        return len(self.tiles)
+
+    def __getitem__(self, title) -> WrappedElement:
         """Select a particular tile by using its title in the [] index accessor. Maybe."""
         return self.MosaicTile(self.dr, next(
             x for x in self.tiles
@@ -386,11 +406,11 @@ class Footer(WrappedElement):
                             'terms-of-use', 'contact-us'])
         attach_links(self, ['facebook', 'plus.google', 'youtube', 'twitter', 'instagram', 'weibo'],
                      selector='[href*="{}.com"]')
-        attach_links(self, ['wechat'], selector='[href*="#china_qr_image"]')
+        attach_links(self, ['wechat'], selector='[href*="#qr_image"],[href*="#china_qr_image"]')
         attach_links(self, ['australia', 'businessevents.australia'],
                      selector='[href*="www.{}.cn"]')
-        attach_links(self, ['australia', 'tourism.australia'], selector='[href*="www.{}.com"]')
-        attach_links(self, ['businessevents.australia'], selector='[href*="{}.com"]')
+        attach_links(self, ['australia', 'tourism.australia'], selector='[href*="www.{}.c"]')
+        attach_links(self, ['businessevents.australia'], selector='[href*="{}.c"]')
 
 class Sitemap(WrappedElement):
     """Represents the Sitemap link cloud."""
@@ -1033,7 +1053,7 @@ class Profile(WrappedElement):
     def __setattr__(self, name, value):
         """If an unknown SET message is received, see if there's a field with that name."""
         # Really should have seen this coming.
-        if name in {'element', 'change'}:
+        if name in {'dr', 'element', 'change'}:
             object.__setattr__(self, name, value)
             return
         elem = self.dr.flashy_find_element(
@@ -1098,11 +1118,12 @@ class TrainingSummary(WrappedElement):
         self.optional = lis[1]
 
     def optional_path(self):
-        """Open the ptional Modules path."""
+        """Open the optional Modules path."""
         self.dr.blip_element(self.optional).click()
 
-    def wait_for_module(self) -> None:
-        """Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly."""
+    def wait_for_module(self) -> str:
+        """Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly.
+        Returns the module code, just to be sure."""
         self.dr.flashy_find_element('.scf-play-button').click()
         # Switch into the frame stack
         self.dr.switch_to_frame('iframe[src^="/content/"]')
@@ -1113,8 +1134,10 @@ class TrainingSummary(WrappedElement):
         self.dr.wait_until_gone('#preloaderImage')
         # And then, set the module to slide one, just in case.
         self.dr.execute_script('cpCmndGotoSlide=0')
+        return self.dr.execute_script(
+            r'return location.href.match(/\/asset\/(.+?)(\.zip)?\/output/)[1].split("_").pop()')
 
-    def module_one(self) -> None:
+    def module_one(self) -> str:
         """Opens the First Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()
@@ -1132,23 +1155,23 @@ class TrainingSummary(WrappedElement):
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[2]).click()
         self.wait_for_module()
 
-    def module_nsw(self) -> None:
-        """Opens the First Optional Module."""
+    def module_nsw(self) -> str:
+        """Opens the First Optional Module. Returns the module code, just to be sure."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()
-        self.wait_for_module()
+        return self.wait_for_module()
 
-    def module_qld(self) -> None:
-        """Opens the Second Optional Module."""
+    def module_qld(self) -> str:
+        """Opens the Second Optional Module Returns the module code, just to be sure.."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[1]).click()
-        self.wait_for_module()
+        return self.wait_for_module()
 
-    def module_vic(self) -> None:
-        """Opens the Third Optional Module."""
-        self.dr.blip_element(self.option).click()
+    def module_vic(self) -> str:
+        """Opens the Third Optional Module. Returns the module code, just to be sure."""
+        self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[2]).click()
-        self.wait_for_module()
+        return self.wait_for_module()
 
     def completion_types(self) -> None:
         """Gets all of the Module entries, then checks how complete they are,

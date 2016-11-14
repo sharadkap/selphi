@@ -198,13 +198,13 @@ def do_locale(args):
             # Chrome and Firefox know how to use http headers.
             if not isie and AUTH:
                 url = re.sub('(https?://)', r'\1{0}:{1}@'.format(*AUTH), url)
-            DRIVER.get(url)
             # IE knows how to write to popups.
             if isie and AUTH:
                 try:
                     DRIVER.switch_to.alert.authenticate(*AUTH)
                 except WebDriverException:  # If you're already logged in, never mind.
                     pass
+            DRIVER.get(url)
             log_in_first(lang)
             # Try to do the module
             for elem in SCRIPTS[mod]:

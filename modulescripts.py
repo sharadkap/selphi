@@ -35,8 +35,8 @@ from collections import OrderedDict
 # ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
-# ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
-ENV = 'https://unifiedstaging.aussiespecialist.com'
+ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://unifiedstaging.aussiespecialist.com'
 # ENV = 'https:www.aussiespecialist.com'
 
 # The Username and Password to use in the Server Authentication, if necessary.
@@ -48,11 +48,11 @@ AUTH = ['dev', 'bclvOP']
 TIMEFORMAT = '%Y/%m/%d %H:%M'
 
 # Which users to log in with when testing through site.
-USERS = {'ca': 'cadevZXYI', 'in': 'instauoet', 'my': 'mydevVOXU', \
-'sg': 'sgdevTDBZ', 'gb': 'gbpocuxem', 'us': 'uspocwgau', \
-'ehk': 'hkdevXEOS', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
-'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
-'cn': 'cnwwwAYYC'}
+USERS = {'ca': 'caunivxny', 'in': 'inuniptaw', 'my': 'myuniodai', \
+'sg': 'sgunicnle', 'gb': 'gbunioiut', 'us': 'usuniciba', \
+'ehk': 'hkuniegdo', 'zhk': 'hkuniobrx', 'id': 'idunicuff', 'jp': 'jpunipuah', 'kr': 'krunizogc', \
+'br': 'bruniqrhh', 'cl': '', 'de': 'deuniocuq', 'fr': 'frunifsgy', 'it': 'itunilanh', \
+'cn': ''}
 # Backup
 # USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
 # 'sg': 'sgprodyyw', 'gb': 'gbpoccgvn''gbwwwvjvz', 'us': 'usprokcmi', \
@@ -76,7 +76,7 @@ MODULES = OrderedDict([('mod1', {}), ('mod2', {}), ('mod3', {}), ('act', {}), ('
                        ('aboriginal', {}), ('golf', {}), ('lodges', {}), ('ra', {}),
                        ('walks', {}), ('wine', {}), ('coastal', {})])
 
-with open('mods.json') as fil:
+with open('mods.json', encoding='UTF-8') as fil:
     thelist = json.load(fil)
 for lang in LANGS:
     lan = LANGS[lang][0].replace('-', '_')
@@ -942,7 +942,7 @@ COASTAL_SCRIPT = ['Button_5', \
     ('Text_Caption_1435', 'SmartShape_298'), 'Button_44', 'Button_713', \
 'Button_269']
 
-SCRIPTS = {'1': MOD_1_SCRIPT, '2': MOD_2_SCRIPT, '3': MOD_3_SCRIPT, \
+SCRIPTS = {'mod1': MOD_1_SCRIPT, 'mod2': MOD_2_SCRIPT, 'mod3': MOD_3_SCRIPT, \
 'act': ACT_SCRIPT, 'nsw': NSW_SCRIPT, 'nt': NT_SCRIPT, 'qld': QLD_SCRIPT, \
 'sa': SA_SCRIPT, 'tas': TAS_SCRIPT, 'vic': VIC_SCRIPT, 'wa': WA_SCRIPT, \
 'aboriginal': ABORIGINAL_SCRIPT, 'golf': GOLF_SCRIPT, 'lodges': LODGES_SCRIPT, \

@@ -543,8 +543,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             nonlocal favtitles
             # Click on some of the Mosaic panels.
             try:
-                tiles = CP.WhatYouCanSeeMosaic(self.dr).random_selection(num)
-                for i in [tile.get_title() for tile in tiles]:
+                # Bleh. Can't just use the tile list, pages change, StaleElementExceptions.
+                # pick a bunch of random numbers from zero to the number of tiles.
+                for i in random.sample(range(len(CP.WhatYouCanSeeMosaic(self.dr))), num):
                     tile = CP.WhatYouCanSeeMosaic(self.dr)[i]
                     # The Panels direct to their page when clicked.
                     tile.go()
@@ -582,7 +583,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.add_error()
             CP.BackupHrefs(self.dr).events()
         # Click the Add To Sales Tools buttons of some of the Event Mosaics.
-        mosaicad(6)
+        mosaicad(3)
         # Navigate to Sales Resources > Fact Sheets.
         try:
             CP.NavMenu.SalesResources(self.dr).open().fact_sheets_overview().click()
@@ -610,7 +611,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         faves = tools.get_favourites()
         favpagetitles = {x.get_title() for x in faves}
         try:
-            self.assertTrue(favtitles.issubset(favpagetitles),
+            self.assertSetEqual(favtitles, favpagetitles,
                             'The Sales Tools should contain every item previously added.')
         except Exception:
             self.add_error()

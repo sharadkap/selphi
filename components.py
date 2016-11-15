@@ -102,8 +102,9 @@ class Hero(WrappedElement):
         self.dr.wait_until_gone('.is-touched')
 
     def get_title(self) -> str:
-        """Returns the page's title, as shown in the hero banenr."""
-        return self.dr.flashy_find_element('.home-hero-title', self.element).text
+        """Returns the page's title, as shown in the hero banenr.
+        Only returns the first line, otherwise Dated Events mess with the FAV test."""
+        return self.dr.flashy_find_element('.home-hero-title', self.element).text.split('\n')[0]
 
 class Video(WrappedElement):
     """Generically represents either a Brightcove Video or a Youku video."""
@@ -206,6 +207,8 @@ class WhatYouCanSeeMosaic(WrappedElement):
 
     def __getitem__(self, title) -> WrappedElement:
         """Select a particular tile by using its title in the [] index accessor. Maybe."""
+        if isinstance(title, int):
+            return self.MosaicTile(self.dr, self.tiles[title])
         return self.MosaicTile(self.dr, next(
             x for x in self.tiles
             if self.dr.quietly_find_element('.label-destination', x).text == title))

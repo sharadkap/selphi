@@ -190,7 +190,12 @@ def do_locale(args):
     # Reset the driver between rounds
     restart_driver(browser)
     # Log into the site, so you can access the modules.
-    log_in(lang)
+    try:
+        log_in(lang)
+    except (WebDriverException, TimeoutError) as ex:
+        DRIVER.quit()
+        return 'Login failed. That breaks the whole locale, so look into that:\n' + ex.msg
+
     # Start recording results.
     result = '_'.join([lang.upper(), brname.upper()])
     for mod in modfilter:
@@ -204,7 +209,7 @@ def do_locale(args):
                 domo(elem)
             result += ',"{0}: PASS"'.format(get_time())
         # Something goes wrong, document it and go to the next module.
-        except WebDriverException as ex:
+        except (WebDriverException, TimeoutError) as ex:
             result += ',"{0}: FAIL: {1}"'.format(get_time(), str(ex).replace('"', '""'))
             draw_failure(lang, mod)
     DRIVER.quit()

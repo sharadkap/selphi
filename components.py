@@ -17,7 +17,7 @@ class WrappedElement:
 
     def click(self) -> 'WrappedElement':
         """Clicks on the element."""
-        self.dr.LAST_LINK = self.dr.fix_url(self.element.get_attribute('href'))
+        self.dr.last_link = self.dr.fix_url(self.element.get_attribute('href'))
         self.element.click()
         return self
 
@@ -71,7 +71,7 @@ class SplashSelect(WrappedElement):
         option = self.dr.quietly_find_element(
             'option[value*="{0}"],option[value*="{1}"]'.format(
                 self.dr.locale, self.dr.locale.replace('-', '_')), self.element)
-        self.dr.LAST_LINK = option.get_attribute('value')
+        self.dr.last_link = option.get_attribute('value')
         option.click()
 
 class WelcomeVideo(WrappedElement):
@@ -170,7 +170,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
         def go(self) -> None:
             """Clicks on a tile, navigating to its link.
             Which of these two is correct is left as an exercise to the reader."""
-            self.dr.LAST_LINK = self.dr.quietly_find_element(
+            self.dr.last_link = self.dr.quietly_find_element(
                 '.mosaic-item-detail-container p>a', self.element).get_attribute('href')
             self.dr.blip_element(self.element).click()
             # External links open in a new tab. No problem if not.
@@ -449,7 +449,7 @@ class FilteredSearch(WrappedElement):
         def view_more_information(self) -> None:
             """Navigates to the result's main page, clicks the View More Info link."""
             link = self.dr.flashy_find_element('.search-results-copy-container a', self.element)
-            self.dr.LAST_LINK = self.dr.fix_url(link.get_attribute('href'))
+            self.dr.last_link = self.dr.fix_url(link.get_attribute('href'))
             link.click()
             self.dr.wait_for_page()
 
@@ -959,7 +959,7 @@ class SignIn(WrappedElement):
         self.dr.flashy_find_element('#j_username', self.element).send_keys(user)
         self.dr.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
         self.dr.flashy_find_element('#usersignin', self.element).click()
-        self.dr.LAST_LINK = '/change.html' if new_password else '/secure'
+        self.dr.last_link = '/change.html' if new_password else '/secure'
         # This bit should maybe go in the selene.py, but I'm not putting
         # fifteen identical trycatches around every invocation of this method.
         try:
@@ -1001,7 +1001,7 @@ class ChangePassword(WrappedElement):
         """Clicks the Update Password button, and then waits for the redirect."""
         self.dr.flashy_find_element('#changepwd-submit', self.element).click()
         self.dr.wait_until_present('.fancybox-wrap')
-        self.dr.LAST_LINK = 'profile.html'
+        self.dr.last_link = 'profile.html'
         self.dr.wait_for_page()
 
 class MySalesTools(WrappedElement):
@@ -1234,6 +1234,7 @@ class SpecialistBadge(WrappedElement):
     def __init__(self, dr: Drivery):
         self.dr = dr
         self.dr.flashy_find_element('a[href*="asp-badge.png"]').click()
+        time.sleep(1)
         self.dr.switch_to_window(1)
         # There's no jQuery on a bare image, so can't highlight.
         self.dr.quietly_find_element('img[src*="asp-badge.png"]')
@@ -1325,7 +1326,7 @@ class AussieStore(WrappedElement):
                 self.dr.flashy_find_element('.fancybox-close').click()
                 self.dr.wait_until_gone('.fancybox-skin')
                 return False
-            self.dr.LAST_LINK = 'cart.html'
+            self.dr.last_link = 'cart.html'
             self.dr.wait_for_page()
             return True
 
@@ -1339,7 +1340,7 @@ class AussieStore(WrappedElement):
             """Clicks the Place Order button, and waits until it's finished loading/messaging."""
             self.dr.flashy_find_element('.submit', self.element)
             if not cartempty:
-                self.dr.LAST_LINK = 'confirmation.html'
+                self.dr.last_link = 'confirmation.html'
                 self.dr.wait_for_page()
             else:
                 self.dr.flashy_find_element('.fancybox-skin')

@@ -73,84 +73,6 @@ def main() -> None:
             log.write('\n"Well, something went wrong. A manual exit, hopefully."')
         raise
 
-def restart_driver(br):
-    """Restarts the DRIVER."""
-    # Global not defined at module level. Well, whatever. pylint: disable-msg=W0601
-    global DRIVER
-    if br == Firefox:   # And, a workaround for Firefox's distrust of basic authentication.
-        p = FirefoxProfile()
-        p.set_preference('network.http.phishy-userpass-length', 255)
-        DRIVER = Firefox(p)
-    else:
-        DRIVER = br()
-    DRIVER.implicitly_wait(IMPLICITLY_WAIT)
-    DRIVER.maximize_window()
-
-def new_drag_drop(source: str, target: str) -> None:
-    """Like the ActionChains drag and drop,
-    but updates the mouse position just after mousedown."""
-    # Command.MOVE_TO, desite taking a css id string, does not actually perform a DOM lookup.
-    def getid(loc: str, frame: str='{}') -> WebElement:
-        """Interpret whether input is a locator or a series or alternate locators.
-        If there is a decorated clone, like in drag-drops, use frame to apply a format string."""
-        if isinstance(loc, str):
-            loc = frame.format(loc)
-            try:
-                return DRIVER.find_element_by_id(loc)
-            except NoSuchElementException:
-                raise NoSuchElementException("Didn't find {0}".format(loc)) from None
-        elif isinstance(loc, list):
-            loc = [frame.format(l) for l in loc]
-            return pick_from_possibilities(loc)
-        else:
-            raise TypeError('You broke it. String, or List only.')
-    # IE WHY.    FIREFOX, ET TU?
-    source, fource, target = getid(source), getid(source, 're-{}c'), getid(target)
-    if not isinstance(DRIVER, Firefox):
-        DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return '
-                              'x.getBoundingClientRect().top;}),wp=window.top;'
-                              'wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 + '
-                              'wp.$("iframe[src*=\'/content/\']").offset().top)', source, target)
-    ActionChains(DRIVER).click_and_hold(source).move_to_element(fource).release(target).perform()
-    time.sleep(MINIWAIT)
-
-def domo(locator: Union[str, tuple, list]) -> None:
-    """If locator is a string, clicks on the element with that as an id
-    if locator is a tuple, drags the first element to the second one.
-    if a list, looks for each of the elements listed, clicks the first one that exists."""
-    if isinstance(locator, str):
-        try:
-            ele = DRIVER.find_element_by_id(locator)
-        except NoSuchElementException:
-            raise NoSuchElementException("Didn't find {0}".format(locator)) from None
-        click_surely(ele)
-    elif isinstance(locator, tuple):
-        new_drag_drop(locator[0], locator[1])
-    elif isinstance(locator, list):
-        click_surely(pick_from_possibilities(locator))
-    else:
-        raise TypeError('You broke it. String, List, or Tuple only.')
-
-def click_surely(ele: WebElement) -> None:
-    """When clicking on an element, move it onscreen first. BECAUSE IE.
-    If that doesn't work, manual override, it was probably just behind a blank textbox."""
-    try:
-        if not isinstance(DRIVER, Firefox):
-            DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect()'
-                                  '.top-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']")'
-                                  '.offset().top)', ele)
-        ele.click()
-    except WebDriverException:
-        ActionChains(DRIVER).move_to_element(ele).click().perform()
-
-def pick_from_possibilities(locator: str) -> WebElement:
-    """Deal with alternate ids. Use a css selector to get any proposed elements."""
-    eles = [e for e in DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))
-            if e.is_displayed()]
-    if len(eles) == 0:
-        raise NoSuchElementException("Didn't find {0}".format(locator))
-    return eles[0]
-
 def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows: LIST_STR) -> None:
     """Run the selected set of modules and locales, logging results,
     and saving a screenshot in case of failure.    By default, will run all of them."""
@@ -179,6 +101,19 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
         print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
         print(output)
 
+def restart_driver(br):
+    """Restarts the DRIVER."""
+    # Global not defined at module level. Well, whatever. pylint: disable-msg=W0601
+    global DRIVER
+    if br == Firefox:   # And, a workaround for Firefox's distrust of basic authentication.
+        p = FirefoxProfile()
+        p.set_preference('network.http.phishy-userpass-length', 255)
+        DRIVER = Firefox(p)
+    else:
+        DRIVER = br()
+    DRIVER.implicitly_wait(IMPLICITLY_WAIT)
+    DRIVER.maximize_window()
+
 def do_locale(args):
     """The target of a process, go do all the modules in a locale."""
     # Global can't be defined at module level. Processes are wierd. pylint: disable-msg=W0601
@@ -192,9 +127,10 @@ def do_locale(args):
     # Log into the site, so you can access the modules.
     try:
         log_in(lang)
-    except (WebDriverException, TimeoutError) as ex:
+    except Exception as ex:
         DRIVER.quit()
-        return 'Login failed. That breaks the whole locale, so look into that:\n' + ex.msg
+        return '"Login to {1} failed. That breaks the whole locale, look into it:\n{2}"'.format(
+            lang, str(ex).replace('"', '""'))
 
     # Start recording results.
     result = '_'.join([lang.upper(), brname.upper()])
@@ -209,21 +145,11 @@ def do_locale(args):
                 domo(elem)
             result += ',"{0}: PASS"'.format(get_time())
         # Something goes wrong, document it and go to the next module.
-        except (WebDriverException, TimeoutError) as ex:
+        except Exception as ex:
             result += ',"{0}: FAIL: {1}"'.format(get_time(), str(ex).replace('"', '""'))
             draw_failure(lang, mod)
     DRIVER.quit()
     return result
-
-def switch_into_module(driver: WebDriver) -> None:
-    """Extract the Enter Iframe function just so it can be better exported."""
-    # Scorm's wrapper on the modules needs to be opened first.
-    driver.find_element_by_css_selector('.scf-play-button').click()
-    iframe = driver.find_element_by_css_selector('iframe[src^="/content/"]')
-    driver.switch_to.frame(iframe)
-    # Scorm has TWO layers of framing.
-    iframe = driver.find_element_by_css_selector('frame#ScormContent')
-    driver.switch_to.frame(iframe)
 
 def log_in(lang: str) -> None:
     """If testing with login, first, have to go and log in and everything.
@@ -278,6 +204,81 @@ def begin_module():
     # THEN, you can run the script that compensates for the loading screen breaking.
     # Or a module being previously completed.
     DRIVER.execute_script(RESET_MODULE)
+
+def switch_into_module(driver: WebDriver) -> None:
+    """Extract the Enter Iframe function just so it can be better exported."""
+    # Scorm's wrapper on the modules needs to be opened first.
+    driver.find_element_by_css_selector('.scf-play-button').click()
+    iframe = driver.find_element_by_css_selector('iframe[src^="/content/"]')
+    driver.switch_to.frame(iframe)
+    # Scorm has TWO layers of framing.
+    iframe = driver.find_element_by_css_selector('frame#ScormContent')
+    driver.switch_to.frame(iframe)
+
+def domo(locator: Union[str, tuple, list]) -> None:
+    """If locator is a string, clicks on the element with that as an id
+    if locator is a tuple, drags the first element to the second one.
+    if a list, looks for each of the elements listed, clicks the first one that exists."""
+    if isinstance(locator, str):
+        try:
+            ele = DRIVER.find_element_by_id(locator)
+        except NoSuchElementException:
+            raise NoSuchElementException("Didn't find {0}".format(locator)) from None
+        click_surely(ele)
+    elif isinstance(locator, tuple):
+        new_drag_drop(locator[0], locator[1])
+    elif isinstance(locator, list):
+        click_surely(pick_from_possibilities(locator))
+    else:
+        raise TypeError('You broke it. String, List, or Tuple only.')
+
+def new_drag_drop(source: str, target: str) -> None:
+    """Like the ActionChains drag and drop,
+    but updates the mouse position just after mousedown."""
+    # Command.MOVE_TO, desite taking a css id string, does not actually perform a DOM lookup.
+    def getid(loc: str, frame: str='{}') -> WebElement:
+        """Interpret whether input is a locator or a series or alternate locators.
+        If there is a decorated clone, like in drag-drops, use frame to apply a format string."""
+        if isinstance(loc, str):
+            loc = frame.format(loc)
+            try:
+                return DRIVER.find_element_by_id(loc)
+            except NoSuchElementException:
+                raise NoSuchElementException("Didn't find {0}".format(loc)) from None
+        elif isinstance(loc, list):
+            loc = [frame.format(l) for l in loc]
+            return pick_from_possibilities(loc)
+        else:
+            raise TypeError('You broke it. String, or List only.')
+    # IE WHY.    FIREFOX, ET TU?
+    source, fource, target = getid(source), getid(source, 're-{}c'), getid(target)
+    if not isinstance(DRIVER, Firefox):
+        DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return '
+                              'x.getBoundingClientRect().top;}),wp=window.top;'
+                              'wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 + '
+                              'wp.$("iframe[src*=\'/content/\']").offset().top)', source, target)
+    ActionChains(DRIVER).click_and_hold(source).move_to_element(fource).release(target).perform()
+    time.sleep(MINIWAIT)
+
+def click_surely(ele: WebElement) -> None:
+    """When clicking on an element, move it onscreen first. BECAUSE IE.
+    If that doesn't work, manual override, it was probably just behind a blank textbox."""
+    try:
+        if not isinstance(DRIVER, Firefox):
+            DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect()'
+                                  '.top-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']")'
+                                  '.offset().top)', ele)
+        ele.click()
+    except WebDriverException:
+        ActionChains(DRIVER).move_to_element(ele).click().perform()
+
+def pick_from_possibilities(locator: str) -> WebElement:
+    """Deal with alternate ids. Use a css selector to get any proposed elements."""
+    eles = [e for e in DRIVER.find_elements_by_css_selector("#" + ",#".join(locator))
+            if e.is_displayed()]
+    if len(eles) == 0:
+        raise NoSuchElementException("Didn't find {0}".format(locator))
+    return eles[0]
 
 def get_time() -> str:
     """Get the time, and formatted as well."""

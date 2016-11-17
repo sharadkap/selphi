@@ -129,7 +129,7 @@ def do_locale(args):
         log_in(lang)
     except Exception as ex:
         DRIVER.quit()
-        return '"Login to {1} failed. That breaks the whole locale, look into it:\n{2}"'.format(
+        return '"Login to {0} failed. That breaks the whole locale, look into it:\n{1}"'.format(
             lang, str(ex).replace('"', '""'))
 
     # Start recording results.

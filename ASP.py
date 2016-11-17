@@ -722,6 +722,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         try:
             modules.module_vic()
             modules.wait_for_module()
+            # Get back out of the module before you try to access the menu.
+            self.dr.switch_to_frame(None)
             CP.NavMenu.Training(self.dr).open().training_summary().click()
         except Exception:
             self.add_error()

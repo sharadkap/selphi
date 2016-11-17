@@ -183,6 +183,8 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
 
     def switch_to_frame(self, selector: str) -> None:
         """Switches WebDriver's focus into the given iframe."""
+        if selector is None:
+            self.driver.switch_to.default_content()
         self.driver.switch_to.frame(self.flashy_find_element(selector))  # pylint: disable-msg=E1101
 
     def fix_url(self, url: str) -> str:

@@ -596,8 +596,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             for result in search.get_all_results():
                 result.add_to_favourites()
                 favtitles.add(result.get_title())
-                self.assertEqual(len(favtitles), CP.HeaderHeartIcon(self.dr).favourites_count(),
-                                 'Adding to favourites should increment favourites count.')
+                self.dr.wait_until( # Use a wait instead of an assert, it takes a second to add.
+                    lambda: len(favtitles) == CP.HeaderHeartIcon(self.dr).favourites_count(),
+                    'Checking equality of my favourites count and favourites count display.')
         except Exception:
             self.add_error()
         # Click the Heart Icon in the header, the My Sales Tools page should be displayed.

@@ -497,7 +497,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Tests the Login-related functionality."""
         # Log in.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Should proceed to the Secure welcome page.
         try:
             self.assertIn(self.globs['locale'] + '/secure.html', self.dr.current_url(),
@@ -562,7 +562,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # If there are already favourites, that's a problem, remove them. Messes with the count.
         if CP.HeaderHeartIcon(self.dr).favourites_count() != 0:
             CP.NavMenu.SalesResources(self.dr).open().my_sales_tools().click()
@@ -636,7 +636,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Tests the Profile page."""
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to the Profile page.
         try:
             CP.NavMenu(self.dr).profile().click()
@@ -692,7 +692,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             modules = CP.TrainingSummary(self.dr)
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to Training > Training Summary.
         try:
             CP.NavMenu.Training(self.dr).open().training_summary().click()
@@ -763,7 +763,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Checks the Aussie Specialist Club nav menu links."""
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Open the Aussie Specialist Club section in the Nav menu
         club = CP.NavMenu.AussieSpecialistClub(self.dr)
         club.click()
@@ -783,7 +783,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Tests the Travel Club search."""
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > Travel Club
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().travel_club().click()
@@ -800,7 +800,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Checks the Famils page."""
         # pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > Famils
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().famils().click()
@@ -815,7 +815,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Checks the Aussie Specialist Photos page."""
         # pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > AS Photos
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().aussie_specialist_photos().click()
@@ -837,7 +837,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.skipTest("China doesn't have the Qualification Badge Download.")
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > Download Qualification Badge
         CP.NavMenu.AussieSpecialistClub(self.dr).open().asp_logo().click()
         # Click the Download Qualification Badge link.
@@ -950,7 +950,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Preamblic mess.
         try:
             CP.NavMenu(self.dr).profile().click()
@@ -1025,7 +1025,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         """Checks that the Profile Page has a Premier Badge. Expect this one to fail."""
         # Pre-condition: Logged in as a Premier User
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to the Profile Page.
         try:
             CP.NavMenu(self.dr).profile().click()
@@ -1044,7 +1044,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Click the Sign In link
         # In the Sign In panel, click the Forgotten Username link.
         try:
-            CP.SignIn(self.dr).forgotten_username().click()
+            CP.SignIn(self).forgotten_username().click()
         except Exception:
             self.add_error()
             CP.BackupHrefs(self.dr).username()
@@ -1064,7 +1064,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Click the Sign In link
         # In the Sign In panel, click the Forgotten Password link.
         try:
-            CP.SignIn(self.dr).forgotten_password().click()
+            CP.SignIn(self).forgotten_password().click()
         except Exception:
             self.add_error()
             CP.BackupHrefs(self.dr).password()
@@ -1086,7 +1086,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Sign in with the new password, because these tests *are* being executed in order, right?
         try:
             # Signing in with a temp password should redirect to the Change page, catch it if not.
-            CP.SignIn(self.dr).sign_in(
+            CP.SignIn(self).sign_in(
                 self.globs['username'], self.globs['temp_pass'], new_password=True)
             change = CP.ChangePassword(self.dr)
         except Exception:

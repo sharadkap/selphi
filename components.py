@@ -948,11 +948,12 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
 
 class SignIn(WrappedElement):
     """Represents the Sign In panel. Instantiating this class will open said panel."""
-    def __init__(self, dr: Drivery):
-        self.dr = dr
+    def __init__(self, asp):
+        self.dr = asp.dr
         self.dr.flashy_find_element('.link-signin-text').click()
         self.element = self.dr.flashy_find_element('.fancybox-wrap')
         attach_links(self, ['forgotten-username', 'forgotten-password'])
+        self.add_error = asp.add_error
 
     def sign_in(self, user: str, passw: str, new_password=False) -> None:
         """Logs in using the given Username and Password."""
@@ -964,8 +965,8 @@ class SignIn(WrappedElement):
         # fifteen identical trycatches around every invocation of this method.
         try:
             self.dr.wait_for_page()
-        except Exception as ex:
-            self.dr.add_error(ex)
+        except Exception:
+            self.add_error()
 
 class ForgottenForm(WrappedElement):
     """Represents the Forgotten Username/Password form. They are the same component."""

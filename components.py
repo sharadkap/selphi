@@ -1352,7 +1352,7 @@ class AussieStore(WrappedElement):
             """Gets the contact details shown at the bottom of the Cart page. Tidy up a bit, too."""
             text = self.dr.flashy_find_element(
                 '.store-order-box-left p:nth-child(2)', self.element).text
-            return '\n'.join([x.strip() for x in text.replace('  ', ' ').split('\n')])
+            return '\n'.join([x.strip().replace('  ', ' ') for x in text.split('\n')])
 
         def get_product_names(self) -> List[str]: # pylint: disable-msg=E1126
             """Gets a list of the names of all of the Products in the Cart."""

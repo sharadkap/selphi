@@ -14,6 +14,7 @@ import tap
 import drivery as DR
 import modules as MOD
 
+from fenester import fenestrate
 from ASP import ASP, aspnames
 from AUS import AUS, ausnames
 
@@ -42,6 +43,7 @@ def main():
     except:
         pool.terminate()
         raise
+    fenestrate(asy.get())
 
 def launch_test(args) -> None:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
@@ -82,7 +84,7 @@ def launch_test(args) -> None:
         tests = unittest.TestSuite(names)
         suite = unittest.TestSuite()
         suite.addTests(tests)
-        runner.run(suite)
+        result = runner.run(suite)
 
         # Give a unique name to the output file so you don't overwrite it every time!
         try:
@@ -91,8 +93,10 @@ def launch_test(args) -> None:
                     locale.replace('/', ''), site, browser, time.strftime('%Y%m%d_%H%M'))),
                       mode='w', encoding='UTF-8') as newfil:
                 newfil.write(buf.getvalue())
+            return result
         except Exception as ex:
             print(ex)
+            return ex
 
 def perform_hacks():
     """Because not everything works the way it SHOULD, have to override a few methods."""

@@ -69,10 +69,18 @@ LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my
     'fr': ('fr-fr', 'fr_fr'), 'it': ('it-it', 'it_it'), \
 'cn': ('zh-cn', 'cn_zh')}
 
+# Not used for the Modules thing, here because this is the centralised config location.
+FANCY_LANGS = OrderedDict([
+    ('United Kingdon', '/en-gb'), ('United States', '/en-us'), ('Canada', '/en-ca'),
+    ('India', '/en-in'), ('Malaysia', '/en-my'), ('Singapore', '/en-sg'),
+    ('Hong Kong(en)', '/en-hk'), ('Hong Kong(zh)', '/zh-hk'), ('Indonesia', '/id-id'),
+    ('Japan', '/ja-jp'), ('Korea', '/ko-kr'), ('Brazil', '/pt-br'), ('Chile', '/es-cl'),
+    ('Germany', '/de-de'), ('France', '/fr-fr'), ('Italy', '/it-it'), ('China', '/zh-cn')])
+
 # Remember to download a fresh modules json for each environment.
 # Find them at {author-url}/content/sites/asp/resources.2.json
 MODULES = OrderedDict([('mod1', {}), ('mod2', {}), ('mod3', {}), ('act', {}), ('nsw', {}),
-                       ('nt', {}), ('qld', {}), ('sa', {}), ('tas', {}),('vic', {}), ('wa', {}),
+                       ('nt', {}), ('qld', {}), ('sa', {}), ('tas', {}), ('vic', {}), ('wa', {}),
                        ('aboriginal', {}), ('golf', {}), ('lodges', {}), ('ra', {}),
                        ('walks', {}), ('wine', {}), ('coastal', {})])
 

@@ -2,6 +2,7 @@
 
 import random
 import unittest
+import time
 from collections import OrderedDict
 from drivery import Drivery, Email
 import modules as MOD
@@ -613,7 +614,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         favpagetitles = {x.get_title() for x in faves}
         try:
             self.assertSetEqual(favtitles, favpagetitles,
-                            'The Sales Tools should contain every item previously added.')
+                                'The Sales Tools should contain every item previously added.')
         except Exception:
             self.add_error()
         # Entries should have an X button, a Title, a Description, and a More Info link.
@@ -681,8 +682,11 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             try:
                 MOD.do_module(self.dr.driver, mod)  # Cheating a little, but w/e
             except Exception:
-                self.add_error()
+                self.add_error()    # Scorm marks completion not on being on the final slide,
+                self.dr.execute_script('cpCmndGotoSlide=cpInfoSlideCount-{}'.format(offset+1))
+                time.sleep(4)       # But by going from the semifinal slide to the final slide.
                 self.dr.execute_script('cpCmndGotoSlide=cpInfoSlideCount-{}'.format(offset))
+                # $("p").filter(function(){return $(this).text() == 'Button '}).sort(function(a,b){var x = $(a).parent().parent().position(),y = $(b).parent().parent().position();return x.top+x.left < y.top+y.left}).map(function(){return $(this).parent().parent()[0];})
             self.dr.back()
             try:
                 CP.NavMenu.Training(self.dr).open().training_summary().click()

@@ -1650,7 +1650,7 @@ class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: 
     def training(self):
         """Opens the Assignments page."""
         self.dr.get(self.dr.base_url + '/content/sites/asp' +
-                    self.dr.locale + '/en/assignments.html')
+                    self.dr.locale.replace('-', '_') + '/assignments.html')
 
     def travel(self):
         """Opens the Travel Club page."""

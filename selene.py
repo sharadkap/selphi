@@ -14,36 +14,35 @@ import tap
 import drivery as DR
 import modules as MOD
 
-from fenester import fenestrate
+import fenester
 from ASP import ASP, aspnames
 from AUS import AUS, ausnames
 
-def main():
-    """Read the arguments, run the tests."""
+def main() -> None:
+    """If selene.py is the entrypoint, read the settings from the config file and run the tests."""
+    # Get the test run settings from the config file.
     args = read_properties()
-    # Set the settings from the given arguments
-    if 'username' in args.keys():
-        args['userid'] = args['username'][-4:]    # The mail ID is the last four characters.
-        args['email'] = args['email'].format(args['userid'])
+    # And run the test with the config file settings.
+    launch_test_suite(args)
 
-    # Get the output settings, the chosen test methods from the ASP suite.
+def launch_test_suite(args: dict) -> None:
+    """Set up the multiprocessing constructure, and kick off all of the tests."""
     outdir = os.path.split(__file__)[0]
-
-    # Run them in each locale.
+    # Each locale and browser combination is to be run in parallel, break out the MultiProcessing.
     pool = Pool(cpu_count() * 2)  # It's mostly waiting; we can afford to overload the cores, right?
-    # KeyboardInterrupts don't actually break out of blocking-waits, so do this the hard way.
-    try:
+    # KeyboardInterrupts don't actually break out of blocking-waits, so a bit of a workaround:
+    try:    # Do the things as normal,
         asy = pool.map_async(launch_test, [(loc, bro, outdir, args.copy())
                                            for loc in args['locales'] for bro in args['browsers']])
-        while True:
+        while True:     # But check every so often if they are all done.
             if asy.ready():
+                fenester.fenestrate(asy.get())  # If so, cool, let's go.
                 return
-            time.sleep(1)   # Alright! Busy-Waiting! That can't possibly go awry!
+            time.sleep(1) # If not, wait a second and check again. This doesn't block the interrupt.
 
-    except:
+    except:   # If there is an interrupt, shut down everything, that was the Cancel Run signal.
         pool.terminate()
         raise
-    fenestrate(asy.get())
 
 def launch_test(args) -> None:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
@@ -98,7 +97,7 @@ def launch_test(args) -> None:
             print(ex)
             return ex
 
-def perform_hacks():
+def perform_hacks() -> None:
     """Because not everything works the way it SHOULD, have to override a few methods."""
     # Another one, that menu sure does get in the way sometimes.
     oldclick = DR.WebElement.click
@@ -164,6 +163,10 @@ def read_properties() -> dict:
     result['browsers'] = result['browsers'].split(',')
     result['tests'] = result['tests'].split(',') if result['tests'] else []
     result['asp_from_emails'] = result['asp_from_emails'].split(',')
+    # Fill out the user details if username is included.
+    if 'username' in result.keys():
+        result['userid'] = result['username'][-4:]    # The mail ID is the last four characters.
+        result['email'] = result['email'].format(result['userid'])
     return result
 
 if __name__ == '__main__':

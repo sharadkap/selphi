@@ -1182,8 +1182,8 @@ class TrainingSummary(WrappedElement):
         then matches that with a Progress Icon type. Kind of a mess."""
         mods = self.dr.flashy_find_elements('.scf-content-card')
         self.dr.flashy_find_element('.assignment-stats-completed', mods[0])
-        self.dr.flashy_find_element('.assignment-stats-inprogress', mods[2])
-        self.dr.flashy_find_element('.assignment-stats-new', mods[1])
+        self.dr.flashy_find_element('.assignment-stats-inprogress', mods[1])
+        self.dr.flashy_find_element('.assignment-stats-new', mods[2])
 
 class Famils(WrappedElement):
     """Represents the content of the Famils page."""

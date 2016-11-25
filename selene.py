@@ -97,6 +97,24 @@ def launch_test(args) -> None:
             print(ex)
             return ex
 
+def tidy_error(ex=None) -> str:
+    """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI"""
+    from os.path import join, abspath, dirname
+    from traceback import extract_tb, format_list, format_exception_only
+
+    show = join(dirname(abspath(__file__)), '')
+
+    def _check_file(name):
+        return name and name.startswith(show)
+
+    def _print(typ, value, tb):
+        show = (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
+        fmt = format_list(show) + format_exception_only(typ, value)
+        return ''.join((f.strip('"\'').replace('\\n', '') for f in fmt))
+
+    args = ex or sys.exc_info()
+    return _print(*args)
+
 def perform_hacks() -> None:
     """Because not everything works the way it SHOULD, have to override a few methods."""
     # Another one, that menu sure does get in the way sometimes.
@@ -134,24 +152,6 @@ def perform_hacks() -> None:
         lines = tidy_error(exc).splitlines(True)
         return tap.formatter.format_as_diagnostics(lines)
     tap.formatter.format_exception = newf
-
-def tidy_error(ex=None) -> str:
-    """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI"""
-    from os.path import join, abspath, dirname
-    from traceback import extract_tb, format_list, format_exception_only
-
-    show = join(dirname(abspath(__file__)), '')
-
-    def _check_file(name):
-        return name and name.startswith(show)
-
-    def _print(typ, value, tb):
-        show = (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
-        fmt = format_list(show) + format_exception_only(typ, value)
-        return ''.join(fmt)
-
-    args = ex or sys.exc_info()
-    return _print(*args)
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""

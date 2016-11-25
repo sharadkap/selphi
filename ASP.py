@@ -555,8 +555,9 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                     hero.add()
                     favtitles.add(hero.get_title())
                     # The Heart Icon in the header should pulse and have a number incremented.
-                    self.assertEqual(len(favtitles), CP.HeaderHeartIcon(self.dr).favourites_count(),
-                                     'Adding to favourites should increment favourites count.')
+                    self.dr.wait_until(
+                        lambda: len(favtitles) == CP.HeaderHeartIcon(self.dr).favourites_count(),
+                        'Added page to faves to increment favourites count.')
                     self.dr.back()
             except Exception:
                 self.add_error()
@@ -733,12 +734,11 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         except Exception:
             self.add_error()
             CP.BackupHrefs(self.dr).training()
-        # Unstarted Modules should have a New label
-        # Started-Not-Finished Modules should have an Incomplete label
-        # Completed Modules should have the Complete label.
+        # Unstarted Modules and Paths should have a New label
+        # Started-Not-Finished Modules and Paths should have an Incomplete label
+        # Completed Modules and Paths should have the Complete label.
         modules = CP.TrainingSummary(self.dr)
         try:
-            modules.optional_path()
             modules.completion_types()
         except Exception:
             self.add_error()

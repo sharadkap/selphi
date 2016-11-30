@@ -2,7 +2,6 @@
 
 import random
 import unittest
-import time
 from collections import OrderedDict
 from drivery import Drivery, Email
 import modules as MOD
@@ -676,18 +675,22 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
     def test_14_Training_Summary(self):
         """Checks the Training Summary page."""
-        def do_mod_then_back(mod: str, offset: int) -> None:
+        # Tells the site that the user has completed five modules.
+        dofimo = r"""var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],
+            e=location.href.match(/\/(\w\w-\w\w)(\/|(\.html)|$)/)[1].split("-").reverse()
+            .join("_").replace("gb","uk");for(m in o)$.ajax({url:"/bin/asp/trainingModule",
+            type:"POST",cache:!1,dataType:"json",data:{moduleId:e+o[m]}})"""
+        def do_mod_then_back(mod: str) -> None:
             """Doing the Module clicks the Back To Training button, which leads to LIVE
             No guarantee that the testing is going on in LIVE, so go back manually."""
             nonlocal modules
             try:
                 MOD.do_module(self.dr.driver, mod)  # Cheating a little, but w/e
             except Exception:
-                self.add_error()    # Scorm marks completion not on being on the final slide,
-                self.dr.execute_script('cpCmndGotoSlide=cpInfoSlideCount-{}'.format(offset+1))
-                time.sleep(4)       # But by going from the semifinal slide to the final slide.
-                self.dr.execute_script('cpCmndGotoSlide=cpInfoSlideCount-{}'.format(offset))
-                # $("p").filter(function(){return $(this).text() == 'Button '}).sort(function(a,b){var x = $(a).parent().parent().position(),y = $(b).parent().parent().position();return x.top+x.left < y.top+y.left}).map(function(){return $(this).parent().parent()[0];})
+                self.add_error()
+                # There are a lot of things that can go wrong here, just nuke the site from orbit.
+                self.dr.execute_script(dofimo)
+                    # It's the only way to be certain.
             self.dr.back()
             try:
                 CP.NavMenu.Training(self.dr).open().training_summary().click()
@@ -704,47 +707,53 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         except Exception:
             self.add_error()
             CP.BackupHrefs(self.dr).training()
-        modules = CP.TrainingSummary(self.dr)
-        # Go do a few of the modules.
-        # I did say that implementation details are to be done elsewhere.
-        # But error handling is to be done here, and that takes priority.
-        modules.module_one()
-        do_mod_then_back('mod1', 4)
-        modules.module_two()
-        do_mod_then_back('mod2', 4)
-        modules.module_three()
-        do_mod_then_back('mod3', 6)
 
-        # Should receive a halfway email here.
+        # Wrap this whole test in an Oops, It's Not Working? Just Cheat! layer.
         try:
-            Email.LocalizedEmail(self.globs, self.dr, self.globs['userid'])
-        except Exception:
-            self.add_error()
+            modules = CP.TrainingSummary(self.dr)
+            # Go do a few of the modules.
+            # I did say that implementation details are to be done elsewhere.
+            # But error handling is to be done here, and that takes priority.
+            modules.module_one()
+            do_mod_then_back('mod1')
+            modules.module_two()
+            do_mod_then_back('mod2')
+            modules.module_three()
+            do_mod_then_back('mod3')
 
-        modn = modules.module_nsw()
-        do_mod_then_back(modn, 4)
+            # Should receive a halfway email here.
+            try:
+                Email.LocalizedEmail(self.globs, self.dr, self.globs['userid'])
+            except Exception:
+                self.add_error()
 
-        # Open this one, but don't finish it.
-        try:
-            modules.module_vic()
-            modules.wait_for_module()
-            # Get back out of the module before you try to access the menu.
-            self.dr.switch_to_frame(None)
-            CP.NavMenu.Training(self.dr).open().training_summary().click()
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).training()
-        # Unstarted Modules and Paths should have a New label
-        # Started-Not-Finished Modules and Paths should have an Incomplete label
-        # Completed Modules and Paths should have the Complete label.
-        modules = CP.TrainingSummary(self.dr)
-        try:
-            modules.completion_types()
-        except Exception:
-            self.add_error()
+            modn = modules.module_nsw()
+            do_mod_then_back(modn)
 
-        modq = modules.module_qld()
-        do_mod_then_back(modq, 4)
+            # Open this one, but don't finish it.
+            try:
+                modules.module_vic()
+                modules.wait_for_module()
+                # Get back out of the module before you try to access the menu.
+                self.dr.switch_to_frame(None)
+                CP.NavMenu.Training(self.dr).open().training_summary().click()
+            except Exception:
+                self.add_error()
+                CP.BackupHrefs(self.dr).training()
+            # Unstarted Modules and Paths should have a New label
+            # Started-Not-Finished Modules and Paths should have an Incomplete label
+            # Completed Modules and Paths should have the Complete label.
+            modules = CP.TrainingSummary(self.dr)
+            try:
+                modules.completion_types()
+            except Exception:
+                self.add_error()
+
+            modq = modules.module_qld()
+            do_mod_then_back(modq)
+        except Exception:   # Anything goes wrong with the modules, hack the badges and cugs in.
+            self.add_error()
+            self.dr.execute_script(dofimo)
 
         # Should receive the qualification email here.
         try:

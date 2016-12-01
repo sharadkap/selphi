@@ -29,7 +29,7 @@ def launch_test_suite(args: dict) -> None:
     """Set up the multiprocessing constructure, and kick off all of the tests."""
     outdir = os.path.split(__file__)[0]
     # Each locale and browser combination is to be run in parallel, break out the MultiProcessing.
-    pool = Pool(cpu_count() * 2)  # It's mostly waiting; we can afford to overload the cores, right?
+    pool = Pool(cpu_count() * 1)  # It's mostly waiting; we can afford to overload the cores, right?
     # KeyboardInterrupts don't actually break out of blocking-waits, so a bit of a workaround:
     try:    # Do the things as normal,
         asy = pool.map_async(launch_test, [(loc, bro, outdir, args.copy())
@@ -92,10 +92,10 @@ def launch_test(args) -> None:
                     locale.replace('/', ''), site, browser, time.strftime('%Y%m%d_%H%M'))),
                       mode='w', encoding='UTF-8') as newfil:
                 newfil.write(buf.getvalue())
-            return result
+            # return #result
         except Exception as ex:
             print(ex)
-            return ex
+            # return ex
 
 def tidy_error(ex=None) -> str:
     """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI"""

@@ -679,7 +679,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         dofimo = r"""var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],
             e=location.href.match(/\/(\w\w-\w\w)(\/|(\.html)|$)/)[1].split("-").reverse()
             .join("_").replace("gb","uk");for(m in o)$.ajax({url:"/bin/asp/trainingModule",
-            type:"POST",cache:!1,dataType:"json",data:{moduleId:e+o[m]}})"""
+            type:"POST",cache:!1,dataType:"json",data:{moduleId:e+o[m]}})""".format(self.dr.locale)
         def do_mod_then_back(mod: str) -> None:
             """Doing the Module clicks the Back To Training button, which leads to LIVE
             No guarantee that the testing is going on in LIVE, so go back manually."""

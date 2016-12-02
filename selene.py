@@ -18,6 +18,8 @@ import fenester
 from ASP import ASP, aspnames
 from AUS import AUS, ausnames
 
+DEBUG = False
+
 def main() -> None:
     """If selene.py is the entrypoint, read the settings from the config file and run the tests."""
     # Get the test run settings from the config file.
@@ -29,7 +31,7 @@ def launch_test_suite(args: dict) -> None:
     """Set up the multiprocessing constructure, and kick off all of the tests."""
     outdir = os.path.split(__file__)[0]
     # Each locale and browser combination is to be run in parallel, break out the MultiProcessing.
-    pool = Pool(cpu_count() * 1)  # It's mostly waiting; we can afford to overload the cores, right?
+    pool = Pool(cpu_count() * 3)  # It's mostly waiting; we can afford to overload the cores, right?
     # KeyboardInterrupts don't actually break out of blocking-waits, so a bit of a workaround:
     try:    # Do the things as normal,
         asy = pool.map_async(launch_test, [(loc, bro, outdir, args.copy())
@@ -48,6 +50,10 @@ def launch_test(args) -> None:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
+    # Turn on debug logging mode, maybe.
+    if globs['debug']:
+        global DEBUG
+        DEBUG = True
     # Instantiate the test suites, and give them their process-unique globals
     site = globs['site']
     if site == 'ASP':
@@ -92,13 +98,14 @@ def launch_test(args) -> None:
                     locale.replace('/', ''), site, browser, time.strftime('%Y%m%d_%H%M'))),
                       mode='w', encoding='UTF-8') as newfil:
                 newfil.write(buf.getvalue())
-            # return #result
+            # return result
         except Exception as ex:
             print(ex)
             # return ex
 
 def tidy_error(ex=None) -> str:
-    """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI"""
+    """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI
+    Unless DEBUG is True, in which case, it prints the enrirety of the trace."""
     from os.path import join, abspath, dirname
     from traceback import extract_tb, format_list, format_exception_only
 
@@ -108,7 +115,7 @@ def tidy_error(ex=None) -> str:
         return name and name.startswith(show)
 
     def _print(typ, value, tb):
-        show = (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
+        show = extract_tb(tb) if DEBUG else (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
         fmt = format_list(show) + format_exception_only(typ, value)
         return ''.join((f.strip('"\'').replace('\\n', '') for f in fmt))
 

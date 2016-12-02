@@ -308,11 +308,12 @@ class Email:
             got, ems = imap.fetch(nums, 'body[2]')
             if got == 'NO':    # The others do not have two parts.
                 got, ems = imap.fetch(nums, 'body[1]')
-            for ema in ems[::2]:    # Yeah, the results come back wierd.
-                try:
-                    results.append(quopri.decodestring(ema[1]).decode())
-                except UnicodeDecodeError:    # Some quasi-latin languages are different
-                    results.append(quopri.decodestring(ema[1]).decode(LATIN_EMAIL_ENCODING))
+            for ema in ems:     # Yeah, the results come back wierd sometimes,
+                if isinstance(ema, tuple):  # have to filter out the bits.
+                    try:
+                        results.append(quopri.decodestring(ema[1]).decode())
+                    except UnicodeDecodeError:    # Some quasi-latin languages are different
+                        results.append(quopri.decodestring(ema[1]).decode(LATIN_EMAIL_ENCODING))
         return results
 
     def email_loop(self, imap: imaplib.IMAP4_SSL, really_get_new: bool=True) -> bytes:

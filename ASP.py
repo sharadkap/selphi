@@ -676,10 +676,11 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
     def test_14_Training_Summary(self):
         """Checks the Training Summary page."""
         # Tells the site that the user has completed five modules.
-        dofimo = r"""var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],
-            e=location.href.match(/\/(\w\w-\w\w)(\/|(\.html)|$)/)[1].split("-").reverse()
-            .join("_").replace("gb","uk");for(m in o)$.ajax({url:"/bin/asp/trainingModule",
-            type:"POST",cache:!1,dataType:"json",data:{moduleId:e+o[m]}})""".format(self.dr.locale)
+        dofimo = ('var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],e="{0}";'
+            'for(m in o)if(o.hasOwnProperty(m))$.ajax({{url:"/bin/asp/trainingModule",type:"POST",cache:!1,dataType:"json"'
+            ',data:{{isComplete:true,moduleId:e+o[m]}}}})').format(
+                '_'.join(self.dr.locale[1:].split('.')[::-1]).replace('gb', 'uk'))
+
         def do_mod_then_back(mod: str) -> None:
             """Doing the Module clicks the Back To Training button, which leads to LIVE
             No guarantee that the testing is going on in LIVE, so go back manually."""
@@ -908,6 +909,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             for prodnum in random.sample(range(gridcount), howmany):
                 # Click on the Product Image
                 prodname = grid.goto_iteree(prodnum)
+                print(prodname)
                 # Should link to the Product's Page
                 product = CP.AussieStore.ProductPage(self.dr)
                 self.assertEqual(prodname, product.name(),
@@ -935,18 +937,20 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                     continue
                 # Otherwise, continue as normal.
                 productcount += 1
-                productnames.add(prodname.casefold())
+                print(productnames)
+                productnames.append(prodname.casefold())
+                print(productnames)
                 # Should redirect to the Cart page.
                 cart = CP.AussieStore.CartPage(self.dr)
                 # Cart page should show a list of all of the products added thus far.
-                self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()},
+                self.assertEqual(productnames, cart.get_product_names(),
                                  'The Cart page should list all of the products previously added.')
                 # (do not do for all) Click the X beside one of the products.
                 if random.random() < 0.2:
                     productnames.remove(cart.remove_random())
                     productcount -= 1
                     # That product should be removed from the Cart.
-                    self.assertEqual(productnames, {x.casefold() for x in cart.get_product_names()},
+                    self.assertEqual(productnames, cart.get_product_names(),
                                      'The cart should no longer show a removed item.')
                 else: # If one was removed, it's not going to be overbooked.
                     # Go back to the Product Page,
@@ -1025,7 +1029,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.add_error()
         # For each of the categories, (except All Products), go through it,
         productcount = 0
-        productnames = set()
+        productnames = []
         try:
             catnum = CP.AussieStore.CategoriesMenu(self.dr).count()
             for cat in range(catnum)[1:]:

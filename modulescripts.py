@@ -84,6 +84,8 @@ MODULES = OrderedDict([('mod1', {}), ('mod2', {}), ('mod3', {}), ('act', {}), ('
                        ('aboriginal', {}), ('golf', {}), ('lodges', {}), ('ra', {}),
                        ('walks', {}), ('wine', {}), ('coastal', {})])
 
+# COMMUNITIES = 
+
 with open('mods.json', encoding='UTF-8') as fil:
     thelist = json.load(fil)
 for lang in LANGS:
@@ -91,8 +93,9 @@ for lang in LANGS:
     if lan in thelist:
         for mod in thelist[lan]:
             if mod.startswith('res'):
-                modid = thelist[lan][mod]['id'].split('_')[-1]
-                MODULES[modid][lang] = mod
+                if mod in MODULES:
+                    modid = thelist[lan][mod]['id'].split('_')[-1]
+                    MODULES[modid][lang] = mod
 
 
 

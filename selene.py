@@ -38,7 +38,7 @@ def launch_test_suite(args: dict) -> None:
                                            for loc in args['locales'] for bro in args['browsers']])
         while True:     # But check every so often if they are all done.
             if asy.ready():
-                fenester.fenestrate(asy.get())  # If so, cool, let's go.
+                # fenester.fenestrate(asy.get())  # If so, cool, let's go.
                 return
             time.sleep(1) # If not, wait a second and check again. This doesn't block the interrupt.
 

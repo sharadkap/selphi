@@ -3,6 +3,8 @@
 import os
 os.chdir(os.path.dirname(__file__))
 
+import re
+import sys
 import tkinter as tk
 import selene
 from math import ceil
@@ -129,7 +131,15 @@ class ResultsForm(tk.Frame):
 
     def create_widgets(self, results):
         """Creates all of the frames containing the results of each test."""
-        pass
+
+        with open(results) as tap:
+            for line in tap.readlines:
+                if re.match('(not )?ok', line):
+                    pane = tk.Frame(self, bg='red' if line.startswith('not') else 'green')
+                    tk.Label(pane, text=re.match(r'test_\d\d_(.+?) ').groups()[0]).grid(column=0)
+                    fultex = tk.Label(pane).grid(columnspan=2)
+                else:
+                    fultex.text += line.strip('#')
 
 def set_some(tosel, x, selection, y):
     """Given a dict of tkinter variables, and a tuple of keys returns a function
@@ -161,5 +171,8 @@ def fenestrate(results):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    incipe(selene.read_properties())
+    if len(sys.argv) == 0:
+        incipe(selene.read_properties())
+    else:
+        fenestrate(sys.argv[1])
     root.mainloop()

@@ -1117,8 +1117,9 @@ class TrainingSummary(WrappedElement):
     Only instantiate this on the root assignments page."""
     def __init__(self, dr: Drivery):
         self.dr = dr
-        lis = self.dr.flashy_find_elements('.scf-content-card')
+        lis = self.dr.flashy_find_elements('.scf-content-card:not(.disabled-link-card)')
         self.core = lis[0]
+        lis = self.dr.flashy_find_elements('.scf-content-card')
         self.optional = lis[1]
 
     def optional_path(self):
@@ -1180,10 +1181,10 @@ class TrainingSummary(WrappedElement):
     def completion_types(self) -> None:
         """Gets all of the Module entries, then checks how complete they are,
         then matches that with a Progress Icon type. Kind of a mess."""
-        mods = self.dr.flashy_find_elements('.scf-content-card')
-        self.dr.flashy_find_element('.assignment-stats-completed', mods[0])
-        self.dr.flashy_find_element('.assignment-stats-inprogress', mods[1])
-        self.dr.flashy_find_element('.assignment-stats-new', mods[2])
+        self.dr.flashy_find_elements('.scf-content-card')
+        self.dr.flashy_find_element('.assignment-status-completed')
+        self.dr.flashy_find_element('.assignment-status-inprogress')
+        self.dr.flashy_find_element('.assignment-status-new')
 
 class Famils(WrappedElement):
     """Represents the content of the Famils page."""
@@ -1356,7 +1357,7 @@ class AussieStore(WrappedElement):
 
         def get_product_names(self) -> List[str]: # pylint: disable-msg=E1126
             """Gets a list of the names of all of the Products in the Cart."""
-            return [x.text for x in self.dr.flashy_find_elements('.cell-title', self.element)]
+            return [x.text.casefold() for x in self.dr.flashy_find_elements('.cell-title', self.element)]
 
         def count(self) -> int:
             """Counts the number of Products in the Cart."""

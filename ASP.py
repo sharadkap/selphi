@@ -506,10 +506,14 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             self.add_error()
         # Check the Nav Menu
         # The Sales section should now have the My Sales Tools link
-        try:
+        try:    # It can sometimes take a minute for the stuff to be set up for a new user.
             CP.NavMenu.SalesResources(self.dr).open().my_sales_tools()
-        except Exception:
-            self.add_error()
+        except Exception:   # So try again if it wasn't there the first time.
+            self.dr.refresh()
+            try:
+                CP.NavMenu.SalesResources(self.dr).open().my_sales_tools()
+            except Exception:
+                self.add_error()
         # The Training Section should now have the Training Summary and Webinars links.
         try:
             train = CP.NavMenu.Training(self.dr).open()
@@ -909,7 +913,6 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             for prodnum in random.sample(range(gridcount), howmany):
                 # Click on the Product Image
                 prodname = grid.goto_iteree(prodnum)
-                print(prodname)
                 # Should link to the Product's Page
                 product = CP.AussieStore.ProductPage(self.dr)
                 self.assertEqual(prodname, product.name(),
@@ -937,9 +940,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
                     continue
                 # Otherwise, continue as normal.
                 productcount += 1
-                print(productnames)
                 productnames.append(prodname.casefold())
-                print(productnames)
                 # Should redirect to the Cart page.
                 cart = CP.AussieStore.CartPage(self.dr)
                 # Cart page should show a list of all of the products added thus far.
@@ -1017,12 +1018,15 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
             cart = CP.AussieStore.CartPage(self.dr)
             # The User's Name and Contact Details should be displayed with the same values
             # as displayed in the Profile. Any Blank Profile fields should not show up as 'null'.
-            if gotprof:
-                cartcontact = cart.contact_details()
-                self.assertEqual(cartcontact, contactBlob,
-                                 "The Cart contact details should match the user's Profile data.")
-                self.assertNotIn('null', cartcontact,
-                                 "The Cart contact details should contain no 'null' values.")
+            try:    # But don't let naming conventions get in the way of a good crusade.
+                if gotprof:
+                    cartcontact = cart.contact_details()
+                    self.assertEqual(cartcontact, contactBlob,
+                                     "The Cart contact details should match the user's Profile data.")
+                    self.assertNotIn('null', cartcontact,
+                                     "The Cart contact details should contain no 'null' values.")
+            except Exception:
+                self.add_error()
             # Tidy up the cart before going into the large test.
             cart.remove_all()
         except Exception:

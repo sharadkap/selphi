@@ -1142,7 +1142,7 @@ class TrainingSummary(WrappedElement):
         return self.dr.execute_script(
             r'return location.href.match(/\/asset\/(.+?)(\.zip)?\/output/)[1].split("_").pop()')
 
-    def module_one(self) -> str:
+    def module_one(self) -> None:
         """Opens the First Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()

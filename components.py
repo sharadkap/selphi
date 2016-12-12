@@ -1139,8 +1139,8 @@ class TrainingSummary(WrappedElement):
         self.dr.wait_until_gone('#preloaderImage')
         # And then, set the module to slide one, just in case.
         self.dr.execute_script('cpCmndGotoSlide=0')
-        return self.dr.execute_script(
-            r'return location.href.match(/\/asset\/(.+?)(\.zip)?\/output/)[1].split("_").pop()')
+        # Return the which module it is; nsw, mod1, wine, etc...
+        return self.dr.execute_script(r'return moduleID.split("_")[3]')
 
     def module_one(self) -> None:
         """Opens the First Core Module."""

@@ -8,6 +8,7 @@ import time
 import signal
 import unittest
 import configparser
+from typing import Tuple
 from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
 import tap
@@ -26,6 +27,16 @@ def main() -> None:
     args = read_properties()
     # And run the test with the config file settings.
     launch_test_suite(args)
+
+def test_dr() -> Tuple[dict, DR.Drivery]:
+    """When the module is loaded, call this one to get a prepopulated gdict and Drivery object."""
+    d = read_properties()
+    d['browser'] = 'chrome'
+    d['locale'] = '/en-gb'
+    d['cn_mode'] = False
+    d['base_url'] = d['environment']
+    d['locale_url'] = d['base_url'] + d['locale']
+    return d, DR.Drivery(d)
 
 def launch_test_suite(args: dict) -> None:
     """Set up the multiprocessing constructure, and kick off all of the tests."""
@@ -114,7 +125,7 @@ def tidy_error(ex=None) -> str:
     def _check_file(name):
         return name and name.startswith(show)
 
-    def _print(typ, value, tb):
+    def _print(typ, value, tb):     # If not debug, generator expression: filter trace to my files.
         show = extract_tb(tb) if DEBUG else (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
         fmt = format_list(show) + format_exception_only(typ, value)
         return ''.join((f.strip('"\'').replace('\\n', '') for f in fmt))

@@ -449,8 +449,8 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         # Random letters to make a unique username.
         self.globs['userid'] = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
         self.globs['email'] = self.globs['email'].format(self.globs['userid'])
-        # The Country Code
-        langcode, localecode = self.globs['locale'].replace('/', '').split('-')
+        # The Country Code.                  To account for the ROW locales, have this bit.
+        langcode, localecode = (self.globs['locale'].replace('/', '').split('-')*2)[0:2]
         environ = self.globs['base_url'].split('/')[2].split('.')[0][0:3] #pylint: disable-msg=E1101
         # Username stuff, add the Environment prefix to identify the user.
         # Different zip codes in different countries.

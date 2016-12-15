@@ -867,6 +867,8 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
 
     def pick_country(self, value: str='') -> None:
         """Picks the country with the given abbreviation from the Country list."""
+        if value == 'EN':
+            value = 'XX'
         sel = self.dr.flashy_find_element('#country_id', self.element)
         self.dr.quietly_find_element('option[value="{0}"]'.format(value), sel).click()
         # Wait for the Country selection to load the State/Lang info.

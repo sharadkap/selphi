@@ -4,7 +4,7 @@ Placeholder for Python Selenium scripts
 ## Installation
 1. Install Python.
   * Version 3.5 (32bit) was used to write this, but the 64bit edition or any 3.x version should work as well.
-  * Ensure that the Python variables are added to your PATH, there should be an option for that on the installer.
+  * Ensure that the Python variables/directories are added to your PATH, there should be an option for that on the installer.
 2. Using Command Prompt (Admin), use `pip` to install the Selenium Webdriver, Beautiful Soup, and TAP python libraries:
   * `pip install selenium`
   * `pip install tap.py`
@@ -17,7 +17,7 @@ Placeholder for Python Selenium scripts
 ## Execution
 The test suite can be executed either by double-clicking the file or via the command line:
 * Both methods will begin a test run with the settings as defined in the `test.properties` file, but running from the command line will give a small progress indicator.
-* Recently, Firefox has discontinued support for the old firefox driver, requiring instead the new marrionette driver. However, this new version doesn't actually work. You may have to experiment with older versions of firefox or selenium to find one that does. (FF 46, selenium 2.52.0 seems to be good.)
+* Recently, Firefox has discontinued support for the old firefox driver, requiring instead the new marrionette driver. However, this new driver, it doesn't actually work. You may have to experiment with older versions of firefox or selenium to find one that does. (FF 46, selenium 2.52.0 seems to be good.)
 * To customise the test suite, edit the `test.properties` file, there should be examples and explanations already in there.
 The ASP Modules test suite can also be run in either mode:
 * The `modulescripts.py` file contains the customisable values, rather more involved, due to the complexity of module hosting. However, the modules to test, which locales to test in, and the browsers to use are currently still command line arguments.
@@ -28,7 +28,7 @@ A dialog box with a series of buttons and/or checkboxes may follow.
 
 ## Results
 ### Website
-When the entire test suite has finished, the results will be printed in the terminal, as well as written to a `REGR_locale_site_browser_time.tap` file, in TAP format, named with the testing settings and the time of completion. Some knowledge of the structure of the test suite and the websites' CSS design may be required to decipher it.
+When the entire test suite has finished, the results will be printed in the terminal, as well as written to a `REGR_locale_site_browser_time.tap` file, in TAP format, named with the testing settings and the time of completion. Some knowledge of the structure of the test suite and the websites' CSS design may be required to decipher it directly.
 
 This can then be uploaded to HipTest and viewed in a more readable format by:
 1. Creating a new test run, selecting the Create As Empty For The Purpose Of Uploading Results option
@@ -48,6 +48,6 @@ Be sure not to have the `module_results.csv` file open during the testing, as if
 
 When any module-related tests are running, refrain from moving the mouse pointer around in the active window.
 
-The Drag+Drop actions use mouse position, and moving the mouse around will interfere with that, likely breaking execution.
+The module Drag+Drop actions use mouse position, and moving the mouse around will interfere with that, likely breaking execution.
 
 There is currently some issue wherein running either test suite unattended for a long time causes some kind of error with webdriver. It is yet unknown whether, but suspected that, this may also randomly cause some tests to be failed.

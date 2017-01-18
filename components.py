@@ -979,13 +979,15 @@ class SignInUnsafe(WrappedElement):
         self.element = self.dr.flashy_find_element('.fancybox-wrap')
         attach_links(self, ['forgotten-username', 'forgotten-password'])
 
-    def sign_in(self, user: str, passw: str, new_password=False) -> None:
-        """Logs in using the given Username and Password."""
+    def sign_in(self, user: str, passw: str, new_password=False, check_redirect: bool=True) -> None:
+        """Logs in using the given Username and Password. With the option to disable
+        that whole 'make sure the user is redirected to the right page' thing."""
         self.dr.flashy_find_element('#j_username', self.element).send_keys(user)
         self.dr.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
         self.dr.flashy_find_element('#usersignin', self.element).click()
-        self.dr.last_link = '/change.html' if new_password else '/secure'
-        self.dr.wait_for_page()
+        if check_redirect:
+            self.dr.last_link = '/change.html' if new_password else '/secure'
+            self.dr.wait_for_page()
 
 class ForgottenForm(WrappedElement):
     """Represents the Forgotten Username/Password form. They are the same component."""

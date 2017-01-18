@@ -182,7 +182,8 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         self.driver.switch_to.window(self.driver.window_handles[window])
 
     def switch_to_frame(self, selector: str) -> None:
-        """Switches WebDriver's focus into the given iframe."""
+        """Switches WebDriver's focus into the given iframe.
+        Alternatively, set selector to a None to revert to the main window."""
         if selector is None:
             self.driver.switch_to.default_content()
         else:

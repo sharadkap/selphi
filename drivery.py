@@ -28,8 +28,9 @@ BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox,
             'ie': Ie, 'opera': Opera, 'safari': Safari}
 
 # A script to scroll a single element into view proper, just in case.
-SCROLL_SCRIPT = ('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
-                 '-wp.innerHeight/2)')
+SCROLL_SCRIPT = ('try{wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
+                 '-wp.innerHeight/2)}catch(DOMException){wp=window;wp.scrollTo(0,arguments[0]'
+                 '.getBoundingClientRect().top-wp.innerHeight/2)}')
 # """A JS script that applies the 'element-highlighted' animation."""
 BLIP_SCRIPT = ('try{$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;'
                '}50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset'

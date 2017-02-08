@@ -171,7 +171,7 @@ def fenestrate(results):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    if len(sys.argv) == 0:
+    if len(sys.argv) == 1:
         incipe(selene.read_properties())
     else:
         fenestrate(sys.argv[1])

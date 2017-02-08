@@ -985,7 +985,7 @@ class SignInUnsafe(WrappedElement):
         self.dr.flashy_find_element('#j_username', self.element).send_keys(user)
         self.dr.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
         tmp = self.dr.flashy_find_element('#usersignin', self.element)
-        self.dr.wait_until(tmp.is_enabled)
+        self.dr.wait_until(tmp.is_enabled, 'the sign in button is clickable.')
         tmp.click()
         if check_redirect:
             self.dr.last_link = '/change.html' if new_password else '/secure'

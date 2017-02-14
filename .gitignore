@@ -6,3 +6,4 @@ debug.log
 __pycache__/
 *.tap
 .cache/
+config.txt

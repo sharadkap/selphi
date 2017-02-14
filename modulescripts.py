@@ -48,12 +48,18 @@ AUTH = ['dev', 'bclvOP']
 TIMEFORMAT = '%Y/%m/%d %H:%M'
 
 # Which users to log in with when testing through site.
-USERS = {'ca': 'caunivxny', 'in': 'inuniptaw', 'my': 'myuniodai', \
-'sg': 'sgunicnle', 'gb': 'gbunioiut', 'us': 'usuniciba', 'en': 'enuatppvb', \
-'ehk': 'hkuniegdo', 'zhk': 'hkuniobrx', 'id': 'idunicuff', 'jp': 'jpunipuah', 'kr': 'krunizogc', \
-'br': 'bruniqrhh', 'cl': '', 'de': 'deuniocuq', 'fr': 'frunifsgy', 'it': 'itunilanh', \
-'cn': ''}
-# Backup
+#uat?
+USERS = {'gb': 'gbuatwvby', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuataguj', \
+'in': 'inuatnhvv', 'cl': 'cluatjsou', 'it': 'ituatlots', 'fr': 'fruatznle', 'de': 'deuathtpw', \
+'br': 'bruatcext', 'kr': 'kruatwxbh', 'jp': 'jpuatsmir', 'zhk': 'hkuatubxp', 'ehk': 'hkuatcylj', \
+'ca': 'cauatdnmb', 'us': 'usuatgjlp', 'en': 'enuatxrqo'}
+# Staging?
+# USERS = {'ca': 'caunivxny', 'in': 'inuniptaw', 'my': 'myuniodai', \
+# 'sg': 'sgunicnle', 'gb': 'gbunioiut', 'us': 'usuniciba', \
+# 'ehk': 'hkuniegdo', 'zhk': 'hkuniobrx', 'id': 'idunicuff', 'jp': 'jpunipuah', 'kr': 'krunizogc', \
+# 'br': 'bruniqrhh', 'cl': '', 'de': 'deuniocuq', 'fr': 'frunifsgy', 'it': 'itunilanh', \
+# 'cn': ''}
+# prod?
 # USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
 # 'sg': 'sgprodyyw', 'gb': 'gbpoccgvn''gbwwwvjvz', 'us': 'usprokcmi', \
 # 'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
@@ -956,8 +962,77 @@ COASTAL_SCRIPT = ['Button_5', \
     ('Text_Caption_1435', 'SmartShape_298'), 'Button_44', 'Button_713', \
 'Button_269']
 
+CRUISE_SCRIPT = ['Button_5',
+'Button_12', 'Button_13', 'Button_14', 'Button_9',
+'Button_20',
+'Button_637', 'Button_657', 'Button_33',
+'Button_559',
+'Button_565',
+'Button_577',
+'Button_569',
+('Text_Caption_1041', 'SmartShape_390'), ('Text_Caption_1042', 'SmartShape_392'), \
+    ('Text_Caption_1043', 'SmartShape_391'), 'Button_99', 'Button_633',
+'Button_535', 'Button_536', 'Button_643', 'Button_642', 'Button_385',
+'Button_539',
+'Button_543',
+'Button_547',
+'Button_551',
+('Text_Caption_876', 'SmartShape_303'), ('Text_Caption_877', 'SmartShape_304'), \
+    ('Text_Caption_878', 'SmartShape_302'), 'Button_77', 'Button_589',
+'Button_513', 'Button_514', 'Button_641', 'Button_639', 'Button_212',
+'Button_517',
+'Button_521',
+'Button_525',
+'Button_529',
+('Text_Caption_891', 'SmartShape_312'), ('Text_Caption_892', 'SmartShape_310'), \
+    ('Text_Caption_893', 'SmartShape_311'), 'Button_79', 'Button_593',
+'vic_tip_btn', 'Button_468', 'Button_644', 'Button_645', 'Button_160',
+'Button_471',
+'Button_475',
+'Button_479',
+'Button_483',
+('Text_Caption_906', 'SmartShape_318'), ('Text_Caption_907', 'SmartShape_320'), \
+    ('Text_Caption_908', 'SmartShape_319'), 'Button_81', 'Button_597',
+'Button_398', 'Button_399', 'Button_646', 'Button_647', 'Button_146',
+'Button_349',
+'Button_357',
+'Button_363',
+'Button_369',
+('Text_Caption_921', 'SmartShape_328'), ('Text_Caption_922', 'SmartShape_326'), \
+    ('Text_Caption_923', 'SmartShape_327'), 'Button_83', 'Button_601',
+'Button_648', 'Button_649', 'Button_191',
+'Button_449',
+'Button_453',
+'Button_457',
+'Button_461',
+('Text_Caption_936', 'SmartShape_335'), ('Text_Caption_937', 'SmartShape_334'), \
+    ('Text_Caption_938', 'SmartShape_336'), 'Button_85', 'Button_605',
+'Button_425', 'Button_426', 'Button_650', 'Button_651', 'Button_181',
+'Button_429',
+'Button_433',
+'Button_437',
+'Button_441',
+('Text_Caption_951', 'SmartShape_344'), ('Text_Caption_952', 'SmartShape_342'), \
+    ('Text_Caption_953', 'SmartShape_343'), 'Button_87', 'Button_609',
+'Button_489', 'Button_490', 'Button_655', 'Button_654', 'Button_202',
+'Button_495',
+'Button_499',
+'Button_503',
+'Button_507',
+('Text_Caption_1011', 'SmartShape_374'), ('Text_Caption_1012', 'SmartShape_375'), \
+    ('Text_Caption_1013', 'SmartShape_376'), 'Button_95', 'Button_625',
+'Button_396', 'Button_397', 'Button_656', 'Button_32', 'Button_27',
+'Button_394',
+'Button_403',
+'Button_407',
+'Button_415',
+('Text_Caption_1026', 'SmartShape_383'), ('Text_Caption_1027', 'SmartShape_384'), \
+    ('Text_Caption_1028', 'SmartShape_382'), 'Button_97', 'Button_629',
+'Button_269']
+
 SCRIPTS = {'mod1': MOD_1_SCRIPT, 'mod2': MOD_2_SCRIPT, 'mod3': MOD_3_SCRIPT, \
 'act': ACT_SCRIPT, 'nsw': NSW_SCRIPT, 'nt': NT_SCRIPT, 'qld': QLD_SCRIPT, \
 'sa': SA_SCRIPT, 'tas': TAS_SCRIPT, 'vic': VIC_SCRIPT, 'wa': WA_SCRIPT, \
 'aboriginal': ABORIGINAL_SCRIPT, 'golf': GOLF_SCRIPT, 'lodges': LODGES_SCRIPT, \
-'ra': RA_SCRIPT, 'walks': WALKS_SCRIPT, 'wine': WINE_SCRIPT, 'coastal': COASTAL_SCRIPT}
+'ra': RA_SCRIPT, 'walks': WALKS_SCRIPT, 'wine': WINE_SCRIPT, 'coastal': COASTAL_SCRIPT, \
+'cruise': CRUISE_SCRIPT}

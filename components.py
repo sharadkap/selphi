@@ -58,8 +58,8 @@ class SplashSelect(WrappedElement):
     locale_set = {'/en-gb.html', '/en-us.html', '/en-ca.html', '/en-in.html', '/en-my.html',
                   '/en-sg.html', '/id-id.html', '/de-de.html', '/zh-hk.html', '/en-hk.html',
                   '/zh-hk.html', '/en-hk.html', '/ja-jp.html', '/ko-kr.html', '/pt-br.html',
-                  '/de-de.html', '/de-de.html', '/fr-fr.html', '/it-it.html',
-                  'https://www.aussiespecialist.cn/zh-cn', 'http://www1.aussiespecialist.com/'}
+                  '/de-de.html', '/de-de.html', '/fr-fr.html', '/it-it.html', '/es-cl.html',
+                  '/en.html', 'https://www.aussiespecialist.cn/zh-cn'}
 
     def get_values(self) -> Set[str]:
         """Gets a set containing the URLs of all the Language Options."""

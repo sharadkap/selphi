@@ -33,9 +33,9 @@ from collections import OrderedDict
 
 # The website domain to use in testing.
 # ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
-# ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
+ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
-ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://unifiedstaging.aussiespecialist.com'
 # ENV = 'https:www.aussiespecialist.com'
 
@@ -49,7 +49,7 @@ TIMEFORMAT = '%Y/%m/%d %H:%M'
 
 # Which users to log in with when testing through site.
 USERS = {'ca': 'caunivxny', 'in': 'inuniptaw', 'my': 'myuniodai', \
-'sg': 'sgunicnle', 'gb': 'gbunioiut', 'us': 'usuniciba', \
+'sg': 'sgunicnle', 'gb': 'gbunioiut', 'us': 'usuniciba', 'en': 'enuatppvb', \
 'ehk': 'hkuniegdo', 'zhk': 'hkuniobrx', 'id': 'idunicuff', 'jp': 'jpunipuah', 'kr': 'krunizogc', \
 'br': 'bruniqrhh', 'cl': '', 'de': 'deuniocuq', 'fr': 'frunifsgy', 'it': 'itunilanh', \
 'cn': ''}
@@ -62,7 +62,7 @@ USERS = {'ca': 'caunivxny', 'in': 'inuniptaw', 'my': 'myuniodai', \
 
 # List of locale codes.
 LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), \
-    'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), \
+    'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), 'en': ('en', 'en'), \
 'ehk': ('en-hk', 'hk_en'), 'zhk': ('zh-hk', 'hk_zh'), 'id': ('id-id', 'id_id'), \
     'jp': ('ja-jp', 'jp_ja'), 'kr': ('ko-kr', 'kr_ko'), \
 'br': ('pt-br', 'br_pt'), 'cl': ('es-cl', 'cl_es'), 'de': ('de-de', 'de_de'), \
@@ -71,8 +71,8 @@ LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my
 
 # Not used for the Modules thing, here because this is the centralised config location.
 FANCY_LANGS = OrderedDict([
-    ('United Kingdon', '/en-gb'), ('United States', '/en-us'), ('Canada', '/en-ca'),
-    ('India', '/en-in'), ('Malaysia', '/en-my'), ('Singapore', '/en-sg'),
+    ('United Kingdom', '/en-gb'), ('United States', '/en-us'), ('Canada', '/en-ca'),
+    ('India', '/en-in'), ('Malaysia', '/en-my'), ('Singapore', '/en-sg'), ('Rest Of World', '/en'),
     ('Hong Kong(en)', '/en-hk'), ('Hong Kong(zh)', '/zh-hk'), ('Indonesia', '/id-id'),
     ('Japan', '/ja-jp'), ('Korea', '/ko-kr'), ('Brazil', '/pt-br'), ('Chile', '/es-cl'),
     ('Germany', '/de-de'), ('France', '/fr-fr'), ('Italy', '/it-it'), ('China', '/zh-cn')])
@@ -82,7 +82,7 @@ FANCY_LANGS = OrderedDict([
 MODULES = OrderedDict([('mod1', {}), ('mod2', {}), ('mod3', {}), ('act', {}), ('nsw', {}),
                        ('nt', {}), ('qld', {}), ('sa', {}), ('tas', {}), ('vic', {}), ('wa', {}),
                        ('aboriginal', {}), ('golf', {}), ('lodges', {}), ('ra', {}),
-                       ('walks', {}), ('wine', {}), ('coastal', {})])
+                       ('walks', {}), ('wine', {}), ('coastal', {}), ('cruise', {})])
 
 with open('mods.json', encoding='UTF-8') as fil:
     thelist = json.load(fil)
@@ -91,8 +91,8 @@ for lang in LANGS:
     if lan in thelist:
         for mod in thelist[lan]:
             if mod.startswith('res'):
-                if mod in MODULES:
-                    modid = thelist[lan][mod]['id'].split('_')[-1]
+                modid = thelist[lan][mod]['id'].split('_')[-1]
+                if modid in MODULES:
                     MODULES[modid][lang] = mod
 
 # COMMUNITIES = {LANGS[lang][0]: {} for lang in LANGS}

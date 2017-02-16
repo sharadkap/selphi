@@ -182,7 +182,7 @@ def read_properties() -> dict:
     result['tests'] = result['tests'].split(',') if result['tests'] else []
     result['asp_from_emails'] = result['asp_from_emails'].split(',')
     # Fill out the user details if username is included.
-    if 'username' in result.keys():
+    if result['username']:
         result['userid'] = result['username'][-4:]    # The mail ID is the last four characters.
         result['email'] = result['email'].format(result['userid'])
     return result

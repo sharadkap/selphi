@@ -49,7 +49,7 @@ TIMEFORMAT = '%Y/%m/%d %H:%M'
 
 # Which users to log in with when testing through site.
 #uat?
-USERS = {'gb': 'gbuatwvby', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuataguj', \
+USERS = {'gb': 'gbuatykor', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuataguj', \
 'in': 'inuatnhvv', 'cl': 'cluatjsou', 'it': 'ituatlots', 'fr': 'fruatznle', 'de': 'deuathtpw', \
 'br': 'bruatcext', 'kr': 'kruatwxbh', 'jp': 'jpuatsmir', 'zhk': 'hkuatubxp', 'ehk': 'hkuatcylj', \
 'ca': 'cauatdnmb', 'us': 'usuatgjlp', 'en': 'enuatxrqo'}

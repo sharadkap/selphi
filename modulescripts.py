@@ -37,7 +37,7 @@ ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://unifiedstaging.aussiespecialist.com'
-# ENV = 'https:www.aussiespecialist.com'
+# ENV = 'https://www.aussiespecialist.com'
 
 # The Username and Password to use in the Server Authentication, if necessary.
 AUTH = ['dev', 'bclvOP']
@@ -60,12 +60,10 @@ USERS = {'gb': 'gbuatykor', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuatag
 # 'br': 'bruniqrhh', 'cl': '', 'de': 'deuniocuq', 'fr': 'frunifsgy', 'it': 'itunilanh', \
 # 'cn': ''}
 # prod?
-# USERS = {'ca': 'caprowtvw', 'in': 'inprontvg', 'my': 'myproqcmc', \
-# 'sg': 'sgprodyyw', 'gb': 'gbpoccgvn''gbwwwvjvz', 'us': 'usprokcmi', \
-# 'ehk': 'hkproptls', 'zhk': 'hkprorjyu', 'id': 'idpronqgn', 'jp': 'jpprodqny', 'kr': 'krprovrqf', \
-# 'br': 'brproheby', 'cl': '', 'de': 'deprokirs', 'fr': 'frprodxes', 'it': 'itprotxqb', \
-# 'cn': 'cnwwwAYYC'}
-
+# USERS = {'it': 'itproliwe', 'de': 'deproktjw', 'fr': 'frprotufc', 'br': 'brprotele', 'kr': 'krprovjrs', \
+#     'jp': 'jpproccim', 'hk': 'hkprockqn', 'hk': 'hkpropedx', 'sg': 'sgproxcto', 'id': 'idprowagf', \
+#     'my': 'myprolsrv', 'ca': 'caprolufh', 'in': 'inprotitw', 'us': 'usproufgz', 'en': 'enproqgdv', \
+#     'gb': 'gbpropqde', 'cn': 'cnwwwAYYC', 'cl': ''}
 # List of locale codes.
 LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), \
     'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), 'en': ('en', 'en'), \

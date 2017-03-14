@@ -1236,7 +1236,7 @@ class AussieSpecialistPhotos(WrappedElement):
 
         def open(self) -> None:
             """Clicks on the mosaic tile, opening it."""
-            MinorElement(self.dr, '.flipper img[src*="image.adapt"]', self.element).point()
+            MinorElement(self.dr, '.flipper img[src*="image/file.adapt"]', self.element).point()
             self.dr.flashy_find_element('.flipper a', self.element).click()
             self.contentpane = [x for x in self.dr.flashy_find_elements(
                 '.mosaic-item-detail-container.active') if x.is_displayed()][0]

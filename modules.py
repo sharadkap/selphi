@@ -208,7 +208,7 @@ def begin_module():
 def switch_into_module(driver: WebDriver) -> None:
     """Extract the Enter Iframe function just so it can be better exported."""
     # Scorm's wrapper on the modules needs to be opened first.
-    driver.find_element_by_css_selector('.scf-play-button').click()
+    click_surely(driver.find_element_by_css_selector('.scf-play-button'), False)
     iframe = driver.find_element_by_css_selector('iframe[src^="/content/"]')
     driver.switch_to.frame(iframe)
     # Scorm has TWO layers of framing.
@@ -260,14 +260,16 @@ def new_drag_drop(source: str, target: str) -> None:
     ActionChains(DRIVER).click_and_hold(source).move_to_element(fource).release(target).perform()
     time.sleep(MINIWAIT)
 
-def click_surely(ele: WebElement) -> None:
+def click_surely(ele: WebElement, inframe: bool=True) -> None:
     """When clicking on an element, move it onscreen first. BECAUSE IE.
     If that doesn't work, manual override, it was probably just behind a blank textbox."""
     try:
+        sc = 'wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top-wp.innerHeight/2'
+        if inframe:
+            sc += '+wp.$("iframe[src*=\'/content/\']").offset().top'
+        sc += ')'
         if not isinstance(DRIVER, Firefox):
-            DRIVER.execute_script('wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect()'
-                                  '.top-wp.innerHeight/2 + wp.$("iframe[src*=\'/content/\']")'
-                                  '.offset().top)', ele)
+            DRIVER.execute_script(sc, ele)
         ele.click()
     except WebDriverException:
         ActionChains(DRIVER).move_to_element(ele).click().perform()

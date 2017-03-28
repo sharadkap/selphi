@@ -252,12 +252,13 @@ def new_drag_drop(source: str, target: str) -> None:
             raise TypeError('You broke it. String, or List only.')
     # IE WHY.    FIREFOX, ET TU?
     source, fource, target = getid(source), getid(source, 're-{}c'), getid(target)
-    if not isinstance(DRIVER, Firefox):
-        DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return '
-                              'x.getBoundingClientRect().top;}),wp=window.top;'
-                              'wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 + '
-                              'wp.$("iframe[src*=\'/content/\']").offset().top)', source, target)
+    # if not isinstance(DRIVER, Firefox):
+    DRIVER.execute_script('a=arguments,h=[a[0],a[1]].map(function(x){return '
+                          'x.getBoundingClientRect().top;}),wp=window.top;'
+                          'wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 + '
+                          'wp.$("iframe[src*=\'/content/\']").offset().top)', source, target)
     ActionChains(DRIVER).click_and_hold(source).move_to_element(fource).release(target).perform()
+    ActionChains(DRIVER).reset_actions() # FIXME can't believe firefox would do this
     time.sleep(MINIWAIT)
 
 def click_surely(ele: WebElement, inframe: bool=True) -> None:
@@ -268,11 +269,12 @@ def click_surely(ele: WebElement, inframe: bool=True) -> None:
         if inframe:
             sc += '+wp.$("iframe[src*=\'/content/\']").offset().top'
         sc += ')'
-        if not isinstance(DRIVER, Firefox):
-            DRIVER.execute_script(sc, ele)
+        # if not isinstance(DRIVER, Firefox):
+        DRIVER.execute_script(sc, ele)
         ele.click()
     except WebDriverException:
         ActionChains(DRIVER).move_to_element(ele).click().perform()
+        ActionChains(DRIVER).reset_actions() # FIXME once marionette gets its act together
 
 def pick_from_possibilities(locator: str) -> WebElement:
     """Deal with alternate ids. Use a css selector to get any proposed elements."""

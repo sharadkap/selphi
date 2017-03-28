@@ -33,11 +33,11 @@ from collections import OrderedDict
 
 # The website domain to use in testing.
 # ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
-ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://unifiedstaging.aussiespecialist.com'
-# ENV = 'https://www.aussiespecialist.com'
+ENV = 'https://www.aussiespecialist.com'
 
 # The Username and Password to use in the Server Authentication, if necessary.
 AUTH = ['dev', 'bclvOP']
@@ -49,10 +49,10 @@ TIMEFORMAT = '%Y/%m/%d %H:%M'
 
 # Which users to log in with when testing through site.
 #uat?
-USERS = {'gb': 'gbuatykor', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuataguj', \
-'in': 'inuatnhvv', 'cl': 'cluatjsou', 'it': 'ituatlots', 'fr': 'fruatznle', 'de': 'deuathtpw', \
-'br': 'bruatcext', 'kr': 'kruatwxbh', 'jp': 'jpuatsmir', 'zhk': 'hkuatubxp', 'ehk': 'hkuatcylj', \
-'ca': 'cauatdnmb', 'us': 'usuatgjlp', 'en': 'enuatxrqo'}
+# USERS = {'gb': 'gbuatykor', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuataguj', \
+# 'in': 'inuatnhvv', 'cl': 'cluatjsou', 'it': 'ituatlots', 'fr': 'fruatznle', 'de': 'deuathtpw', \
+# 'br': 'bruatcext', 'kr': 'kruatwxbh', 'jp': 'jpuatsmir', 'zhk': 'hkuatubxp', 'ehk': 'hkuatcylj', \
+# 'ca': 'cauatdnmb', 'us': 'usuatgjlp', 'en': 'enuatxrqo'}
 # Staging?
 # USERS = {'ca': 'caunivxny', 'in': 'inuniptaw', 'my': 'myuniodai', \
 # 'sg': 'sgunicnle', 'gb': 'gbunioiut', 'us': 'usuniciba', \
@@ -60,10 +60,10 @@ USERS = {'gb': 'gbuatykor', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuatag
 # 'br': 'bruniqrhh', 'cl': '', 'de': 'deuniocuq', 'fr': 'frunifsgy', 'it': 'itunilanh', \
 # 'cn': ''}
 # prod?
-# USERS = {'it': 'itproliwe', 'de': 'deproktjw', 'fr': 'frprotufc', 'br': 'brprotele', 'kr': 'krprovjrs', \
-#     'jp': 'jpproccim', 'hk': 'hkprockqn', 'hk': 'hkpropedx', 'sg': 'sgproxcto', 'id': 'idprowagf', \
-#     'my': 'myprolsrv', 'ca': 'caprolufh', 'in': 'inprotitw', 'us': 'usproufgz', 'en': 'enproqgdv', \
-#     'gb': 'gbpropqde', 'cn': 'cnwwwAYYC', 'cl': ''}
+USERS = {'it': 'itproliwe', 'de': 'deproktjw', 'fr': 'frprotufc', 'br': 'brprotele', 'kr': 'krprovjrs', \
+    'jp': 'jpproccim', 'ehk': 'hkprockqn', 'zhk': 'hkpropedx', 'sg': 'sgproxcto', 'id': 'idprowagf', \
+    'my': 'myprolsrv', 'ca': 'caprolufh', 'in': 'inprotitw', 'us': 'usproufgz', 'en': 'enproqgdv', \
+    'gb': 'gbpropqde', 'cn': 'cnwwwAYYC', 'cl': 'clwwwaxtu'}
 # List of locale codes.
 LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), \
     'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), 'en': ('en', 'en'), \
@@ -150,7 +150,7 @@ MOD_1_SCRIPT = ['Button_728', \
 
 MOD_2_SCRIPT = ['P1_btn_LetsStart', \
 'Button_2815', 'Button_2816', ['Button_3068', 'Button_945'], \
-['map_qld', 'Button_2878'], \
+['map_qld', 'qld_visited', 'Button_2878'], \
     'Button_1791', \
     'Button_1789', \
     'Button_2617', 'Button_2649', 'Button_1817', \
@@ -161,7 +161,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
         ('Drag_IslandsBeaches', 'drop_island'), 'Button_15', 'Button_2688', \
     ('answer_nature', 'drop_nature'), ('answer_events', 'drop_events'), \
         ('answer_southbank', 'drop_southbank'), 'Button_17', 'qld_next', \
-['map_vic', 'Button_2874'], \
+['map_vic', 'vic_visited', 'Button_2874'], \
     'Button_2094', \
     'Button_2083', \
     'Button_2629', 'Button_2668', 'Button_2104', \
@@ -172,7 +172,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
         ('Drag_GOR', 'drop_gor'), 'Button_26', 'Button_2710', \
     ('answer_fitzroy', 'drop_fitzroy'), ('answer_south', 'drop_south'), \
         ('answer_lane', 'drop_lane'), 'Button_50', 'vic_next', \
-['map_nsw', 'Button_2873'], \
+['map_nsw', 'nsw_visited', 'Button_2873'], \
     'Button_2002', \
     'Button_2077', \
     'Button_2621', 'Button_2660', 'Button_2012', \
@@ -183,7 +183,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
         ('Drag_BlueMountains', 'drop_blue_mountain'), 'Button_19', 'Button_2702', \
     ('answer_beaches', 'drop_beaches'), ('answer_opera', 'drop_opera'), \
         ('answer_harbour', 'drp_harbour'), 'Button_46', 'nsw_next', \
-['map_act', 'Button_2875'], \
+['map_act', 'act_visited', 'Button_2875'], \
     'Button_1892', \
     'Button_1881', \
     'Button_2625', 'Button_2664', 'Button_1902', \
@@ -194,7 +194,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
         ('Drag_Art', 'drop_art'), 'Button_22', 'Button_2706', \
     ('answer_gallery', 'drop_gallery'), ('answer_museum', 'drop_museum'), \
         ('answer_awm', 'drop_awm'), 'Button_54', 'act_next', \
-['map_tas', 'Button_2877'], \
+['map_tas', 'tas_visited', 'Button_2877'], \
     'Button_2184', \
     'Button_2173', \
     'Button_2633', 'Button_2672', 'Button_2194', \
@@ -205,7 +205,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
         ('Drag_Freycinet', 'drop_freycinet'), 'Button_30', 'Button_2714', \
     ('answer_mount', 'drop_mount'), ('answer_market', 'drop_market'), \
         ('answer_mona', 'drop_mona'), 'Button_58', 'tas_next', \
-['map_sa', 'Button_2876'], \
+['map_sa', 'sa_visited', 'Button_2876'], \
     'Button_2249', \
     'Button_2238', \
     'Button_2637', 'Button_2676', 'Button_2259', \
@@ -216,7 +216,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
         ('Drag_Barossa', 'drop_barossa'), 'Button_34', 'Button_2718', \
     ('answer_glenelg', 'drop_glenelg'), ('answer_north', 'drop_north'), \
         ('answer_market_ade', 'drop_market_ade'), 'Button_62', 'sa_next', \
-['map_wa', 'Button_2880'], \
+['map_wa', 'wa_visited', 'Button_2880'], \
     'Button_2314', \
     'Button_2303', \
     'Button_2641', 'Button_2680', 'Button_2324', \
@@ -227,7 +227,7 @@ MOD_2_SCRIPT = ['P1_btn_LetsStart', \
         ('Drag_Kimberley', 'drop_kimberley'), 'Button_38', 'Button_2722', \
     ('answer_parks', 'drop_parks'), ('answer_rottnest', 'drop_rottnest'), \
         ('answer_fremantle', 'drop_fremantle'), 'Button_66', 'wa_next', \
-['map_nt', 'Button_2879'], \
+['map_nt', 'nt_visited', 'Button_2879'], \
     'Button_2379', \
     'Button_2368', \
     'Button_2645', 'Button_2684', 'Button_2389', \

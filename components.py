@@ -1687,7 +1687,7 @@ class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: 
     def photos(self):
         """Opens the Aussie Specialist Photos page."""
         self.dr.get(self.dr.locale_url +
-                    '/secure/aussiespecialist-club/aussie-specialist-photos.html')
+                    '/secure/aussie-specialist-club/aussie-specialist-photos.html')
 
     def store(self):
         """Opens the Aussie Store page."""

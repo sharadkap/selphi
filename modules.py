@@ -91,15 +91,14 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
     results = asy.get()
     output += '\n'.join(results)    # Each locale's row.
     output += '\n"FINISH: {0}"\n\n'.format(get_time())    # Footer row.
-    print(output)
-    # try:
-    #     with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
-    #         log.write(output)
-    # except PermissionError:
-    #     print('In future, be sure to not leave the log file open.')
-    #     print('That tends to lock it, so now it cannot be written to.')
-    #     print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
-    #     print(output)
+    try:
+        with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
+            log.write(output)
+    except PermissionError:
+        print('In future, be sure to not leave the log file open.')
+        print('That tends to lock it, so now it cannot be written to.')
+        print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
+        print(output)
 
 def restart_driver(br):
     """Restarts the DRIVER."""
@@ -125,12 +124,12 @@ def do_locale(args):
     # Reset the driver between rounds
     restart_driver(browser)
     # Log into the site, so you can access the modules.
-    #try:
-    log_in(lang)
-    # except Exception as ex:
-    #     DRIVER.quit()
-    #     return '"Login to {0} failed. That breaks the whole locale, look into it:\n{1}"'.format(
-    #         lang, str(ex).replace('"', '""'))
+    try:
+        log_in(lang)
+    except Exception as ex:
+        DRIVER.quit()
+        return '"Login to {0} failed. That breaks the whole locale, look into it:\n{1}"'.format(
+            lang, str(ex).replace('"', '""'))
 
     # Start recording results.
     result = '_'.join([lang.upper(), brname.upper()])

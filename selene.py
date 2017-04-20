@@ -89,12 +89,12 @@ def launch_test(args) -> None:
     # Create the test runner, choose the output path: right next to the test script file.
     with io.StringIO() as buf:
         # TAP uses Module State, have to reset it for each test.
-        tap.runner._tracker = tap.tracker.Tracker()     #pylint: disable-msg=W0212
+        tap.runner._tracker = tap.tracker.Tracker()     #pylint: disable=W0212
         runner = tap.TAPTestRunner()
         runner.set_format('Result of: {method_name} - {short_description}')
         runner.set_stream(True)
         # Bit of a hack, but it doesn't support A Proper Way to reassign output, so.
-        tap.runner._tracker.stream = buf    # pylint: disable-msg=W0212
+        tap.runner._tracker.stream = buf    # pylint: disable=W0212
         # For whatever reason, there are two output streams. Ignore this one, I guess.
         runner.stream.stream = sys.stdout
         tests = unittest.TestSuite(names)
@@ -157,12 +157,12 @@ def perform_hacks() -> None:
 
     # Striiped this entire method right out.
     # The original method contains this unused argument, and yes, it isn't used there either.
-    def newex(self, err, test):     # pylint: disable-msg=W0613
+    def newex(self, err, test):     # pylint: disable=W0613
         """Converts a sys.exc_info()-style tuple of values into a string."""
         return tidy_error(err)
     # And, override the existing method.
     # I do need to access this private property to correctly HAX it into working.
-    # pylint: disable-msg=W0212
+    # pylint: disable=W0212
     unittest.result.TestResult._exc_info_to_string = newex
     # Also, tap has its own renderer as well, so have to overwrite that too.
     def newf(exc):

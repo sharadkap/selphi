@@ -39,8 +39,8 @@ BLIP_SCRIPT = ('try{$("head").append("<style>@keyframes selhian{0%{outline: 0px 
                'ght/2), c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(functi'
                'on(e) {e.style.animationName="selhian"}, 10, c)}}catch(e){}')
 # """Type annotation, referring to either a WebElement, or a list of them."""
-ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable-msg=E1126
-ELEMENT_LIST = List[WebElement] # pylint: disable-msg=E1126
+ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable=E1126
+ELEMENT_LIST = List[WebElement] # pylint: disable=E1126
 
 def to_list(item) -> list:
     """Wraps the input into a list if it wasn't already one."""
@@ -57,7 +57,7 @@ def find_error_improver(func: FunctionType):
                 selector, self.current_url())) from None
     return actually_helpful
 
-class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint: disable-msg=R0904
+class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint: disable=R0904
     """Because Module-Level-State is apparently a terrible idea, have a class singleton.
     Wraps a WebDriver instance, and does a bunch of other useful things."""
     def __init__(self, globs: dict):
@@ -179,7 +179,7 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
 
     def switch_to_window(self, window: int) -> None:
         """Switch WebDriver's focus to the given open tab or window. Zero based indexing."""
-        # Disable warning on missing property. Pylint just can't find it. pylint: disable-msg=E1101
+        # Disable warning on missing property. Pylint just can't find it. pylint: disable=E1101
         self.driver.switch_to.window(self.driver.window_handles[window])
 
     def switch_to_frame(self, selector: str) -> None:
@@ -188,7 +188,7 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         if selector is None:
             self.driver.switch_to.default_content()
         else:
-            self.driver.switch_to.frame(self.flashy_find_element(selector))  # pylint: disable-msg=E1101
+            self.driver.switch_to.frame(self.flashy_find_element(selector))  # pylint: disable=E1101
 
     def fix_url(self, url: str) -> str:
         """Use this to remove that /content/asp/ stuff from URLs."""
@@ -221,6 +221,10 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
     def execute_mouse_over(self, element: WebElement) -> None:
         """Simulates the mouse moving into an element."""
         ActionChains(self.driver).move_to_element(element).perform()
+
+    def override_click(self, element: WebElement) -> None:
+        """Use this if the thing you want to click is ''""'behind''"'" something else."""
+        ActionChains(self.driver).move_to_element(element).click().perform()
 
     @find_error_improver
     def quietly_find_element(self, selector: str, within: WebElement=None) -> WebElement:
@@ -281,7 +285,7 @@ class Email:
             globs['test_email_password'], globs['asp_from_emails'])
         self.dr = dr
 
-    def get_all_locales(self) -> Set[str]:     # pylint: disable-msg=E1126
+    def get_all_locales(self) -> Set[str]:     # pylint: disable=E1126
         """Collects all of the emails received by this email subaddress,
         and returns a set of Locale codes representing each one found."""
         locs = set()
@@ -298,7 +302,7 @@ class Email:
                 locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
         return locs
 
-    def get_new_messages(self, really_get_new: bool=True) -> List[str]: # pylint: disable-msg=E1126
+    def get_new_messages(self, really_get_new: bool=True) -> List[str]: # pylint: disable=E1126
         """Polls the IMAP server untill a (maybe) new email(s) are found, then
         attempts to make sense of their ridiculous transmission formatting."""
         results = []
@@ -329,7 +333,7 @@ class Email:
             None, ' OR FROM '.join(['', *self.froms[:-1]]).strip(), 'FROM', self.froms[-1],
             'TO', self.email, 'UNSEEN' if really_get_new else 'SEEN')[1][0].split(b' '))
 
-    class LocalizedEmail():    # Oh, whatever. pylint: disable-msg=R0903
+    class LocalizedEmail():    # Oh, whatever. pylint: disable=R0903
         """Superclass for the various emails."""
         def __init__(self, globs: dict, dr: Drivery, userid: str):
             self.email = bs4.BeautifulSoup(
@@ -337,7 +341,7 @@ class Email:
             self.userid = userid
             self.cn_mode = globs['cn_mode']
 
-    class RegistrationEmail(LocalizedEmail):    # pylint: disable-msg=R0903
+    class RegistrationEmail(LocalizedEmail):    # pylint: disable=R0903
         """Represents the Registration Email, if used correctly. Correctly here meaning:
         instantiate this shortly after registering, and be sure to attach it to
         an email sub-address with no existing unread messages."""
@@ -348,7 +352,7 @@ class Email:
             else:
                 return self.email.select('a[href*="activation"]')[0]['href']
 
-    class ForgottenUsernameEmail(LocalizedEmail):    # pylint: disable-msg=R0903
+    class ForgottenUsernameEmail(LocalizedEmail):    # pylint: disable=R0903
         """Represents the Forgotten Username Email.
         If it is called at the right time, of course."""
         def get_username(self) -> str:

@@ -11,7 +11,7 @@ from math import ceil
 from ASP import aspnames
 from drivery import BROWSERS
 from modulescripts import FANCY_LANGS
-# Too many ancestors. That's external wrapper libraries for you. pylint: disable-msg=R0901
+# Too many ancestors. That's external wrapper libraries for you. pylint: disable=R0901
 
 class TestForm(tk.Frame):
     """A Frame containing a bunch of controls, used to customise test runs."""

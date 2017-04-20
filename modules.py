@@ -16,25 +16,25 @@ from selenium.webdriver.remote.webdriver import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from modulescripts import (LANGS, MODULES, SCRIPTS, USERS, ENV, AUTH, TIMEFORMAT)
+from modulescripts import (LANGS, MODULES, SCRIPTS, USER, PASSWORD, ENV, AUTH, TIMEFORMAT)
 
 RESET_MODULE = 'cpCmndGotoSlide=0'
 MINIWAIT = 0.5
-LIST_STR = List[str]    # pylint: disable-msg=E1126
+LIST_STR = List[str]    # pylint: disable=E1126
 
 def do_module(driver: WebDriver, module: str) -> None:
     """Run this one if this is being imported as part of the Reg tests.
     Be sure to have already navigated to the module page, pass in the driver
     to be used, tell it which module this is and stand back. Names are: mod1, mod2, mod3,
     act, qld, nsw, nt, sa, tas, vic, wa, aboriginal, golf, lodges, ra, walks, wine"""
-    global DRIVER    # pylint: disable-msg=W0601
+    global DRIVER    # pylint: disable=W0601
     DRIVER = driver
     for elem in SCRIPTS[module]:
         domo(elem)
 
 def parseargs():
     """Do this bit separately so it can be copied into the new processes."""
-    # pylint: disable-msg=W0601
+    # pylint: disable=W0601
     global IMPLICITLY_WAIT, MOD_STEM, SCREENSHOT_DIR, RESULTS_FILE
     IMPLICITLY_WAIT = ARGS.wait[0]
     SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
@@ -44,11 +44,11 @@ def parseargs():
 
 def main() -> None:
     """Run this if the modules suite is being executed as itself."""
-    # pylint: disable-msg=W0601
+    # pylint: disable=W0601
     global ARGS, BROWSERS
     BROWSERS = {'chrome': Chrome, 'firefox': Firefox, 'ie': Ie,
                 'safari': Safari, 'opera': Opera, 'edge': Edge}
-    # pylint: disable-msg=C0103
+    # pylint: disable=C0103
     PARSER = argparse.ArgumentParser()
     PARSER.add_argument('-m', '--modules', help='Which modules to test. One or more of '
                         '[%(choices)s]. Default is all.', nargs='+', type=str,
@@ -68,7 +68,7 @@ def main() -> None:
     try:
         full_languages_modules_run(modfilter=ARGS.modules,
                                    langfilter=ARGS.locales, brows=ARGS.browsers)
-    except Exception:    # Too general is the point, it's a Final Action. pylint: disable-msg=W0703
+    except Exception:    # Too general is the point, it's a Final Action. pylint: disable=W0703
         with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
             log.write('\n"Well, something went wrong. A manual exit, hopefully."')
         raise
@@ -91,19 +91,19 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
     results = asy.get()
     output += '\n'.join(results)    # Each locale's row.
     output += '\n"FINISH: {0}"\n\n'.format(get_time())    # Footer row.
-
-    try:
-        with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
-            log.write(output)
-    except PermissionError:
-        print('In future, be sure to not leave the log file open.')
-        print('That tends to lock it, so now it cannot be written to.')
-        print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
-        print(output)
+    print(output)
+    # try:
+    #     with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
+    #         log.write(output)
+    # except PermissionError:
+    #     print('In future, be sure to not leave the log file open.')
+    #     print('That tends to lock it, so now it cannot be written to.')
+    #     print('\n\nNow, you have to try to read raw CSV from a console:\n\n')
+    #     print(output)
 
 def restart_driver(br):
     """Restarts the DRIVER."""
-    # Global not defined at module level. Well, whatever. pylint: disable-msg=W0601
+    # Global not defined at module level. Well, whatever. pylint: disable=W0601
     global DRIVER
     if br == Firefox:   # And, a workaround for Firefox's distrust of basic authentication.
         p = FirefoxProfile()
@@ -116,7 +116,7 @@ def restart_driver(br):
 
 def do_locale(args):
     """The target of a process, go do all the modules in a locale."""
-    # Global can't be defined at module level. Processes are wierd. pylint: disable-msg=W0601
+    # Global can't be defined at module level. Processes are wierd. pylint: disable=W0601
     global ARGS
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     # Unpack arguments
@@ -125,12 +125,12 @@ def do_locale(args):
     # Reset the driver between rounds
     restart_driver(browser)
     # Log into the site, so you can access the modules.
-    try:
-        log_in(lang)
-    except Exception as ex:
-        DRIVER.quit()
-        return '"Login to {0} failed. That breaks the whole locale, look into it:\n{1}"'.format(
-            lang, str(ex).replace('"', '""'))
+    #try:
+    log_in(lang)
+    # except Exception as ex:
+    #     DRIVER.quit()
+    #     return '"Login to {0} failed. That breaks the whole locale, look into it:\n{1}"'.format(
+    #         lang, str(ex).replace('"', '""'))
 
     # Start recording results.
     result = '_'.join([lang.upper(), brname.upper()])
@@ -170,8 +170,9 @@ def log_in(lang: str) -> None:
     # Try to log in
     try:
         DRIVER.find_element_by_css_selector('.link-signin-text').click()
-        DRIVER.find_element_by_id('j_username').send_keys(USERS[lang])
-        DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys('Welcome1')
+        print('This is the value of the USER variable: ' + USER)
+        DRIVER.find_element_by_id('j_username').send_keys('IS SUPER A STRING, YOU GUYS')
+        DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys(PASSWORD)
         DRIVER.find_element_by_id('usersignin').click()
     except NoSuchElementException as ex:
         raise NoSuchElementException('Login failed, something was missing from the '
@@ -258,7 +259,6 @@ def new_drag_drop(source: str, target: str) -> None:
                           'wp.scrollTo(0,(h[0]+h[1])/2 - wp.innerHeight/2 + '
                           'wp.$("iframe[src*=\'/content/\']").offset().top)', source, target)
     ActionChains(DRIVER).click_and_hold(source).move_to_element(fource).release(target).perform()
-    ActionChains(DRIVER).reset_actions() # FIXME can't believe firefox would do this
     time.sleep(MINIWAIT)
 
 def click_surely(ele: WebElement, inframe: bool=True) -> None:
@@ -274,7 +274,6 @@ def click_surely(ele: WebElement, inframe: bool=True) -> None:
         ele.click()
     except WebDriverException:
         ActionChains(DRIVER).move_to_element(ele).click().perform()
-        ActionChains(DRIVER).reset_actions() # FIXME once marionette gets its act together
 
 def pick_from_possibilities(locator: str) -> WebElement:
     """Deal with alternate ids. Use a css selector to get any proposed elements."""

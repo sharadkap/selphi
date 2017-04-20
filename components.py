@@ -21,6 +21,12 @@ class WrappedElement:
         self.element.click()
         return self
 
+    def override_click(self) -> 'WrappedElement':
+        """Clicks on the element, even if it is ``behind"" another one."""
+        self.dr.last_link = self.dr.fix_url(self.element.get_attribute('href'))
+        self.dr.override_click(self.element)
+        return self
+
     def point(self) -> 'WrappedElement':
         """Moves the mouse cursor over the element."""
         self.dr.execute_mouse_over(self.element)
@@ -119,7 +125,7 @@ class Video(WrappedElement):
     def play(self):
         """Starts up the video. Probably."""
         # This might be necessary, the Youku player is a little ahead of itself.
-        def x(): """Maybe"""; self.element.click(); return self.is_playing()
+        def x(): """Maybe"""; self.override_click(); return self.is_playing()
         self.dr.wait_until(x, 'Click it and is it playing now?')
 
     def is_playing(self) -> bool:
@@ -197,7 +203,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
             """Clicks the Heart button in the tiles content. Has to be open first."""
             self.dr.flashy_find_element('.btn-bubble', self.contentpane).click()
 
-    def random_selection(self, num: int) -> List[WrappedElement]: # pylint: disable-msg=E1126
+    def random_selection(self, num: int) -> List[WrappedElement]: # pylint: disable=E1126
         """Given a number, gets that many randomly selected tiles from the mosaic."""
         return [self.MosaicTile(self.dr, tile) for tile in random.sample(self.tiles, num)]
 
@@ -515,7 +521,7 @@ class FilteredSearch(WrappedElement):
         # The largest number must be the total results, with the other two being 'this many shown'.
         return (1 + counter[1] - counter[0], counter[2])
 
-    def get_all_results(self) -> List[WrappedElement]: # pylint: disable-msg=E1126
+    def get_all_results(self) -> List[WrappedElement]: # pylint: disable=E1126
         """Gets all of the search results."""
         return [self.SearchResult(self.dr, e) for e in self.dr.flashy_find_elements('.mosaic-item')]
 
@@ -764,7 +770,7 @@ class InteractiveMap(WrappedElement):
                 self.dr.blip_element(self.pins)
                 return len(self.pins)
 
-            def get_names(self) -> List[str]: # pylint: disable-msg=E1126
+            def get_names(self) -> List[str]: # pylint: disable=E1126
                 """Returns a list of the labels on all of the pins"""
                 self.dr.blip_element(self.pins)
                 return [x.text for x in self.pins]
@@ -817,7 +823,7 @@ class ContactUs(WrappedElement):
         self.dr = dr
         self.element = self.dr.flashy_find_element('a[href*="mailto:"]')
 
-class RegistrationForm(WrappedElement): # They aren't instance variables. pylint: disable-msg=R0902
+class RegistrationForm(WrappedElement): # They aren't instance variables. pylint: disable=R0902
     """Represents the Registration Form"""
     def __init__(self, dr: Drivery):
         self.dr = dr
@@ -847,7 +853,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
             self.dr.blip_element(element)
             element.send_keys(value)
     # Deliberately uses the __setattr__, ignore the attribute define warning.
-    # pylint: disable-msg=W0201
+    # pylint: disable=W0201
     def date_of_birth(self, value: str='//') -> None:
         """Overwrites the Date Of Birth Name field to have the given D/M/Y value. Blank default."""
         value = value.split('/')
@@ -1056,7 +1062,7 @@ class MySalesTools(WrappedElement):
             """Clicks the X button, closing the entry."""
             self.dr.flashy_find_element('.icon-close', self.element).click()
 
-    def get_favourites(self) -> List[WrappedElement]: # pylint: disable-msg=E1126
+    def get_favourites(self) -> List[WrappedElement]: # pylint: disable=E1126
         """Gets all of the saved sales tools entries."""
         return [self.SalesTool(self.dr, x) for x in
                 self.dr.flashy_find_elements('.search-result-row-spacing', self.element)]
@@ -1221,7 +1227,7 @@ class AussieSpecialistPhotos(WrappedElement):
         self.dr = dr
         self.photos = self.dr.flashy_find_elements('.mosaic-item')
 
-    def random_images(self, num: int) -> List[WrappedElement]: # pylint: disable-msg=E1126
+    def random_images(self, num: int) -> List[WrappedElement]: # pylint: disable=E1126
         """Randomly selects num photos."""
         return [self.Photo(self.dr, x) for x in random.sample(self.photos, num)]
 
@@ -1378,7 +1384,7 @@ class AussieStore(WrappedElement):
                 '.store-order-box-left p:nth-child(2)', self.element).text
             return '\n'.join([x.strip().replace('  ', ' ') for x in text.split('\n')])
 
-        def get_product_names(self) -> List[str]: # pylint: disable-msg=E1126
+        def get_product_names(self) -> List[str]: # pylint: disable=E1126
             """Gets a list of the names of all of the Products in the Cart."""
             return [x.text.casefold() for x in self.dr.flashy_find_elements('.cell-title', self.element)]
 
@@ -1491,7 +1497,7 @@ class PanoramicCarousel(WrappedElement):
         self.dr = dr
         self.element = self.dr.flashy_find_element('.panoramicCarousel')
 
-    def watch_video(self) -> Tuple[str, str]:
+    def watch_video(self) -> Tuple(str, str):
         """Selects a random video to watch. Returns the video's Title+Description and Image src."""
         # The text and the background images are on separate carousels. For some reason.
         num = len(self.dr.quietly_find_elements('.owl-item', self.element)) / 2
@@ -1531,7 +1537,7 @@ class PanoramicCarousel(WrappedElement):
 
 class KDPSearch(FilteredSearch):
     """Represents the Key Distribution Partner search."""
-    def __init__(self, dr: Drivery): # I did the important bits manually. pylint: disable-msg=W0231
+    def __init__(self, dr: Drivery): # I did the important bits manually. pylint: disable=W0231
         self.dr = dr
         self.element = self.dr.flashy_find_element('.kdpSearch')
         # Hold up, have to wait for the initial results to come in first,
@@ -1565,7 +1571,7 @@ class KDPSearch(FilteredSearch):
 
 class SiteSearch(FilteredSearch):
     """Represents the Search component on the page that appears when using the Header Search."""
-    def __init__(self, dr: Drivery): # I did the important bits manually. pylint: disable-msg=W0231
+    def __init__(self, dr: Drivery): # I did the important bits manually. pylint: disable=W0231
         self.dr = dr
         self.element = self.dr.flashy_find_element('.search>div.search-component')
         # Hold up, have to wait for the initial results to come in first,
@@ -1626,7 +1632,7 @@ class Explore(WrappedElement):
             """Clicks the Add To Dream Trip button."""
             self.dr.flashy_find_element('.bubble-colour-favourite', self.element).click()
 
-class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: disable-msg=R0904
+class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: disable=R0904
     """Call on this if an important component is missing, it has links to the pages."""
     def __init__(self, dr: Drivery):
         self.dr = dr

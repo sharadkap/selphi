@@ -22,7 +22,7 @@ aspnames = OrderedDict(
      ('FPW', 'test_23_Forgotten_Password'), ('CPW', 'test_24_Change_Password'),
      ('CMP', 'test_25_Campaign')])
 
-class ASP(unittest.TestCase): # pylint: disable-msg=R0904
+class ASP(unittest.TestCase): # pylint: disable=R0904
     """The Test Suite for the ASP regresseion. Test methods are numbered because HipTest."""
     def __init__(self, name: str, glob: dict):
         # super(ASP, self, name).__init__()
@@ -451,7 +451,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         self.globs['email'] = self.globs['email'].format(self.globs['userid'])
         # The Country Code.                  To account for the ROW locales, have this bit.
         langcode, localecode = (self.globs['locale'].replace('/', '').split('-')*2)[0:2]
-        environ = self.globs['base_url'].split('/')[2].split('.')[0][0:3] #pylint: disable-msg=E1101
+        environ = self.globs['base_url'].split('/')[2].split('.')[0][0:3] #pylint: disable=E1101
         # Username stuff, add the Environment prefix to identify the user.
         # Different zip codes in different countries.
         zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345',
@@ -866,7 +866,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
         Except don't actually ever do this. That form is hooked up to real delivery agents,
         most of whom would rather not be bombarded with Test Emails."""
         raise NotImplementedError('Do Not.')    # Do Not.
-        # pylint: disable-msg=W0101
+        # pylint: disable=W0101
         # Go to the Cart Page.
         self.dr.flashy_find_element('.fancybox-close').click()
         self.dr.flashy_find_element('#myCartIcon').click()
@@ -895,7 +895,7 @@ class ASP(unittest.TestCase): # pylint: disable-msg=R0904
 
     def test_20_Aussie_Store(self):
         """Checks all of the Aussie Store functionality, except for actually placing an order."""
-        # yes its a big method i know    pylint: disable-msg=R0914
+        # yes its a big method i know    pylint: disable=R0914
         # China doesn't have the store.
         if self.globs['cn_mode']:
             self.skipTest("China doesn't have the Aussie Store.")

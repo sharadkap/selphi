@@ -33,11 +33,12 @@ from collections import OrderedDict
 
 # The website domain to use in testing.
 # ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
-# ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
+ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
+# ENV = 'https://uat.aussiespecialist.cn'
 # ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://unifiedstaging.aussiespecialist.com'
-ENV = 'https://www.aussiespecialist.com'
+# ENV = 'https://www.aussiespecialist.com'
 
 # The Username and Password to use in the Server Authentication, if necessary.
 AUTH = ['dev', 'bclvOP']
@@ -47,23 +48,19 @@ AUTH = ['dev', 'bclvOP']
 # Ehh, nothing major here, just, if you want differently-shaped timestamps?
 TIMEFORMAT = '%Y/%m/%d %H:%M'
 
-# Which users to log in with when testing through site.
-#uat?
-# USERS = {'gb': 'gbuatykor', 'id': 'iduatddvp', 'sg': 'sguatdaea', 'my': 'myuataguj', \
-# 'in': 'inuatnhvv', 'cl': 'cluatjsou', 'it': 'ituatlots', 'fr': 'fruatznle', 'de': 'deuathtpw', \
-# 'br': 'bruatcext', 'kr': 'kruatwxbh', 'jp': 'jpuatsmir', 'zhk': 'hkuatubxp', 'ehk': 'hkuatcylj', \
-# 'ca': 'cauatdnmb', 'us': 'usuatgjlp', 'en': 'enuatxrqo'}
-# Staging?
-# USERS = {'ca': 'caunivxny', 'in': 'inuniptaw', 'my': 'myuniodai', \
-# 'sg': 'sgunicnle', 'gb': 'gbunioiut', 'us': 'usuniciba', \
-# 'ehk': 'hkuniegdo', 'zhk': 'hkuniobrx', 'id': 'idunicuff', 'jp': 'jpunipuah', 'kr': 'krunizogc', \
-# 'br': 'bruniqrhh', 'cl': '', 'de': 'deuniocuq', 'fr': 'frunifsgy', 'it': 'itunilanh', \
-# 'cn': ''}
-# prod?
-USERS = {'it': 'itproliwe', 'de': 'deproktjw', 'fr': 'frprotufc', 'br': 'brprotele', 'kr': 'krprovjrs', \
-    'jp': 'jpproccim', 'ehk': 'hkprockqn', 'zhk': 'hkpropedx', 'sg': 'sgproxcto', 'id': 'idprowagf', \
-    'my': 'myprolsrv', 'ca': 'caprolufh', 'in': 'inprotitw', 'us': 'usproufgz', 'en': 'enproqgdv', \
-    'gb': 'gbpropqde', 'cn': 'cnwwwAYYC', 'cl': 'clwwwaxtu'}
+# Which user to log in with. Special Note: this user is in ALL of the *trainee_modules groups.
+# That's why you only need the one. Be sure to set that up if using your own.
+# Probably won't be an issue in the CN server though, they only have the one locale.
+# This one in DEV:
+USER = 'gbdevJPTN'
+# UAT One:
+# USER = 'gbuaterio'
+# Staging:
+# USER = 'gbstaHIME'
+# Production
+# USER = ''
+# The USER's password there, can change this if you want to use your own user.
+PASSWORD = 'Welcome1'
 # List of locale codes.
 LANGS = {'ca': ('en-ca', 'ca_en'), 'in': ('en-in', 'in_en'), 'my': ('en-my', 'my_en'), \
     'sg': ('en-sg', 'sg_en'), 'gb': ('en-gb', 'uk_en'), 'us': ('en-us', 'us_en'), 'en': ('en', 'en'), \

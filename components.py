@@ -1497,7 +1497,7 @@ class PanoramicCarousel(WrappedElement):
         self.dr = dr
         self.element = self.dr.flashy_find_element('.panoramicCarousel')
 
-    def watch_video(self) -> Tuple(str, str):
+    def watch_video(self) -> Tuple[str, str]:
         """Selects a random video to watch. Returns the video's Title+Description and Image src."""
         # The text and the background images are on separate carousels. For some reason.
         num = len(self.dr.quietly_find_elements('.owl-item', self.element)) / 2

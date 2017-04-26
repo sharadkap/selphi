@@ -169,8 +169,7 @@ def log_in(lang: str) -> None:
     # Try to log in
     try:
         DRIVER.find_element_by_css_selector('.link-signin-text').click()
-        print('This is the value of the USER variable: ' + USER)
-        DRIVER.find_element_by_id('j_username').send_keys('IS SUPER A STRING, YOU GUYS')
+        DRIVER.find_element_by_id('j_username').send_keys(USER)
         DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys(PASSWORD)
         DRIVER.find_element_by_id('usersignin').click()
     except NoSuchElementException as ex:

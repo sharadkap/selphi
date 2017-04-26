@@ -52,9 +52,9 @@ TIMEFORMAT = '%Y/%m/%d %H:%M'
 # That's why you only need the one. Be sure to set that up if using your own.
 # Probably won't be an issue in the CN server though, they only have the one locale.
 # This one in DEV:
-USER = 'gbdevJPTN'
+# USER = 'gbdevJPTN'
 # UAT One:
-# USER = 'gbuaterio'
+USER = 'gbuaterio'
 # Staging:
 # USER = 'gbstaHIME'
 # Production

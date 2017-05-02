@@ -1,6 +1,5 @@
 module_screenshots/
-REGR.tap
-module_results.txt
+results_archive/
 geckodriver.log
 debug.log
 __pycache__/

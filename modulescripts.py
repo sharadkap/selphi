@@ -33,8 +33,8 @@ from collections import OrderedDict
 
 # The website domain to use in testing. Remember to change JSON as well!
 # ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
-ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
-# ENV = 'https://uat.aussiespecialist.cn'
+# ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
+ENV = 'https://uat.aussiespecialist.cn'
 # ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://unifiedstaging.aussiespecialist.com'
@@ -43,7 +43,8 @@ ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
 # The filename corresponding to the JSON file to use for the module urls.
 # Get a new one if you keep getting 404 errors: From Author instance, /content/sites/asp/resources.2.json
 # JSON = 'dev_mods.json'
-JSON = 'uat_mods.json'
+# JSON = 'uat_mods.json'
+JSON = 'cnuat_mods.json'
 # JSON = 'stage_mods.json'
 # JSON = 'prod_mods.json'
 
@@ -58,14 +59,12 @@ TIMEFORMAT = '%Y/%m/%d %H:%M'
 # Which user to log in with. Special Note: this user is in ALL of the *trainee_modules groups.
 # That's why you only need the one. Be sure to set that up if using your own.
 # Probably won't be an issue in the CN server though, they only have the one locale.
-# This one in DEV:
 # USER = 'gbdevJPTN'
-# UAT One:
-USER = 'gbuaterio'
-# Staging:
+# USER = 'gbuaterio'
+USER = 'cnuatzsuc'
 # USER = 'gbstaHIME'
-# Production
 # USER = ''
+
 # The USER's password there, can change this if you want to use your own user.
 PASSWORD = 'Welcome1'
 # List of locale codes.
@@ -94,23 +93,22 @@ MODULES = OrderedDict([('mod1', {}), ('mod2', {}), ('mod3', {}), ('act', {}), ('
 
 with open(JSON, encoding='UTF-8') as fil:
     thelist = json.load(fil)
-for lang in LANGS:
-    lan = LANGS[lang][0].replace('-', '_')
-    if lan in thelist:
-        for mod in thelist[lan]:
-            if mod.startswith('res'):
-                modid = thelist[lan][mod]['id'].split('_')[-1]
-                if modid in MODULES:
-                    MODULES[modid][lang] = mod
-
-# COMMUNITIES = {LANGS[lang][0]: {} for lang in LANGS}
-# for lang in COMMUNITIES:
-#     lan = lang.replace('-', '_')
-#     d = COMMUNITIES[lang]
-#     d['core'] = thelist[lan]
+try:
+    for lang in LANGS:
+        lan = LANGS[lang][0].replace('-', '_')
+        if lan in thelist:
+            for mod in thelist[lan]:
+                if mod.startswith('res'):
+                    modid = thelist[lan][mod]['id'].split('_')[-1]
+                    if modid in MODULES:
+                        MODULES[modid][lang] = mod
+except KeyError as ex:
+    print("KeyError: You might need to update your JSON file/setting, seems the '"
+          + ex.args[0] + "' locale/module couldn't be found in the existing one?")
 
 
-
+# Set this to true, to show the entire traceback of errors. If false, only the last relevant three.
+DEBUG = False
 
         ### ### ### ### ### ### ### ### ###
         ### Begin the Do Not Touch Zone ###

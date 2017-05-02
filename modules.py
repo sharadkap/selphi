@@ -16,7 +16,7 @@ from selenium.webdriver.remote.webdriver import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from modulescripts import (LANGS, MODULES, SCRIPTS, USER, PASSWORD, ENV, AUTH, TIMEFORMAT)
+from modulescripts import (LANGS, MODULES, SCRIPTS, USER, PASSWORD, ENV, AUTH, TIMEFORMAT, DEBUG)
 
 RESET_MODULE = 'cpCmndGotoSlide=0'
 MINIWAIT = 0.5
@@ -35,12 +35,13 @@ def do_module(driver: WebDriver, module: str) -> None:
 def parseargs():
     """Do this bit separately so it can be copied into the new processes."""
     # pylint: disable=W0601
-    global IMPLICITLY_WAIT, MOD_STEM, SCREENSHOT_DIR, RESULTS_FILE
+    global IMPLICITLY_WAIT, MOD_STEM, CMOD_STEM, SCREENSHOT_DIR, RESULTS_FILE
     IMPLICITLY_WAIT = ARGS.wait[0]
     SCREENSHOT_DIR = os.path.join(os.path.split(__file__)[0], 'module_screenshots')
     RESULTS_FILE = os.path.join(SCREENSHOT_DIR, 'module_results.csv')
     MOD_STEM = ('{0}/content/sites/asp/{{0}}/assignments.resource.html/content/sites/asp'
                 '/resources/{{0}}/{{1}}'.format(ENV))
+    CMOD_STEM = '{0}/content/sites/asp-zh-cn/en/assignments.resource.html/content/sites/asp-zh-cn/resources/en/{{1}}'.format(ENV)
 
 def main() -> None:
     """Run this if the modules suite is being executed as itself."""
@@ -70,7 +71,7 @@ def main() -> None:
                                    langfilter=ARGS.locales, brows=ARGS.browsers)
     except Exception:    # Too general is the point, it's a Final Action. pylint: disable=W0703
         with open(RESULTS_FILE, mode='a', encoding='UTF-8') as log:
-            log.write('\n"Well, something went wrong. A manual exit, hopefully."')
+            log.write('\n"Well, something went wrong. A manual exit, hopefully:"\n\n' + tidy_error())
         raise
 
 def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows: LIST_STR) -> None:
@@ -79,7 +80,7 @@ def full_languages_modules_run(langfilter: LIST_STR, modfilter: LIST_STR, brows:
     output = '\n"START: {0}", {1}\n'.format(get_time(), ','.join(modfilter).upper())   # header row.
     pool = Pool(cpu_count() * 2)
     try:
-        asy = pool.map_async(do_locale, [(x, LANGS, MOD_STEM, modfilter, b,
+        asy = pool.map_async(do_locale, [(x, LANGS, MOD_STEM, CMOD_STEM, modfilter, b,
                                           BROWSERS[b], ARGS) for x in langfilter for b in brows])
         while True:
             if asy.ready():
@@ -119,17 +120,20 @@ def do_locale(args):
     global ARGS
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     # Unpack arguments
-    lang, langs, stem, modfilter, brname, browser, ARGS = args
+    lang, langs, stem, cstem, modfilter, brname, browser, ARGS = args
     parseargs()
+    # A Hack. CN has a different structure, so use a different url form.
+    if lang == 'cn':
+        stem = cstem
     # Reset the driver between rounds
     restart_driver(browser)
     # Log into the site, so you can access the modules.
     try:
         log_in(lang)
-    except Exception as ex:
+    except Exception:
         DRIVER.quit()
         return '"Login to {0} failed. That breaks the whole locale, look into it:\n{1}"'.format(
-            lang, str(ex).replace('"', '""'))
+            lang, tidy_error().replace('"', '""'))
 
     # Start recording results.
     result = '_'.join([lang.upper(), brname.upper()])
@@ -144,8 +148,8 @@ def do_locale(args):
                 domo(elem)
             result += ',"{0}: PASS"'.format(get_time())
         # Something goes wrong, document it and go to the next module.
-        except Exception as ex:
-            result += ',"{0}: FAIL: {1}"'.format(get_time(), str(ex).replace('"', '""'))
+        except Exception:
+            result += ',"{0}: FAIL: {1}"'.format(get_time(), tidy_error().replace('"', '""'))
             draw_failure(lang, mod)
     DRIVER.quit()
     return result
@@ -172,6 +176,7 @@ def log_in(lang: str) -> None:
         DRIVER.find_element_by_id('j_username').send_keys(USER)
         DRIVER.find_element_by_css_selector('[name="j_password"]').send_keys(PASSWORD)
         DRIVER.find_element_by_id('usersignin').click()
+        WebDriverWait(DRIVER, IMPLICITLY_WAIT).until(lambda _: '/secure' in DRIVER.current_url)
     except NoSuchElementException as ex:
         raise NoSuchElementException('Login failed, something was missing from the '
                                      'login panel.\n\n' + ex.msg) from None
@@ -293,6 +298,27 @@ def draw_failure(lang: str, mod: str) -> None:
     imgdata = DRIVER.get_screenshot_as_png()
     with open(filename, mode='wb') as fil:
         fil.write(imgdata)
+
+def tidy_error(ex=None) -> str:
+    """Reads exception info from sys.exc_info and only shows the lines that are from MODULES.PY
+    Unless DEBUG is True, in which case, it prints the enrirety of the trace.
+    Don't use this like 'except Exception as ex: tidy_error(ex)', has to be the 3-tuple, exc_info-style."""
+    from sys import exc_info
+    from os.path import join, abspath, dirname
+    from traceback import extract_tb, format_list, format_exception_only
+
+    show = join(dirname(abspath(__file__)), '')
+
+    def _check_file(name):
+        return name and name.startswith(show)
+
+    def _print(typ, value, tb):     # If not debug, generator expression: filter trace to my files.
+        show = extract_tb(tb) if DEBUG else (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
+        fmt = format_list(show) + format_exception_only(typ, value)
+        return ''.join((f.strip('"\'').replace('\\n', '') for f in fmt))
+
+    args = ex or exc_info()
+    return _print(*args)
 
 if __name__ == '__main__':
     main()

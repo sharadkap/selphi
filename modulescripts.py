@@ -61,7 +61,7 @@ TIMEFORMAT = '%Y/%m/%d %H:%M'
 # Probably won't be an issue in the CN server though, they only have the one locale.
 # USER = 'gbdevJPTN'
 # USER = 'gbuaterio'
-USER = 'cnuatzsuc'
+USER = 'cnuatLKPR'
 # USER = 'gbstaHIME'
 # USER = ''
 

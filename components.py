@@ -1387,7 +1387,8 @@ class AussieStore(WrappedElement):
 
         def get_product_names(self) -> List[str]: # pylint: disable=E1126
             """Gets a list of the names of all of the Products in the Cart."""
-            return [x.text.casefold() for x in self.dr.flashy_find_elements('.cell-title', self.element)]
+            return [x.text.casefold()
+                    for x in self.dr.flashy_find_elements('.cell-title', self.element)]
 
         def count(self) -> int:
             """Counts the number of Products in the Cart."""
@@ -1679,9 +1680,10 @@ class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: 
         self.dr.get(self.dr.locale_url + '/secure/profile.html')
 
     def training(self):
-        """Opens the Assignments page."""
-        self.dr.get(self.dr.base_url + '/content/sites/asp' +
-                    self.dr.locale.replace('-', '_') + '/assignments.html')
+        """Opens the Assignments page. China has a different format though."""
+        self.dr.get((self.dr.base_url + '/content/sites/asp' + self.dr.locale.replace('-', '_') +
+                     '/assignments.html') if self.dr.cn_mode else
+                    (self.dr.base_url + '/content/sites/asp-zh-cn/en/assignments.html'))
 
     def travel(self):
         """Opens the Travel Club page."""

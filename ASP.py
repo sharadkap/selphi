@@ -694,8 +694,10 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             except Exception:
                 self.add_error()
                 # There are a lot of things that can go wrong here, just nuke the site from orbit.
+                self.dr.switch_to_frame(None)
                 self.dr.execute_script(dofimo)
                     # It's the only way to be certain.
+            self.dr.switch_to_frame(None)
             self.dr.back()
             try:
                 CP.NavMenu.Training(self.dr).open().training_summary().click()
@@ -757,6 +759,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             do_mod_then_back(modq)
         except Exception:   # Anything goes wrong with the modules, hack the badges and cugs in.
             self.add_error()
+            self.dr.switch_to_frame(None)
             self.dr.execute_script(dofimo)
 
         # Should receive the qualification email here.

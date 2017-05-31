@@ -2085,29 +2085,6 @@
       "send-enrollment-email": false,
       "allow-comments": true
     },
-    "_2": {
-      "jcr:primaryType": "nt:unstructured",
-      "jcr:mixinTypes": ["cq:Taggable"],
-      "allow-social-switch": true,
-      "jcr:title": "模块一2",
-      "ec-uuid": "_2_100425791460039441377",
-      "description": "",
-      "allow-ratings": true,
-      "date-first-published": "Thu Apr 07 2016 22:30:41 GMT+0800",
-      "date-modified": "Thu Apr 07 2016 22:30:41 GMT+0800",
-      "id": "zh_cn_core_mod1",
-      "enablement-resource-name": "模块一2",
-      "resource-contact": [
-        "{\"userId\":\"replication-user\", \"userName\":\"replication-user\", \"userEmail\":\"\"}"
-      ],
-      "date-created": "Thu Apr 07 2016 22:30:41 GMT+0800",
-      "cq:tags": [],
-      "sling:resourceType": "social/enablement/components/hbs/resource",
-      "created-by": "admin",
-      "card-image-path": "./cardimage/image",
-      "send-enrollment-email": false,
-      "allow-comments": true
-    },
     "res17": {
       "jcr:primaryType": "nt:unstructured",
       "jcr:mixinTypes": ["cq:Taggable", "cq:ReplicationStatus"],
@@ -2157,34 +2134,6 @@
       "send-enrollment-email": false,
       "allow-comments": true
     },
-    "testing_resource": {
-      "jcr:primaryType": "nt:unstructured",
-      "jcr:mixinTypes": ["cq:ReplicationStatus", "cq:Taggable"],
-      "allow-social-switch": true,
-      "jcr:title": "Testing Resource",
-      "ec-uuid": "testing_resource_12754489571453081379776",
-      "description": "Testing Resource",
-      "cq:lastReplicationAction": "Activate",
-      "cq:lastReplicatedBy": "admin",
-      "resource-author": [],
-      "resource-expert": [],
-      "allow-ratings": true,
-      "date-first-published": "Mon Jan 18 2016 09:42:59 GMT+0800",
-      "date-modified": "Wed Jan 27 2016 12:03:41 GMT+0800",
-      "cq:lastReplicated": "Fri May 20 2016 13:47:45 GMT+0800",
-      "id": "zh_cn_core_mod1",
-      "enablement-resource-name": "Testing Resource",
-      "resource-contact": [
-        "{'userId':'replication-user','userName':'replication-user','userEmail':''}"
-      ],
-      "date-created": "Mon Jan 18 2016 09:42:59 GMT+0800",
-      "cq:tags": [],
-      "sling:resourceType": "social/enablement/components/hbs/resource",
-      "created-by": "admin",
-      "card-image-path": "./assets/asset/./uk_en_core_mod1.zip/jcr:content/renditions/cq5dam.thumbnail.319.319.png",
-      "send-enrollment-email": false,
-      "allow-comments": true
-    },
     "res85": {
       "jcr:primaryType": "nt:unstructured",
       "jcr:mixinTypes": ["cq:Taggable", "cq:ReplicationStatus"],
@@ -2213,32 +2162,6 @@
     },
     "rep:policy": {
       "jcr:primaryType": "rep:ACL"
-    },
-    "res61": {
-      "jcr:primaryType": "nt:unstructured",
-      "jcr:mixinTypes": ["cq:Taggable", "cq:ReplicationStatus"],
-      "allow-social-switch": true,
-      "jcr:title": "1025_TC_module1",
-      "ec-uuid": "res61_-14500612531477301621644",
-      "description": "",
-      "cq:lastReplicationAction": "Activate",
-      "cq:lastReplicatedBy": "florence.wu@deepfocus.com.cn",
-      "allow-ratings": true,
-      "date-first-published": "Mon Oct 24 2016 17:33:41 GMT+0800",
-      "date-modified": "Mon Oct 24 2016 17:33:41 GMT+0800",
-      "cq:lastReplicated": "Mon Oct 24 2016 17:34:37 GMT+0800",
-      "id": "zh_cn_core_mod1",
-      "enablement-resource-name": "1025_TC_module1",
-      "resource-contact": [
-        "{\"userId\":\"replication-user\", \"userName\":\"Replication User\", \"userEmail\":\"\"}"
-      ],
-      "date-created": "Mon Oct 24 2016 17:33:41 GMT+0800",
-      "cq:tags": [],
-      "sling:resourceType": "social/enablement/components/hbs/resource",
-      "created-by": "florence.wu@deepfocus.com.cn",
-      "card-image-path": "./assets/asset/./hk_zh_core_mod1.zip/jcr:content/renditions/cq5dam.thumbnail.319.319.png",
-      "send-enrollment-email": false,
-      "allow-comments": true
     },
     "res71": {
       "jcr:primaryType": "nt:unstructured",
@@ -2407,32 +2330,6 @@
         "{\"userId\":\"replication-user\", \"userName\":\"replication-user\", \"userEmail\":\"\"}"
       ],
       "date-created": "Thu Mar 24 2016 10:38:36 GMT+0800",
-      "cq:tags": [],
-      "sling:resourceType": "social/enablement/components/hbs/resource",
-      "created-by": "admin",
-      "card-image-path": "./cardimage/image",
-      "send-enrollment-email": false,
-      "allow-comments": true
-    },
-    "core_1": {
-      "jcr:primaryType": "nt:unstructured",
-      "jcr:mixinTypes": ["cq:ReplicationStatus", "cq:Taggable"],
-      "allow-social-switch": true,
-      "jcr:title": "模块一",
-      "ec-uuid": "core_1_18725562091458107780745",
-      "description": "",
-      "cq:lastReplicationAction": "Activate",
-      "cq:lastReplicatedBy": "admin",
-      "allow-ratings": true,
-      "date-first-published": "Wed Mar 16 2016 13:56:20 GMT+0800",
-      "date-modified": "Tue Aug 16 2016 10:52:46 GMT+0800",
-      "cq:lastReplicated": "Tue Aug 16 2016 10:53:18 GMT+0800",
-      "id": "zh_cn_core_mod1",
-      "enablement-resource-name": "模块一",
-      "resource-contact": [
-        "{\"userId\":\"replication-user\", \"userName\":\"replication-user\", \"userEmail\":\"\"}"
-      ],
-      "date-created": "Wed Mar 16 2016 13:56:20 GMT+0800",
       "cq:tags": [],
       "sling:resourceType": "social/enablement/components/hbs/resource",
       "created-by": "admin",
@@ -3081,32 +2978,6 @@
       "sling:resourceType": "social/enablement/components/hbs/resource",
       "created-by": "admin",
       "card-image-path": "./assets/asset/./zh_cn_niche_golf_0407.zip/jcr:content/renditions/cq5dam.thumbnail.319.319.png",
-      "send-enrollment-email": false,
-      "allow-comments": true
-    },
-    "res43": {
-      "jcr:primaryType": "nt:unstructured",
-      "jcr:mixinTypes": ["cq:Taggable", "cq:ReplicationStatus"],
-      "allow-social-switch": true,
-      "jcr:title": "1024_jpmodule1",
-      "ec-uuid": "res43_-14500613131477286706533",
-      "description": "",
-      "cq:lastReplicationAction": "Activate",
-      "cq:lastReplicatedBy": "florence.wu@deepfocus.com.cn",
-      "allow-ratings": true,
-      "date-first-published": "Mon Oct 24 2016 13:25:06 GMT+0800",
-      "date-modified": "Mon Oct 24 2016 13:25:06 GMT+0800",
-      "cq:lastReplicated": "Mon Oct 24 2016 13:25:35 GMT+0800",
-      "id": "zh_cn_core_mod1",
-      "enablement-resource-name": "1024_jpmodule1",
-      "resource-contact": [
-        "{\"userId\":\"replication-user\", \"userName\":\"Replication User\", \"userEmail\":\"\"}"
-      ],
-      "date-created": "Mon Oct 24 2016 13:25:06 GMT+0800",
-      "cq:tags": [],
-      "sling:resourceType": "social/enablement/components/hbs/resource",
-      "created-by": "florence.wu@deepfocus.com.cn",
-      "card-image-path": "./assets/asset/./jp_ja_core_mod1.zip/jcr:content/renditions/cq5dam.thumbnail.319.319.png",
       "send-enrollment-email": false,
       "allow-comments": true
     },

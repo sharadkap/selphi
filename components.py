@@ -65,7 +65,7 @@ class SplashSelect(WrappedElement):
                   '/en-sg.html', '/id-id.html', '/de-de.html', '/zh-hk.html', '/en-hk.html',
                   '/zh-hk.html', '/en-hk.html', '/ja-jp.html', '/ko-kr.html', '/pt-br.html',
                   '/de-de.html', '/de-de.html', '/fr-fr.html', '/it-it.html', '/es-cl.html',
-                  '/en.html', 'https://www.aussiespecialist.cn/zh-cn'}
+                  '/en.html', 'https://www.aussiespecialist.cn/zh-cn.html'}
 
     def get_values(self) -> Set[str]:
         """Gets a set containing the URLs of all the Language Options."""
@@ -1131,8 +1131,8 @@ class Profile(WrappedElement):
         """Checks the Status Badge area, returns a string of the User Level."""
         if self.dr.check_visible_quick('.profile-status img', self.element):
             img = self.dr.flashy_find_element('.profile-status img', self.element)
-            return {'2.png': self.QUALIFIED, '3.png': self.PREMIER}.get(
-                img.get_attribute('src')[-5:], self.TRAINEE)
+            return {'2': self.QUALIFIED, '3': self.PREMIER}.get(
+                img.get_attribute('src').split('/')[-1].split('_')[0], self.TRAINEE)
         else:
             return self.TRAINEE
 

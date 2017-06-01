@@ -889,7 +889,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
         """Picks a language from the Language field. If in Hong Kong, choose carefully."""
         sel = self.dr.flashy_find_element('#language_id', self.element)
         if lang == 'zh':
-            self.dr.quietly_find_element('option[value="8"])', sel).click()
+            self.dr.quietly_find_element('option[value="8"]', sel).click()
         else:
             self.dr.quietly_find_element('option:not([value=""])', sel).click()
 

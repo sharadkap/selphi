@@ -220,7 +220,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
             if self.dr.quietly_find_element('.label-destination', x).text == title))
 
 def attach_links(menu: WrappedElement, names: List[str],
-                 selector: str='[href*="{}.html"]') -> None:
+                 selector: str = '[href*="{}.html"]') -> None:
     """A function that attaches an attribute that can be called to create a simple link.
     The 'names' arguments should be the bits that .format into the selector"""
     for name in names:
@@ -231,7 +231,7 @@ def attach_links(menu: WrappedElement, names: List[str],
         menu.__setattr__(name.replace('-', '_').replace('.', '_'), link_maker(name))
 
 def attach_fancy_links(menu: WrappedElement, names: List[str],
-                       selector: str='a.mosaic-overlay[href*="{}.html"]') -> None:
+                       selector: str = 'a.mosaic-overlay[href*="{}.html"]') -> None:
     """Like attach_links, attaches an attribute that can be called to create a link.
     This one is for those Mosaic-type links, and those need a bit of a workaround
     to deal with element layering."""
@@ -434,7 +434,7 @@ class Sitemap(WrappedElement):
 
 class FilteredSearch(WrappedElement):
     """Represents the Itinerary or Fact Sheet Search Components."""
-    def __init__(self, dr: Drivery, fact_sheet_mode: bool=False) -> None:
+    def __init__(self, dr: Drivery, fact_sheet_mode: bool = False) -> None:
         self.dr = dr
         self.element = self.dr.flashy_find_element('.filteredSearch')
         self.fact_sheet_mode = fact_sheet_mode
@@ -504,7 +504,7 @@ class FilteredSearch(WrappedElement):
         """Returns the number of search results currently displayed."""
         return len(self.dr.flashy_find_elements('.mosaic-item', self.element))
 
-    def read_results_counter(self, wait: bool=False) -> (int, int) or None:
+    def read_results_counter(self, wait: bool = False) -> (int, int) or None:
         """Returns the number of results the 'Showing X-Y of Z results' thing says there are:
         A tuple as (shown, total), or a None if it's not shown, such as with Travel Club.
         If wait is set to True, will wait for the counter to load before assuming its absence."""
@@ -845,7 +845,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
         elem.clear()
         elem.send_keys(value)
 
-    def plain_text_fields(self, value: str=''):
+    def plain_text_fields(self, value: str = ''):
         """Sets the value of all of the text fields that are mandatory,
         but which don't need any particular value or format."""
         elements = self.dr.quietly_find_elements('[type="text"]', self.element)
@@ -854,7 +854,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
             element.send_keys(value)
     # Deliberately uses the __setattr__, ignore the attribute define warning.
     # pylint: disable=W0201
-    def date_of_birth(self, value: str='//') -> None:
+    def date_of_birth(self, value: str = '//') -> None:
         """Overwrites the Date Of Birth Name field to have the given D/M/Y value. Blank default."""
         value = value.split('/')
         self.birthdayday = value[0]
@@ -871,7 +871,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
         sel = self.dr.flashy_find_element('[name="affiliationtype"]', self.element)
         random.choice(self.dr.quietly_find_elements('option:not([value=""])', sel)).click()
 
-    def pick_country(self, value: str='') -> None:
+    def pick_country(self, value: str = '') -> None:
         """Picks the country with the given abbreviation from the Country list."""
         if value == 'EN':
             value = 'XX'
@@ -885,7 +885,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
         sel = self.dr.flashy_find_element('#state_list', self.element)
         random.choice(self.dr.quietly_find_elements('option:not([value=""])', sel)).click()
 
-    def pick_language(self, lang: str='') -> None:
+    def pick_language(self, lang: str = '') -> None:
         """Picks a language from the Language field. If in Hong Kong, choose carefully."""
         sel = self.dr.flashy_find_element('#language_id', self.element)
         if lang == 'zh':
@@ -893,7 +893,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
         else:
             self.dr.quietly_find_element('option:not([value=""])', sel).click()
 
-    def email_address(self, value: str='') -> None:
+    def email_address(self, value: str = '') -> None:
         """Sets the Email Address and Verify Email fields to the given value. Blank default."""
         self.email = value
         # China does not have this email verification.
@@ -927,7 +927,7 @@ class RegistrationForm(WrappedElement): # They aren't instance variables. pylint
         for box in random.sample(sel, len(sel) // 2):
             self.dr.blip_element(box).click()
 
-    def password(self, value: str='') -> None:
+    def password(self, value: str = '') -> None:
         """Sets the value of the Create A Password and Re-Enter Password fields. Blank default."""
         self.pwd = value
         self.pwd1 = value
@@ -985,7 +985,8 @@ class SignInUnsafe(WrappedElement):
         self.element = self.dr.flashy_find_element('.fancybox-wrap')
         attach_links(self, ['forgotten-username', 'forgotten-password'])
 
-    def sign_in(self, user: str, passw: str, new_password=False, check_redirect: bool=True) -> None:
+    def sign_in(self, user: str, passw: str, new_password: bool = False,
+                check_redirect: bool = True) -> None:
         """Logs in using the given Username and Password. With the option to disable
         that whole 'make sure the user is redirected to the right page' thing."""
         self.dr.flashy_find_element('#j_username', self.element).send_keys(user)
@@ -1133,8 +1134,7 @@ class Profile(WrappedElement):
             img = self.dr.flashy_find_element('.profile-status img', self.element)
             return {'2': self.QUALIFIED, '3': self.PREMIER}.get(
                 img.get_attribute('src').split('/')[-1].split('_')[0], self.TRAINEE)
-        else:
-            return self.TRAINEE
+        return self.TRAINEE
 
     def module_badges(self) -> Set[str]:
         """Checks the Recent Achievements section, returns a set of the badges attained."""
@@ -1368,7 +1368,7 @@ class AussieStore(WrappedElement):
             self.dr = dr
             self.element = self.dr.flashy_find_element('.shoppingcart')
 
-        def place_order(self, cartempty: bool=False) -> None:
+        def place_order(self, cartempty: bool = False) -> None:
             """Clicks the Place Order button, and waits until it's finished loading/messaging."""
             self.dr.flashy_find_element('.submit', self.element)
             if not cartempty:

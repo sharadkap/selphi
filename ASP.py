@@ -977,7 +977,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         except Exception:
             self.add_error()
             CP.BackupHrefs(self.dr).profile()
-        def xandxplusy(x: str, y: str=', '):
+        def xandxplusy(x: str, y: str = ', '):
             """Basically, if X is not blank, append Y to it."""
             return x and x + y
         # First, create a set of profile data that matches the formatting given in the Store.
@@ -1024,9 +1024,9 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
                 if gotprof:
                     cartcontact = cart.contact_details()
                     self.assertEqual(cartcontact, contactBlob,
-                                     "The Cart contact details should match the user's Profile data.")
+                                     "Cart's contact details should match user's Profile data.")
                     self.assertNotIn('null', cartcontact,
-                                     "The Cart contact details should contain no 'null' values.")
+                                     "Cart's contact details should contain no 'null' values.")
             except Exception:
                 self.add_error()
             # Tidy up the cart before going into the large test.

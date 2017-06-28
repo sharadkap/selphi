@@ -681,9 +681,10 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         """Checks the Training Summary page."""
         # Tells the site that the user has completed five modules.
         dofimo = ('var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],f="{0}",e=f'
-                  '.split("-").reverse().join("_").replace("gb","uk");for(m in o)if(o.hasOwnPropert'
-                  'y(m))$.ajax({{url:"/bin/asp/trainingModule",type:"POST",cache:!1,dataType:"json"'
-                  ',data:{{isComplete:!0,moduleId:e+o[m],locale:f}}}})').format(self.dr.locale[1:])
+                  '.split("-").reverse().join("_").replace("gb","uk");o=o.concat(o);for(m in o)if(o'
+                  '.hasOwnProperty(m))$.ajax({{url:"/bin/asp/trainingModule",type:"POST",cache:!1,d'
+                  'ataType:"json",data:{{isComplete:!0,moduleId:e+o[m],locale:f}}}})').format(
+                      self.dr.locale[1:])
 
         def do_mod_then_back(mod: str) -> None:
             """Doing the Module clicks the Back To Training button, which leads to LIVE

@@ -1151,6 +1151,21 @@ class TrainingSummary(WrappedElement):
         lis = self.dr.flashy_find_elements('.scf-content-card')
         self.optional = lis[1]
 
+    @classmethod
+    def complete_module(cls, dr: Drivery):
+        """Call this static method when on a training module page,
+        and in the module frame, to fast-complete the module.
+        Not really a part of SELPHI, just putting it here for convenience."""
+        # Go do the MOD shortcut, basically. Send the module start event, go to the last slide
+        # and tell SCORM that the module is totally finished, no, really, it's all suuper done.
+        dr.execute_script(
+            "function modgo(n){cpCmndGotoSlide=cpInfoSlideCount-n}var props = "
+            "JSON.parse(window.top.$(\"script[data-scf-json='true']:not([id*='social'])\").text())"
+            ".properties;updateModuleStatus(setStatusURL, undefined, props.id, 0, false, 0, "
+            "getModuleID(), props['enablement-resource-name']);switch(props.id.split(\"_\")[3])"
+            "{case \"mod3\":modgo(6);break;default:modgo(4)};SCORM2004_objAPI.Activity."
+            "ActivityObjectives[0].SatisfiedByMeasure = true;")
+
     def optional_path(self):
         """Open the optional Modules path."""
         self.dr.blip_element(self.optional).click()

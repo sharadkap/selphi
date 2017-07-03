@@ -2,6 +2,7 @@
 
 import re
 import time
+import json
 import random
 import hashlib
 from types import MethodType
@@ -1141,38 +1142,16 @@ class Profile(WrappedElement):
         return {x.get_attribute('alt').split('_')[-1] for x in self.dr.flashy_find_elements(
             '.Achievements .profile-status img', self.element)}
 
-class TrainingSummary(WrappedElement):
-    """Represents the two Training Summary modules list things.
-    Only instantiate this on the root assignments page."""
+class TrainingModule(WrappedElement):
+    """Represents a Module. Instantiating will switch into the module frame, so watch it."""
     def __init__(self, dr: Drivery):
         self.dr = dr
-        lis = self.dr.flashy_find_elements('.scf-content-card:not(.disabled-link-card)')
-        self.core = lis[0]
-        lis = self.dr.flashy_find_elements('.scf-content-card')
-        self.optional = lis[1]
-
-    @classmethod
-    def complete_module(cls, dr: Drivery):
-        """Call this static method when on a training module page,
-        and in the module frame, to fast-complete the module.
-        Not really a part of SELPHI, just putting it here for convenience."""
-        # Go do the MOD shortcut, basically. Send the module start event, go to the last slide
-        # and tell SCORM that the module is totally finished, no, really, it's all suuper done.
-        dr.execute_script(
-            "function modgo(n){cpCmndGotoSlide=cpInfoSlideCount-n}var props = "
-            "JSON.parse(window.top.$(\"script[data-scf-json='true']:not([id*='social'])\").text())"
-            ".properties;updateModuleStatus(setStatusURL, undefined, props.id, 0, false, 0, "
-            "getModuleID(), props['enablement-resource-name']);switch(props.id.split(\"_\")[3])"
-            "{case \"mod3\":modgo(6);break;default:modgo(4)};SCORM2004_objAPI.Activity."
-            "ActivityObjectives[0].SatisfiedByMeasure = true;")
-
-    def optional_path(self):
-        """Open the optional Modules path."""
-        self.dr.blip_element(self.optional).click()
+        self.code, self.resname = self.wait_for_module()
 
     def wait_for_module(self) -> str:
         """Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly.
         Returns the module code, just to be sure."""
+        prop = json.loads(self.dr.quietly_find_element('script[data-scf-json="true"]:not([id*="social"])').text)['properties']
         self.dr.flashy_find_element('.scf-play-button').click()
         # Switch into the frame stack
         self.dr.switch_to_frame('iframe[src^="/content/"]')
@@ -1184,43 +1163,70 @@ class TrainingSummary(WrappedElement):
         # And then, set the module to slide one, just in case.
         self.dr.execute_script('cpCmndGotoSlide=0')
         # Return the which module it is; nsw, mod1, wine, etc...
-        return self.dr.execute_script(r'return moduleID.split("_")[3]')
+        return prop['id'], prop['enablement-resource-name']
+
+    def fast_complete_module(self):
+        """Call this static method when on a training module page,
+        and in the module frame, to fast-complete the module.
+        Not really a part of SELPHI, just putting it here for convenience."""
+        # Go do the MOD shortcut, basically. Send the module start event, go to the last slide
+        # and tell SCORM that the module is totally finished, no, really, it's all suuper done.
+        self.dr.execute_script(
+            ("function modgo(n){cpCmndGotoSlide=cpInfoSlideCount-n}"
+             "updateModuleStatus(setStatusURL, undefined, {0}, 0, false, 0, "
+             "getModuleID(), {1});switch({0}.split('_')[3])"
+             "{case 'mod3':modgo(6);break;default:modgo(4)};SCORM2004_objAPI.Activity."
+             "ActivityObjectives[0].SatisfiedByMeasure = true;").format(self.code, self.resname))
+
+class TrainingSummary(WrappedElement):
+    """Represents the two Training Summary modules list things.
+    Only instantiate this on the root assignments page."""
+    def __init__(self, dr: Drivery):
+        self.dr = dr
+        lis = self.dr.flashy_find_elements('.scf-content-card:not(.disabled-link-card)')
+        self.core = lis[0]
+        lis = self.dr.flashy_find_elements('.scf-content-card')
+        self.optional = lis[1]
+
+    def optional_path(self):
+        """Open the optional Modules path."""
+        self.dr.blip_element(self.optional).click()
 
     def module_one(self) -> None:
         """Opens the First Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()
-        self.wait_for_module()
+        TrainingModule(self.dr)
 
     def module_two(self) -> None:
         """Opens the Second Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[1]).click()
-        self.wait_for_module()
+        TrainingModule(self.dr)
 
     def module_three(self) -> None:
         """Opens the First Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[2]).click()
-        self.wait_for_module()
+        TrainingModule(self.dr)
 
     def module_nsw(self) -> str:
         """Opens the First Optional Module. Returns the module code, just to be sure."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()
-        return self.wait_for_module()
+        return TrainingModule(self.dr).code
 
     def module_qld(self) -> str:
         """Opens the Second Optional Module Returns the module code, just to be sure.."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[1]).click()
-        return self.wait_for_module()
+        return TrainingModule(self.dr).code
 
     def module_vic(self) -> str:
         """Opens the Third Optional Module. Returns the module code, just to be sure."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[2]).click()
-        return self.wait_for_module()
+        return TrainingModule(self.dr).code
 
     def completion_types(self) -> None:
         """Gets all of the Module entries, then checks how complete they are,

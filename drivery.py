@@ -12,6 +12,10 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+#JA BLU ET
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+
+
 import bs4
 
     ###Some Magic Numbers, default values.###
@@ -74,10 +78,21 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
             p = FirefoxProfile()
             p.set_preference('network.http.phishy-userpass-length', 255)
             self.driver = Firefox(p)
+        # Chrome, too, just up and decided to stop supporting this one day.
+        elif globs['browser'] == 'chrome':
+            c = ChromeOptions()
+            c.add_argument('--disable-blink-features=BlockCredentialedSubresources')
+            self.driver = Chrome(chrome_options=c)
         else:
             self.driver = BROWSERS[globs['browser']]()
         self.driver.implicitly_wait(LONG_WAIT)
         self.driver.maximize_window()
+
+    def set_wait(self, wait: int) -> None:
+        """Set the driver's implicit waiting value and the LONG_WAIT value too."""
+        global LONG_WAIT
+        LONG_WAIT = wait
+        self.driver.implicitly_wait(wait)
 
     def close(self) -> None:
         """The testing bit calls this at the end of each test. Clears the session."""

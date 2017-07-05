@@ -679,8 +679,6 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
 
     def test_14_Training_Summary(self):
         """Checks the Training Summary page."""
-        # Tandem non est inventus; Calix.
-        doumo = 'SCORM2004_objAPI.Activity.ActivityObjectives[0].SatisfiedByMeasure = true;'
         # Tells the site that the user has completed five modules.
         dofimo = ('var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],f="{0}",e=f'
                   '.split("-").reverse().join("_").replace("gb","uk");o=o.concat(o);for(m in o)if(o'
@@ -699,7 +697,6 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
                 # There are a lot of things that can go wrong here, just nuke the site from orbit.
                 self.dr.switch_to_frame(None)
                 self.dr.execute_script(dofimo)
-                self.dr.execute_script(doumo)
                     # It's the only way to be   certain.
             self.dr.switch_to_frame(None)
             self.dr.back()

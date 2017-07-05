@@ -1148,14 +1148,15 @@ class TrainingModule(WrappedElement):
         self.dr = dr
         self.code, self.resname = self.wait_for_module()
 
-    def wait_for_module(self) -> str:
+    def wait_for_module(self) -> Tuple[str, str]:
         """Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly.
         Returns the module code, just to be sure."""
-        prop = json.loads(self.dr.quietly_find_element('script[data-scf-json="true"]:not([id*="social"])').text)['properties']
+        prop = json.loads(self.dr.quietly_find_element(
+            'script[data-scf-json="true"]:not([id*="social"])')
+            .get_attribute('innerText'))['properties']  # the text property isn't good enough, apparently
         self.dr.flashy_find_element('.scf-play-button').click()
         # Switch into the frame stack
-        self.dr.switch_to_frame('iframe[src^="/content/"]')
-        self.dr.switch_to_frame('frame#ScormContent')
+        self.enter()
         # Then, wait until something is actually present
         self.dr.wait_until_present('[id^="Text_Caption_"]')
         # Then, wait until the loading overlay is gone.
@@ -1165,6 +1166,17 @@ class TrainingModule(WrappedElement):
         # Return the which module it is; nsw, mod1, wine, etc...
         return prop['id'], prop['enablement-resource-name']
 
+    def enter(self):
+        """Switches into the Module iFrame.
+        Does not 'unwrap' the module though, that happens in the constructor."""
+        self.dr.switch_to_frame('iframe[src^="/content/"]')
+        self.dr.switch_to_frame('frame#ScormContent')
+
+    def exit(self):
+        """Switches out of the Module iFrame.
+        Use this after you're finished with module stuff, else you'll crash the test."""
+        self.dr.switch_to_frame(None)
+
     def fast_complete_module(self):
         """Call this static method when on a training module page,
         and in the module frame, to fast-complete the module.
@@ -1172,11 +1184,11 @@ class TrainingModule(WrappedElement):
         # Go do the MOD shortcut, basically. Send the module start event, go to the last slide
         # and tell SCORM that the module is totally finished, no, really, it's all suuper done.
         self.dr.execute_script(
-            ("function modgo(n){cpCmndGotoSlide=cpInfoSlideCount-n}"
-             "updateModuleStatus(setStatusURL, undefined, {0}, 0, false, 0, "
-             "getModuleID(), {1});switch({0}.split('_')[3])"
-             "{case 'mod3':modgo(6);break;default:modgo(4)};SCORM2004_objAPI.Activity."
-             "ActivityObjectives[0].SatisfiedByMeasure = true;").format(self.code, self.resname))
+            ("function modgo(n){{cpCmndGotoSlide=cpInfoSlideCount-n;}}"
+             "updateModuleStatus(setStatusURL, undefined, '{0}', 0, false, 0, "
+             "getModuleID(), '{1}');switch('{0}'.split('_')[3])"
+             "{{case 'mod3':modgo(6);break;default:modgo(4)}};SCORM2004_objAPI.RunTimeData."
+             "CompletionStatus = 'completed';").format(self.code, self.resname))
 
 class TrainingSummary(WrappedElement):
     """Represents the two Training Summary modules list things.

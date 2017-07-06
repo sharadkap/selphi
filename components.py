@@ -1147,6 +1147,7 @@ class TrainingModule(WrappedElement):
     def __init__(self, dr: Drivery):
         self.dr = dr
         self.code, self.resname = self.wait_for_module()
+        self.id = self.code.split('_')[-1]
 
     def wait_for_module(self) -> Tuple[str, str]:
         """Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly.
@@ -1185,10 +1186,10 @@ class TrainingModule(WrappedElement):
         # and tell SCORM that the module is totally finished, no, really, it's all suuper done.
         self.dr.execute_script(
             ("function modgo(n){{cpCmndGotoSlide=cpInfoSlideCount-n;}}"
-             "updateModuleStatus(setStatusURL, undefined, '{0}', 0, false, 0, "
-             "getModuleID(), '{1}');switch('{0}'.split('_')[3])"
-             "{{case 'mod3':modgo(6);break;default:modgo(4)}};SCORM2004_objAPI.RunTimeData."
-             "CompletionStatus = 'completed';").format(self.code, self.resname))
+             "updateModuleStatus(setStatusURL,undefined,'{0}',0,false, 0,getModuleID(),'{1}');"
+             "switch('{2}'){{case 'mod3':modgo(6);break;default:modgo(4)}};"
+             "SCORM2004_objAPI.RunTimeData.CompletionStatus = 'completed';").format(
+                self.code, self.resname, self.id))
 
 class TrainingSummary(WrappedElement):
     """Represents the two Training Summary modules list things.
@@ -1226,19 +1227,19 @@ class TrainingSummary(WrappedElement):
         """Opens the First Optional Module. Returns the module code, just to be sure."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()
-        return TrainingModule(self.dr).code
+        return TrainingModule(self.dr).id
 
     def module_qld(self) -> str:
         """Opens the Second Optional Module Returns the module code, just to be sure.."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[1]).click()
-        return TrainingModule(self.dr).code
+        return TrainingModule(self.dr).id
 
     def module_vic(self) -> str:
         """Opens the Third Optional Module. Returns the module code, just to be sure."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[2]).click()
-        return TrainingModule(self.dr).code
+        return TrainingModule(self.dr).id
 
     def completion_types(self) -> None:
         """Gets all of the Module entries, then checks how complete they are,

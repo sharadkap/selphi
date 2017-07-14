@@ -10,6 +10,7 @@ from multiprocessing.pool import Pool
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver import (Chrome, Firefox, Ie, Safari, Opera, Edge,
                                 FirefoxProfile, ActionChains)
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webdriver import WebDriverException
@@ -109,6 +110,10 @@ def restart_driver(br):
         p = FirefoxProfile()
         p.set_preference('network.http.phishy-userpass-length', 255)
         DRIVER = Firefox(p)
+    elif br == Chrome:  # Now Chrome doesn't trust it either, bleh.
+        c = ChromeOptions()
+        c.add_argument('--disable-blink-features=BlockCredentialedSubresources')
+        DRIVER = Chrome(chrome_options=c)
     else:
         DRIVER = br()
     DRIVER.implicitly_wait(IMPLICITLY_WAIT)

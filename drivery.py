@@ -20,7 +20,7 @@ import bs4
 
     ###Some Magic Numbers, default values.###
 # """How long, in seconds, to search the DOM before declaring an Element Not Found."""
-LONG_WAIT = 30
+LONG_WAIT = 60
 # """Time in seconds to poll for something that should be absent or already here."""
 SHORT_WAIT = 2
 

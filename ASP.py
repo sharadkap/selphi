@@ -923,9 +923,9 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
                 # Product Page should have a unique Code, which also should not be N/A or null.
                 code = product.unique_code()
                 self.assertNotIn('N/A', code,
-                                 "It's important that the code not be 'N/A'. That isn't unique.")
+                                 "It's important that the code not be 'N/A'. That isn't unique. ("+prodname+")")
                 self.assertNotIn('null', code,
-                                 "It's important that the code not be 'null'. That isn't unique.")
+                                 "It's important that the code not be 'null'. That isn't unique. ("+prodname+")")
                 # Select a Quantity.
                 product.select_max_quantity()
                 # Click the Add To Cart button.
@@ -964,7 +964,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
                     product.select_max_quantity()
                     # A panel should pop up, notifying that Maximum Quantity was exceeded.
                     self.assertFalse(product.add_to_cart(),
-                                     "Shouldn't be able to add beyond max quantity, shows a popup.")
+                                     "Shouldn't be able to add beyond max quantity, shows a popup. ("+prodname+")")
                 # Back to Category Page, try the next one.
                 CP.AussieStore.CategoriesMenu(self.dr).goto_iteree(category)
                 grid = CP.AussieStore.ProductGrid(self.dr)

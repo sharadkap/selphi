@@ -43,8 +43,8 @@ ENV = 'https://uat.aussiespecialist.cn'
 # The filename corresponding to the JSON file to use for the module urls.
 # Get a new one if you keep getting 404 errors: From Author instance, /content/sites/asp/resources.2.json
 # JSON = 'dev_mods.json'
-# JSON = 'uat_mods.json'
-JSON = 'cnuat_mods.json'
+JSON = 'uat_mods.json'
+# JSON = 'cnuat_mods.json'
 # JSON = 'stage_mods.json'
 # JSON = 'prod_mods.json'
 

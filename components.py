@@ -1716,7 +1716,7 @@ class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: 
     def training(self):
         """Opens the Assignments page. China has a different format though."""
         self.dr.get((self.dr.base_url + '/content/sites/asp' + self.dr.locale.replace('-', '_') +
-                     '/assignments.html') if self.dr.cn_mode else
+                     '/assignments.html') if not self.dr.cn_mode else
                     (self.dr.base_url + '/content/sites/asp-zh-cn/en/assignments.html'))
 
     def travel(self):

@@ -32,9 +32,10 @@ from collections import OrderedDict
         ### ### ### #### ### ### ###
 
 # The website domain to use in testing. Remember to change JSON as well!
+# ENV = 'https://uat.aussiespecialist.cn'
+ENV = 'https://www.aussiespecialist.cn'
 # ENV = 'https://dev-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://uat-pub-elb-asp.tour-aus.aws.haylix.net'
-ENV = 'https://uat.aussiespecialist.cn'
 # ENV = 'https://poc-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://stage-pub-elb-asp.tour-aus.aws.haylix.net'
 # ENV = 'https://unifiedstaging.aussiespecialist.com'
@@ -43,10 +44,11 @@ ENV = 'https://uat.aussiespecialist.cn'
 # The filename corresponding to the JSON file to use for the module urls.
 # Get a new one if you keep getting 404 errors: From Author instance, /content/sites/asp/resources.2.json
 # JSON = 'dev_mods.json'
-JSON = 'uat_mods.json'
-# JSON = 'cnuat_mods.json'
+# JSON = 'uat_mods.json'
 # JSON = 'stage_mods.json'
 # JSON = 'prod_mods.json'
+# JSON = 'cnuat_mods.json'
+JSON = 'cnprod_mods.json'
 
 # The Username and Password to use in the Server Authentication, if necessary.
 AUTH = ['dev', 'bclvOP']
@@ -61,7 +63,8 @@ TIMEFORMAT = '%Y/%m/%d %H:%M'
 # Probably won't be an issue in the CN server though, they only have the one locale.
 # USER = 'gbdevJPTN'
 # USER = 'gbuaterio'
-USER = 'cnuatqftq'
+# USER = 'cnuatqftq'
+USER = 'cnwwwocgb'
 # USER = 'gbstaHIME'
 # USER = ''
 
@@ -374,7 +377,7 @@ NSW_SCRIPT = ['Button_2016', \
 'ff1_fiction1', 'ff1_fiction2', 'ff1_fact3', 'Button_1989', \
 'Button_2448', 'Button_2088', \
 'Button_2061', \
-'Button_2184', \
+['Button_2184', 'Button_2545'], \
 'Button_2468']
 
 NT_SCRIPT = ['Button_2016', \

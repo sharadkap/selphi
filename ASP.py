@@ -56,7 +56,8 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         # Concerning the Languages Selector
         langsel = CP.SplashSelect(self.dr)
         try:
-            self.assertSetEqual(langsel.locale_set, langsel.get_values(),
+            self.assertSetEqual(langsel.cn_locale_set if self.globs['cn_mode']
+                                else langsel.locale_set, langsel.get_values(),
                                 'The language selector should contain all locales.')
         except Exception:
             self.add_error()

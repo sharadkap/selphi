@@ -67,6 +67,28 @@ class SplashSelect(WrappedElement):
                   '/zh-hk.html', '/en-hk.html', '/ja-jp.html', '/ko-kr.html', '/pt-br.html',
                   '/de-de.html', '/de-de.html', '/fr-fr.html', '/it-it.html', '/es-cl.html',
                   '/en.html', 'https://www.aussiespecialist.cn/zh-cn.html'}
+    # A Set of the full list of options that should be in the splash page language selector.
+    cn_locale_set = {'https://www.aussiespecialist.com/en-gb.html',
+                     'https://www.aussiespecialist.com/en-us.html',
+                     'https://www.aussiespecialist.com/en-ca.html',
+                     'https://www.aussiespecialist.com/en-in.html',
+                     'https://www.aussiespecialist.com/en-my.html',
+                     'https://www.aussiespecialist.com/en-sg.html',
+                     'https://www.aussiespecialist.com/id-id.html',
+                     'https://www.aussiespecialist.com/de-de.html',
+                     'https://www.aussiespecialist.com/zh-hk.html',
+                     'https://www.aussiespecialist.com/en-hk.html',
+                     'https://www.aussiespecialist.com/zh-hk.html',
+                     'https://www.aussiespecialist.com/en-hk.html',
+                     'https://www.aussiespecialist.com/ja-jp.html',
+                     'https://www.aussiespecialist.com/ko-kr.html',
+                     'https://www.aussiespecialist.com/pt-br.html',
+                     'https://www.aussiespecialist.com/de-de.html',
+                     'https://www.aussiespecialist.com/de-de.html',
+                     'https://www.aussiespecialist.com/fr-fr.html',
+                     'https://www.aussiespecialist.com/it-it.html',
+                     'https://www.aussiespecialist.com/es-cl.html',
+                     'https://www.aussiespecialist.com/en.html', '/zh-cn.html'}
 
     def get_values(self) -> Set[str]:
         """Gets a set containing the URLs of all the Language Options."""

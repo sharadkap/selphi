@@ -117,10 +117,18 @@ class TestForm(tk.Frame):
             self.tests.choices, 0, remodow, 1)).grid(column=2, row=51, sticky='nsew')
 
         # Finally, the Go Button.
-        tk.Button(self, command=self.compile, text='GO').grid(column=1, row=2, sticky='nsew')
+        tk.Button(self, command=self.go, text='GO').grid(column=1, row=2, sticky='nsew')
 
-    def compile(self):
-        pass
+    def go(self):
+        """Arranges all of the options into an argsdict, and kicks off the test."""
+        args = selene.read_properties()
+        args['locales'] = [FANCY_LANGS[l] for l in FANCY_LANGS if self.locales.choices[FANCY_LANGS[l]].get() == 1]
+        args['browsers'] = [b for b in BROWSERS if self.browsers.choices[b].get() == 1]
+        args['tests'] = [t for t in aspnames if self.tests.choices[t].get() == 1]
+        args['username'] = self.user.name.get()
+        args['environment'] = self.environs.environment.get()
+        args['chenvironment'] = self.environs.chenvironment.get()
+        selene.launch_test_suite(args)
 
 class ResultsForm(tk.Frame):
     """A Frame containing a bunch of Frames containing a bunch of Frames"""

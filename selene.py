@@ -109,10 +109,10 @@ def launch_test(args) -> None:
                     locale.replace('/', ''), site, browser, time.strftime('%Y%m%d_%H%M'))),
                       mode='w', encoding='UTF-8') as newfil:
                 newfil.write(buf.getvalue())
-            # return result
+            return result
         except Exception as ex:
             print(ex)
-            # return ex
+            return ex
 
 def tidy_error(ex=None) -> str:
     """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI

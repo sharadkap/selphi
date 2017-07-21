@@ -9,9 +9,7 @@ import signal
 import unittest
 import configparser
 from typing import Tuple
-from multiprocessing import cpu_count
-from multiprocessing.pool import Pool
-import tap
+from multiprocessing import cpu_count, Pool
 import drivery as DR
 import modules as MOD
 
@@ -57,7 +55,7 @@ def launch_test_suite(args: dict) -> None:
         pool.terminate()
         raise
 
-def launch_test(args) -> None:
+def launch_test(args) -> unittest.TextTestResult:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
@@ -86,33 +84,37 @@ def launch_test(args) -> None:
         globs['base_url'] = globs['environment']
     globs['locale_url'] = globs['base_url'] + locale
 
+
+    # Customise the test runner a little
+    class MyTestResult(unittest.TextTestResult):
+        """Like a TextTestResult, but it actually remembers how the test went."""
+        def __init__(self, *args, **kwargs):
+            self.resultsList = []
+            super(MyTestResult, self).__init__(*args, **kwargs)
+
+        def addSuccess(self, test):
+            """If a test passed, make a note of that."""
+            super(MyTestResult, self).addSuccess(test)
+            self.resultsList.append(("PASS", test))
+
+
     # Create the test runner, choose the output path: right next to the test script file.
     with io.StringIO() as buf:
-        # TAP uses Module State, have to reset it for each test.
-        tap.runner._tracker = tap.tracker.Tracker()     #pylint: disable=W0212
-        runner = tap.TAPTestRunner()
-        runner.set_format('Result of: {method_name} - {short_description}')
-        runner.set_stream(True)
-        # Bit of a hack, but it doesn't support A Proper Way to reassign output, so.
-        tap.runner._tracker.stream = buf    # pylint: disable=W0212
-        # For whatever reason, there are two output streams. Ignore this one, I guess.
-        runner.stream.stream = sys.stdout
+        runner = unittest.TextTestRunner(stream=buf)
         tests = unittest.TestSuite(names)
         suite = unittest.TestSuite()
         suite.addTests(tests)
         result = runner.run(suite)
 
         # Give a unique name to the output file so you don't overwrite it every time!
+        filna = 'REGR_{0}_{1}_{2}_{3}.txt'.format(locale[1:], site, browser,
+                                                  time.strftime('%Y%m%d_%H%M'))
         try:
-            with open(os.path.join( # Bleh.
-                outdir, 'REGR_{0}_{1}_{2}_{3}.tap'.format(
-                    locale.replace('/', ''), site, browser, time.strftime('%Y%m%d_%H%M'))),
-                      mode='w', encoding='UTF-8') as newfil:
+            with open(os.path.join(outdir, filna), mode='w', encoding='UTF-8') as newfil:
                 newfil.write(buf.getvalue())
-            return result
         except Exception as ex:
-            print(ex)
-            return ex
+            print("Failed to save the output file:", ex)
+        return result
 
 def tidy_error(ex=None) -> str:
     """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI
@@ -164,12 +166,6 @@ def perform_hacks() -> None:
     # I do need to access this private property to correctly HAX it into working.
     # pylint: disable=W0212
     unittest.result.TestResult._exc_info_to_string = newex
-    # Also, tap has its own renderer as well, so have to overwrite that too.
-    def newf(exc):
-        """Rewrite this method so as to remove the traceback."""
-        lines = tidy_error(exc).splitlines(True)
-        return tap.formatter.format_as_diagnostics(lines)
-    tap.formatter.format_exception = newf
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""

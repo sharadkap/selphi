@@ -1,17 +1,19 @@
 """Makes a form window for those who prefer using a GUI to set their settings."""
-# Remove this bit when publishing.
 import os
 os.chdir(os.path.dirname(__file__))
 
-import re
 import sys
 import tkinter as tk
-import selene
 from math import ceil
+# from multiprocessing import Process
+import selene
 from ASP import aspnames
 from drivery import BROWSERS
 from modulescripts import FANCY_LANGS
 # Too many ancestors. That's external wrapper libraries for you. pylint: disable=R0901
+
+relcol = {selene.STATES.PASS.name: 'green', selene.STATES.SKIP.name: 'grey',
+          selene.STATES.FAIL.name: 'yellow', selene.STATES.ERROR.name: 'red'}
 
 class TestForm(tk.Frame):
     """A Frame containing a bunch of controls, used to customise test runs."""
@@ -103,18 +105,22 @@ class TestForm(tk.Frame):
         prereg = ('SPL', 'HPG', 'NAV', 'FTR', 'SMP', 'ITN', 'FCT', 'MAP', 'CTC')
         tk.Button(self.tests, text='Not-Signed-In Tests', command=set_some(
             self.tests.choices, 0, prereg, 1)).grid(column=1, row=50, sticky='nsew')
-        postreg = ('LOG', 'FAV', 'PRF', 'TRN', 'ASC', 'TVL', 'FML', 'PHT', 'DLB', 'STR', 'PRM', 'FUN', 'FPW', 'CPW', 'CMP')
+        postreg = ('LOG', 'FAV', 'PRF', 'TRN', 'ASC', 'TVL', 'FML', 'PHT',
+                   'DLB', 'STR', 'PRM', 'FUN', 'FPW', 'CPW', 'CMP')
         tk.Button(self.tests, text='Signed-In Tests', command=set_some(
             self.tests.choices, 0, postreg, 1)).grid(column=1, row=51, sticky='nsew')
         postqual = ('ASC', 'TVL', 'FML', 'PHT', 'DLB', 'STR', 'PRM', 'FUN', 'FPW', 'CPW', 'CMP')
         tk.Button(self.tests, text='Specialist Tests', command=set_some(
             self.tests.choices, 0, postqual, 1)).grid(column=2, row=50, sticky='nsew')
-        modow = ('SPL', 'HPG', 'NAV', 'FTR', 'SMP', 'ITN', 'FCT', 'MAP', 'CTC', 'REG', 'LOG', 'FAV', 'PRF', 'FUN', 'FPW', 'CPW', 'CMP')
+        modow = ('SPL', 'HPG', 'NAV', 'FTR', 'SMP', 'ITN', 'FCT', 'MAP', 'CTC',
+                 'REG', 'LOG', 'FAV', 'PRF', 'FUN', 'FPW', 'CPW', 'CMP')
         tk.Button(self.tests, text='Full Run If Modules Is Down', command=set_some(
             self.tests.choices, 0, modow, 1)).grid(column=2, row=50, sticky='nsew')
-        remodow = ('SPL','HPG','NAV','FTR','SMP','ITN','FCT','MAP','CTC','LOG','FAV','PRF','FUN','FPW','CPW','CMP')
-        tk.Button(self.tests, text='Full Run If Registration And Modules Are Down\n(Provide A Username)', command=set_some(
-            self.tests.choices, 0, remodow, 1)).grid(column=2, row=51, sticky='nsew')
+        remodow = ('SPL', 'HPG', 'NAV', 'FTR', 'SMP', 'ITN', 'FCT', 'MAP', 'CTC',
+                   'LOG', 'FAV', 'PRF', 'FUN', 'FPW', 'CPW', 'CMP')
+        tk.Button(self.tests, command=set_some(self.tests.choices, 0, remodow, 1),
+                  text='Full Run If Registration And Modules Are Down\n(Provide A Username)').grid(
+                      column=2, row=51, sticky='nsew')
 
         # Finally, the Go Button.
         tk.Button(self, command=self.go, text='GO').grid(column=1, row=2, sticky='nsew')
@@ -122,13 +128,14 @@ class TestForm(tk.Frame):
     def go(self):
         """Arranges all of the options into an argsdict, and kicks off the test."""
         args = selene.read_properties()
-        args['locales'] = [FANCY_LANGS[l] for l in FANCY_LANGS if self.locales.choices[FANCY_LANGS[l]].get() == 1]
+        args['locales'] = [
+            FANCY_LANGS[l] for l in FANCY_LANGS if self.locales.choices[FANCY_LANGS[l]].get() == 1]
         args['browsers'] = [b for b in BROWSERS if self.browsers.choices[b].get() == 1]
         args['tests'] = [t for t in aspnames if self.tests.choices[t].get() == 1]
         args['username'] = self.user.name.get()
         args['environment'] = self.environs.environment.get()
         args['chenvironment'] = self.environs.chenvironment.get()
-        selene.launch_test_suite(args)
+        fenestrate(selene.launch_test_suite(args))
 
 class ResultsForm(tk.Frame):
     """A Frame containing a bunch of Frames containing a bunch of Frames"""
@@ -139,15 +146,17 @@ class ResultsForm(tk.Frame):
 
     def create_widgets(self, results):
         """Creates all of the frames containing the results of each test."""
-
-        with open(results) as tap:
-            for line in tap.readlines:
-                if re.match('(not )?ok', line):
-                    pane = tk.Frame(self, bg='red' if line.startswith('not') else 'green')
-                    tk.Label(pane, text=re.match(r'test_\d\d_(.+?) ').groups()[0]).grid(column=0)
-                    fultex = tk.Label(pane).grid(columnspan=2)
-                else:
-                    fultex.text += line.strip('#')
+        for browser, locale, result in results:
+            pane = tk.Frame(self)
+            tk.Label(pane, text=browser + ' - ' + locale).grid(column=0)
+            for name in result:
+                panel = tk.Label(pane, text=name)
+                panel.grid(columnspan=2)
+                for i, (status, info) in enumerate(result[name]):
+                    status = status.name
+                    tk.Label(panel, text=status, background=relcol[status]).grid(column=0, row=i+1)
+                    tk.Label(panel, text=info, background=relcol[status]).grid(column=1, row=i+1)
+            pane.grid(column=0)
 
 def set_some(tosel, x, selection, y):
     """Given a dict of tkinter variables, and a tuple of keys returns a function
@@ -173,9 +182,9 @@ def incipe(props):
     TestForm(props, master=root)
 
 def fenestrate(results):
-    """Display a TextTestResult as a Tk application thing. Results should be a list.
-    A list of TextTestResult objects or Exceptions. Try not to mishandle them."""
-    ResultsForm(results, master=root)
+    """Display a TextTestResult as a Tk application thing. Results should be a list:
+    A list of tuples (browser name, locale, results dict)"""
+    ResultsForm(results)
 
 if __name__ == '__main__':
     root = tk.Tk()

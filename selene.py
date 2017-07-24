@@ -5,19 +5,21 @@ import os
 import io
 import sys
 import time
+import enum
 import signal
 import unittest
 import configparser
 from typing import Tuple
+from collections import OrderedDict
 from multiprocessing import cpu_count, Pool
 import drivery as DR
 import modules as MOD
 
-import fenester
 from ASP import ASP, aspnames
 from AUS import AUS, ausnames
 
 DEBUG = False
+STATES = enum.Enum('STATES', 'PASS SKIP FAIL ERROR')
 
 def main() -> None:
     """If selene.py is the entrypoint, read the settings from the config file and run the tests."""
@@ -36,7 +38,7 @@ def test_dr() -> Tuple[dict, DR.Drivery]:
     d['locale_url'] = d['base_url'] + d['locale']
     return d, DR.Drivery(d)
 
-def launch_test_suite(args: dict) -> None:
+def launch_test_suite(args: dict) -> list:
     """Set up the multiprocessing constructure, and kick off all of the tests."""
     outdir = os.path.split(__file__)[0]
     # Each locale and browser combination is to be run in parallel, break out the MultiProcessing.
@@ -47,15 +49,53 @@ def launch_test_suite(args: dict) -> None:
                                            for loc in args['locales'] for bro in args['browsers']])
         while True:     # But check every so often if they are all done.
             if asy.ready():
-                # fenester.fenestrate(asy.get())  # If so, cool, let's go.
-                return
+                return asy.get()  # If so, cool, let's go.
             time.sleep(1) # If not, wait a second and check again. This doesn't block the interrupt.
-
-    except:   # If there is an interrupt, shut down everything, that was the Cancel Run signal.
+    except KeyboardInterrupt:
+        # If there is an interrupt, shut down everything, that was the Cancel Run signal.
         pool.terminate()
-        raise
+        sys.exit()
 
-def launch_test(args) -> unittest.TextTestResult:
+class MyTestResult(unittest.TextTestResult):
+    """Like a TextTestResult, but it actually remembers how all the tests went"""
+    def __init__(self, *args, **kwargs):
+        self.resultsList = OrderedDict()
+        super(MyTestResult, self).__init__(*args, **kwargs)
+
+    def _exc_info_to_string(self, err, test):
+        """Converts a sys.exc_info()-style tuple of values into a string."""
+        return tidy_error(err)
+
+    def addResult(self, test, status, info):
+        """Add a test's result to the record.
+        Ends up something like {name: [(status, info), (status, info)]}"""
+        name = test.id()
+        if self.resultsList.get(name):
+            self.resultsList[name].append((status, info))
+        else:
+            self.resultsList[name] = [(status, info)]
+
+    def addSuccess(self, test):
+        """If a test passed, make a note of that"""
+        super(MyTestResult, self).addSuccess(test)
+        self.addResult(test, STATES.PASS, "Test Passed")
+
+    def addSkip(self, test, reason):
+        """If a test was skipped, make a note of that"""
+        super(MyTestResult, self).addSkip(test, reason)
+        self.addResult(test, STATES.SKIP, reason)
+
+    def addFailure(self, test, err):
+        """If a test failed, make a note of that"""
+        super(MyTestResult, self).addFailure(test, err)
+        self.addResult(test, STATES.FAIL, err)
+
+    def addError(self, test, err):
+        """If a test crashed, make a note of that"""
+        super(MyTestResult, self).addError(test, err)
+        self.addResult(test, STATES.ERROR, err)
+
+def launch_test(args) -> Tuple[str, str, dict]:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
@@ -84,23 +124,9 @@ def launch_test(args) -> unittest.TextTestResult:
         globs['base_url'] = globs['environment']
     globs['locale_url'] = globs['base_url'] + locale
 
-
-    # Customise the test runner a little
-    class MyTestResult(unittest.TextTestResult):
-        """Like a TextTestResult, but it actually remembers how the test went."""
-        def __init__(self, *args, **kwargs):
-            self.resultsList = []
-            super(MyTestResult, self).__init__(*args, **kwargs)
-
-        def addSuccess(self, test):
-            """If a test passed, make a note of that."""
-            super(MyTestResult, self).addSuccess(test)
-            self.resultsList.append(("PASS", test))
-
-
     # Create the test runner, choose the output path: right next to the test script file.
     with io.StringIO() as buf:
-        runner = unittest.TextTestRunner(stream=buf)
+        runner = unittest.TextTestRunner(stream=buf, resultclass=MyTestResult)
         tests = unittest.TestSuite(names)
         suite = unittest.TestSuite()
         suite.addTests(tests)
@@ -114,7 +140,7 @@ def launch_test(args) -> unittest.TextTestResult:
                 newfil.write(buf.getvalue())
         except Exception as ex:
             print("Failed to save the output file:", ex)
-        return result
+        return (browser, locale, result.resultsList)
 
 def tidy_error(ex=None) -> str:
     """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI
@@ -128,7 +154,8 @@ def tidy_error(ex=None) -> str:
         return name and name.startswith(show)
 
     def _print(typ, value, tb):     # If not debug, generator expression: filter trace to my files.
-        show = extract_tb(tb) if DEBUG else (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
+        show = extract_tb(tb) if DEBUG else (
+            fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
         fmt = format_list(show) + format_exception_only(typ, value)
         return ''.join((f.strip('"\'').replace('\\n', '') for f in fmt))
 
@@ -156,16 +183,6 @@ def perform_hacks() -> None:
         if self.dots or self.showAll:
             self.stream.writeln()
     unittest.TextTestResult.printErrors = newprinterrors
-
-    # Striiped this entire method right out.
-    # The original method contains this unused argument, and yes, it isn't used there either.
-    def newex(self, err, test):     # pylint: disable=W0613
-        """Converts a sys.exc_info()-style tuple of values into a string."""
-        return tidy_error(err)
-    # And, override the existing method.
-    # I do need to access this private property to correctly HAX it into working.
-    # pylint: disable=W0212
-    unittest.result.TestResult._exc_info_to_string = newex
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""

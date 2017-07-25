@@ -4,6 +4,7 @@ os.chdir(os.path.dirname(__file__))
 
 import sys
 import tkinter as tk
+import tkinter.ttk as ttk
 from math import ceil
 # from multiprocessing import Process
 import selene
@@ -19,7 +20,7 @@ class TestForm(tk.Frame):
     """A Frame containing a bunch of controls, used to customise test runs."""
     def __init__(self, props, master=None):
         super().__init__(master)
-        self.pack(side='left')
+        self.grid(column=0, row=0)
         self.create_widgets(props)
 
     def create_widgets(self, props: dict):
@@ -135,28 +136,60 @@ class TestForm(tk.Frame):
         args['username'] = self.user.name.get()
         args['environment'] = self.environs.environment.get()
         args['chenvironment'] = self.environs.chenvironment.get()
-        fenestrate(selene.launch_test_suite(args))
+        fenestrate(self.launch_fake_test())
+        # fenestrate(selene.launch_test_suite(args))
+
+    def launch_fake_test(self) -> list:
+        """Just so I don't have to do an actual test run each time I test this thing."""
+        return [('Chrome', '/it-it', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
+                ('Chrome', '/en-gb', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
+                ('Firefox', '/it-it', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
+                ('Firefox', '/en-gb', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]})]
 
 class ResultsForm(tk.Frame):
     """A Frame containing a bunch of Frames containing a bunch of Frames"""
     def __init__(self, results, master=None):
-        super().__init__(master)
-        self.pack(side='right')
+        super().__init__(master, borderwidth=2, relief='solid')
+        self.grid(column=1, row=0, sticky="nsew")
         self.create_widgets(results)
 
     def create_widgets(self, results):
         """Creates all of the frames containing the results of each test."""
         for browser, locale, result in results:
-            pane = tk.Frame(self)
-            tk.Label(pane, text=browser + ' - ' + locale).grid(column=0)
+            pane = Collapser(self, text=browser + ' - ' + locale)
+            pane.grid(sticky='nsew')
             for name in result:
-                panel = tk.Label(pane, text=name)
-                panel.grid(columnspan=2)
+                panelet = Collapser(pane.sub_frame, text=name)
+                panelet.grid(sticky='nsew')
                 for i, (status, info) in enumerate(result[name]):
                     status = status.name
-                    tk.Label(panel, text=status, background=relcol[status]).grid(column=0, row=i+1)
-                    tk.Label(panel, text=info, background=relcol[status]).grid(column=1, row=i+1)
-            pane.grid(column=0)
+                    tk.Label(panelet.sub_frame, text=status, width=12,
+                             background=relcol[status]).grid(row=i, column=0, sticky='nsew')
+                    tk.Label(panelet.sub_frame, text=info).grid(row=i, column=1, sticky='nsew')
+
+class Collapser(tk.Frame):
+    """A tk Frame that can be collapsed and expanded"""
+    def __init__(self, parent, text="", *args, **options):
+        tk.Frame.__init__(self, parent, *args, **options)
+
+        self.show = tk.IntVar()
+        self.show.set(0)
+        self.title_frame = tk.Frame(self)
+        self.title_frame.grid(row=0, column=0, sticky='nsew')
+        tk.Label(self.title_frame, text=text).grid(row=0, column=0, sticky='w')
+        self.toggle_button = ttk.Checkbutton(self.title_frame, width=2, command=self.toggle,
+                                             text='+', variable=self.show, style='Toolbutton')
+        self.toggle_button.grid(row=0, column=1, sticky='e')
+        self.sub_frame = tk.Frame(self, relief='sunken', borderwidth=1)
+
+    def toggle(self):
+        """Show or hide the panel"""
+        if bool(self.show.get()):
+            self.sub_frame.grid(row=1, column=0, sticky='nsew')
+            self.toggle_button.configure(text='-')
+        else:
+            self.sub_frame.forget()
+            self.toggle_button.configure(text='+')
 
 def set_some(tosel, x, selection, y):
     """Given a dict of tkinter variables, and a tuple of keys returns a function
@@ -169,9 +202,9 @@ def set_some(tosel, x, selection, y):
     return selectem
 
 def set_all(tosel, x):
-    """Given a dict of tkinter variables, returns a function that can be called to set all to x."""
+    """Given a dict of tkinter variables, returns a function that can be called to set all to x"""
     def selectem():
-        """Sets all of the things to something."""
+        """Sets all of the things to something"""
         for t in tosel:
             tosel[t].set(x)
     return selectem

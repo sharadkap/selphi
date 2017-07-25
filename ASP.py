@@ -781,6 +781,11 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         self.assertSetEqual({'mod1', 'mod2', 'mod3', modn, modq}, profile.module_badges(),
                             'The Profile should contain the badges of the modules just completed.')
 
+        # And you should have a Certification of Qualification.
+        profile.download_certificate()
+        self.dr.switch_to_window(1)
+        CP.PDFPage(self.dr)
+
     def test_15_Aussie_Specialist_Club(self):
         """Checks the Aussie Specialist Club nav menu links."""
         # Pre-condition: Logged in as a Qualified User.

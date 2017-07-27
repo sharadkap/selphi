@@ -136,8 +136,11 @@ class TestForm(tk.Frame):
         args['username'] = self.user.name.get()
         args['environment'] = self.environs.environment.get()
         args['chenvironment'] = self.environs.chenvironment.get()
-        fenestrate(self.launch_fake_test())
-        # fenestrate(selene.launch_test_suite(args))
+        prev = self.master.children.get('!resultsform')
+        if prev:
+            prev.grid_forget()
+        # fenestrate(self.launch_fake_test())
+        fenestrate(selene.launch_test_suite(args))
 
     def launch_fake_test(self) -> list:
         """Just so I don't have to do an actual test run each time I test this thing."""
@@ -155,15 +158,23 @@ class ResultsForm(tk.Frame):
 
     def create_widgets(self, results):
         """Creates all of the frames containing the results of each test."""
+        colls = []
+        topl = tk.Frame(self)
+        topl.grid(sticky='nsew')
+        tk.Button(topl, command=lambda: [x.show() for x in colls], text="Show All").grid(column=0, row=0)
+        tk.Button(topl, command=lambda: [x.hide() for x in colls], text="Hide All").grid(column=1, row=0)
         for browser, locale, result in results:
             pane = Collapser(self, text=browser + ' - ' + locale)
             pane.grid(sticky='nsew')
+            pane.sub_frame.columnconfigure(0, weight=1)
+            colls.append(pane)
             for name in result:
                 panelet = Collapser(pane.sub_frame, text=name)
                 panelet.grid(sticky='nsew')
+                colls.append(panelet)
                 for i, (status, info) in enumerate(result[name]):
                     status = status.name
-                    tk.Label(panelet.sub_frame, text=status, width=12,
+                    tk.Label(panelet.sub_frame, text=status, width=6,
                              background=relcol[status]).grid(row=i, column=0, sticky='nsew')
                     tk.Label(panelet.sub_frame, text=info).grid(row=i, column=1, sticky='nsew')
 
@@ -172,24 +183,38 @@ class Collapser(tk.Frame):
     def __init__(self, parent, text="", *args, **options):
         tk.Frame.__init__(self, parent, *args, **options)
 
-        self.show = tk.IntVar()
-        self.show.set(0)
+        self.showv = tk.IntVar()
+        self.showv.set(0)
+        self.columnconfigure(0, weight=1)
         self.title_frame = tk.Frame(self)
+        self.title_frame.bind('<Button-1>', self.toggle)
         self.title_frame.grid(row=0, column=0, sticky='nsew')
-        tk.Label(self.title_frame, text=text).grid(row=0, column=0, sticky='w')
-        self.toggle_button = ttk.Checkbutton(self.title_frame, width=2, command=self.toggle,
-                                             text='+', variable=self.show, style='Toolbutton')
-        self.toggle_button.grid(row=0, column=1, sticky='e')
-        self.sub_frame = tk.Frame(self, relief='sunken', borderwidth=1)
+        self.title_frame.columnconfigure(0, weight=1)
+        label = tk.Label(self.title_frame, text=text)
+        label.bind('<Button-1>', self.toggle)
+        self.toggle_button = ttk.Label(self.title_frame, width=2, text='>')
+        self.toggle_button.pack(side='left')
+        label.pack(side='left')
+        self.sub_frame = tk.Frame(self, relief='sunken', borderwidth=1, padx=10)
 
-    def toggle(self):
+    def show(self):
+        """Show the panel"""
+        self.sub_frame.grid(row=1, column=0, sticky='nsew')
+        self.toggle_button.configure(text='v')
+        self.showv.set(1)
+
+    def hide(self):
+        """Hide the panel"""
+        self.sub_frame.grid_remove()
+        self.toggle_button.configure(text='>')
+        self.showv.set(0)
+
+    def toggle(self, _=None):
         """Show or hide the panel"""
-        if bool(self.show.get()):
-            self.sub_frame.grid(row=1, column=0, sticky='nsew')
-            self.toggle_button.configure(text='-')
+        if bool(self.showv.get()):
+            self.hide()
         else:
-            self.sub_frame.forget()
-            self.toggle_button.configure(text='+')
+            self.show()
 
 def set_some(tosel, x, selection, y):
     """Given a dict of tkinter variables, and a tuple of keys returns a function
@@ -221,6 +246,7 @@ def fenestrate(results):
 
 if __name__ == '__main__':
     root = tk.Tk()
+    root.title('SELPHI')
     if len(sys.argv) == 1:
         incipe(selene.read_properties())
     else:

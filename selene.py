@@ -95,6 +95,11 @@ class MyTestResult(unittest.TextTestResult):
         super(MyTestResult, self).addError(test, err)
         self.addResult(test, STATES.ERROR, err)
 
+    def printErrors(self):
+        """Don't print the full error report, that'll paste over the entire terminal."""
+        if self.dots or self.showAll:
+            self.stream.writeln()
+
 def launch_test(args) -> Tuple[str, str, dict]:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
@@ -174,15 +179,6 @@ def perform_hacks() -> None:
             args[0].parent.execute_script(DR.SCROLL_SCRIPT, args[0])
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
-
-    # By default, it will print out the full list of test failures at the end of the test.
-    # This is a terrible idea, as that list tends to be longer than the cmd window buffer.
-    # Especially when multiple test runs are underway. Here, set to skip that step.
-    def newprinterrors(self):
-        """Print a newline to the stream if in dot-drawing mode. Do not print the error report."""
-        if self.dots or self.showAll:
-            self.stream.writeln()
-    unittest.TextTestResult.printErrors = newprinterrors
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""

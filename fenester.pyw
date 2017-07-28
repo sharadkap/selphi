@@ -176,7 +176,7 @@ class ResultsForm(tk.Frame):
                     status = status.name
                     tk.Label(panelet.sub_frame, text=status, width=6,
                              background=relcol[status]).grid(row=i, column=0, sticky='nsew')
-                    tk.Label(panelet.sub_frame, text=info).grid(row=i, column=1, sticky='nsew')
+                    tk.Label(panelet.sub_frame, text=info, anchor='w').grid(row=i, column=1, sticky='nsew')
 
 class Collapser(tk.Frame):
     """A tk Frame that can be collapsed and expanded"""

@@ -88,17 +88,23 @@ class MyTestResult(unittest.TextTestResult):
     def addFailure(self, test, err):
         """If a test failed, make a note of that"""
         super(MyTestResult, self).addFailure(test, err)
-        self.addResult(test, STATES.FAIL, err)
+        self.addResult(test, STATES.FAIL, tidy_error(err))
 
     def addError(self, test, err):
         """If a test crashed, make a note of that"""
         super(MyTestResult, self).addError(test, err)
-        self.addResult(test, STATES.ERROR, err)
+        self.addResult(test, STATES.ERROR, tidy_error(err))
 
     def printErrors(self):
-        """Don't print the full error report, that'll paste over the entire terminal."""
-        if self.dots or self.showAll:
-            self.stream.writeln()
+        """After running the test, print out the full results"""
+        self.stream.writeln()
+        for name in self.resultsList:
+            self.stream.writeln(self.separator1)
+            self.stream.writeln(name)
+            for status, info in self.resultsList[name]:
+                self.stream.writeln(self.separator2)
+                self.stream.writeln(status.name)
+                self.stream.writeln(info)
 
 def launch_test(args) -> Tuple[str, str, dict]:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""

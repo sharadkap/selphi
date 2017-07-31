@@ -32,7 +32,7 @@ class AUS(unittest.TestCase):
         self.dr.close()
         self.maxDiff = None
         for err in self.verificationErrors:
-            self.result.addFailure(self, err, preformatted=True)
+            self.result.addFailure(self, err)
         # self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
         #                  ' assertions. Hopefully the custom messages are helpful enough.')
 

@@ -158,15 +158,15 @@ class MyTestResult(unittest.TextTestResult):
         super(MyTestResult, self).addSkip(test, reason)
         self.addResult(test, STATES.SKIP, reason)
 
-    def addFailure(self, test, err, preformatted=False):
+    def addFailure(self, test, err):
         """If a test failed, make a note of that"""
         super(MyTestResult, self).addFailure(test, err)
-        self.addResult(test, STATES.FAIL, err if preformatted else tidy_error(err))
+        self.addResult(test, STATES.FAIL, tidy_error(err))
 
-    def addError(self, test, err, preformatted=False):
+    def addError(self, test, err):
         """If a test crashed, make a note of that"""
         super(MyTestResult, self).addError(test, err)
-        self.addResult(test, STATES.ERROR, err if preformatted else tidy_error(err))
+        self.addResult(test, STATES.ERROR, tidy_error(err))
 
     def printErrors(self):
         """After running the test, print out the full results"""
@@ -232,6 +232,9 @@ def tidy_error(ex=None) -> str:
     Unless DEBUG is True, in which case, it prints the enrirety of the trace."""
     from os.path import join, abspath, dirname
     from traceback import extract_tb, format_list, format_exception_only
+    # If the exception is already pasted into a string, just return that.
+    if type(ex) is str:
+        return ex
 
     show = join(dirname(abspath(__file__)), '')
 

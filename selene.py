@@ -56,6 +56,79 @@ def launch_test_suite(args: dict) -> list:
         pool.terminate()
         sys.exit()
 
+class MyTestRunner(unittest.TextTestRunner):
+    def __init__(self, *args, **kwargs):
+        super(MyTestRunner, self).__init__(*args, **kwargs)
+        self.result = self._makeResult()
+
+    def run(self, test):
+        "Run the given test case or test suite. All this overload for one measly line."
+        import warnings
+        from unittest.signals import registerResult
+        # result = self._makeResult()   Move this line into the init so I can mess with it interim.
+        registerResult(self.result)
+        self.result.failfast = self.failfast
+        self.result.buffer = self.buffer
+        self.result.tb_locals = self.tb_locals
+        with warnings.catch_warnings():
+            if self.warnings:
+                warnings.simplefilter(self.warnings)
+                if self.warnings in ['default', 'always']:
+                    warnings.filterwarnings('module',
+                                            category=DeprecationWarning,
+                                            message=r'Please use assert\w+ instead.')
+            startTime = time.time()
+            startTestRun = getattr(self.result, 'startTestRun', None)
+            if startTestRun is not None:
+                startTestRun()
+            try:
+                test(self.result)
+            finally:
+                stopTestRun = getattr(self.result, 'stopTestRun', None)
+                if stopTestRun is not None:
+                    stopTestRun()
+            stopTime = time.time()
+        timeTaken = stopTime - startTime
+        self.result.printErrors()
+        if hasattr(self.result, 'separator2'):
+            self.stream.writeln(self.result.separator2)
+        run = self.result.testsRun
+        self.stream.writeln("Ran %d test%s in %.3fs" %
+                            (run, run != 1 and "s" or "", timeTaken))
+        self.stream.writeln()
+
+        expectedFails = unexpectedSuccesses = skipped = 0
+        try:
+            results = map(len, (self.result.expectedFailures,
+                                self.result.unexpectedSuccesses,
+                                self.result.skipped))
+        except AttributeError:
+            pass
+        else:
+            expectedFails, unexpectedSuccesses, skipped = results
+
+        infos = []
+        if not self.result.wasSuccessful():
+            self.stream.write("FAILED")
+            failed, errored = len(self.result.failures), len(self.result.errors)
+            if failed:
+                infos.append("failures=%d" % failed)
+            if errored:
+                infos.append("errors=%d" % errored)
+        else:
+            self.stream.write("OK")
+        if skipped:
+            infos.append("skipped=%d" % skipped)
+        if expectedFails:
+            infos.append("expected failures=%d" % expectedFails)
+        if unexpectedSuccesses:
+            infos.append("unexpected successes=%d" % unexpectedSuccesses)
+        if infos:
+            self.stream.writeln(" (%s)" % (", ".join(infos),))
+        else:
+            self.stream.write("\n")
+        return self.result
+
 class MyTestResult(unittest.TextTestResult):
     """Like a TextTestResult, but it actually remembers how all the tests went"""
     def __init__(self, *args, **kwargs):
@@ -85,15 +158,15 @@ class MyTestResult(unittest.TextTestResult):
         super(MyTestResult, self).addSkip(test, reason)
         self.addResult(test, STATES.SKIP, reason)
 
-    def addFailure(self, test, err):
+    def addFailure(self, test, err, preformatted=False):
         """If a test failed, make a note of that"""
         super(MyTestResult, self).addFailure(test, err)
-        self.addResult(test, STATES.FAIL, tidy_error(err))
+        self.addResult(test, STATES.FAIL, err if preformatted else tidy_error(err))
 
-    def addError(self, test, err):
+    def addError(self, test, err, preformatted=False):
         """If a test crashed, make a note of that"""
         super(MyTestResult, self).addError(test, err)
-        self.addResult(test, STATES.ERROR, tidy_error(err))
+        self.addResult(test, STATES.ERROR, err if preformatted else tidy_error(err))
 
     def printErrors(self):
         """After running the test, print out the full results"""
@@ -114,12 +187,6 @@ def launch_test(args) -> Tuple[str, str, dict]:
     if globs['debug']:
         global DEBUG
         DEBUG = True
-    # Instantiate the test suites, and give them their process-unique globals
-    site = globs['site']
-    if site == 'ASP':
-        names = [ASP(aspnames[x], globs) for x in globs['tests'] or aspnames]
-    elif site == 'AUS':
-        names = [AUS(ausnames[x], globs) for x in globs['tests'] or ausnames]
     # Do a bunch of method overrides to get it to work properly.
     perform_hacks()
     # Set up the run settings.
@@ -137,7 +204,14 @@ def launch_test(args) -> Tuple[str, str, dict]:
 
     # Create the test runner, choose the output path: right next to the test script file.
     with io.StringIO() as buf:
-        runner = unittest.TextTestRunner(stream=buf, resultclass=MyTestResult)
+        # A custom hack to enable multiple-test-failues
+        runner = MyTestRunner(stream=buf, resultclass=MyTestResult)
+        # Instantiate the test suites, and give them their process-unique globals and access to things
+        site = globs['site']
+        if site == 'ASP':
+            names = [ASP(aspnames[x], globs, runner.result) for x in globs['tests'] or aspnames]
+        elif site == 'AUS':
+            names = [AUS(ausnames[x], globs, runner.result) for x in globs['tests'] or ausnames]
         tests = unittest.TestSuite(names)
         suite = unittest.TestSuite()
         suite.addTests(tests)

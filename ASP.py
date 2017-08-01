@@ -492,7 +492,25 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         regemail = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
         # In the Registration Confirmation email, click the Activate Account link.
         # Should open the Registration Acknowledgement page, confirming the account is set up.
-        self.dr.get(regemail.activation_link())
+        activa = regemail.activation_link()
+        # Then, go to the Resend Activation page
+        try:
+            CP.SignIn(self).resend().click()
+        except Exception:
+            self.add_error()
+            CP.BackupHrefs(self.dr).resend()
+        # Enter the user's email address into the Forgot Username form.
+        regus = CP.ForgottenForm(self.dr)
+        regus.email(self.globs['email'])
+        # Click the Submit button, a panel should appear confirming submission.
+        regus.submit()
+        # An email should be received at the given address; it's just the registration email again.
+        rerege = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
+        self.assertEqual(activa, rerege.activation_link(),
+                         "The Re Activation email should have the same link as the regular one.")
+
+
+        self.dr.get(activa)
 
     def test_11_Login(self):
         """Tests the Login-related functionality."""

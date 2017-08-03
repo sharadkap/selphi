@@ -804,7 +804,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             self.assertSetEqual({'mod1', 'mod2', 'mod3', modn, modq}, profile.module_badges(),
                                 'The Profile should contain the badges of the completed modules.')
         except NameError:
-            self.add_error('Did not finish the modules, but do have ' + profile.module_badges())
+            self.add_error('Did not finish the modules, but do have ' + str(profile.module_badges()))
 
     def test_15_Aussie_Specialist_Club(self):
         """Checks the Aussie Specialist Club nav menu links."""

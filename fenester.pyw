@@ -157,17 +157,32 @@ class ResultsForm(tk.Frame):
     def __init__(self, results, master=None):
         super().__init__(master, borderwidth=2, relief='solid')
         self.grid(column=1, row=0, sticky="nsew")
+
+        self.canvas = tk.Canvas(self, borderwidth=0, background="#ffffff")
+        self.frame = tk.Frame(self.canvas, background="#ffffff")
+        self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((4,4), window=self.frame, anchor="nw",
+                                  tags="self.frame")
+        self.frame.bind("<Configure>", self.onFrameConfigure)
         self.create_widgets(results)
+
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def create_widgets(self, results):
         """Creates all of the frames containing the results of each test."""
         colls = []
-        topl = tk.Frame(self)
+        topl = tk.Frame(self.frame)
         topl.grid(sticky='nsew')
         tk.Button(topl, command=lambda: [x.show() for x in colls], text="Show All").grid(column=0, row=0)
         tk.Button(topl, command=lambda: [x.hide() for x in colls], text="Hide All").grid(column=1, row=0)
         for browser, locale, result in results:
-            pane = Collapser(self, text=browser + ' - ' + locale)
+            pane = Collapser(self.frame, text=browser + ' - ' + locale)
             pane.grid(sticky='nsew')
             pane.sub_frame.columnconfigure(0, weight=1)
             colls.append(pane)
@@ -179,7 +194,7 @@ class ResultsForm(tk.Frame):
                     status = status.name
                     tk.Label(panelet.sub_frame, text=status, width=6,
                              background=relcol[status]).grid(row=i, column=0, sticky='nsew')
-                    tk.Label(panelet.sub_frame, text=info, anchor='w', wraplength=500
+                    tk.Label(panelet.sub_frame, text=info, anchor='w', justify='left', wraplength=500
                             ).grid(row=i, column=1, sticky='nsew')
 
 class Collapser(tk.Frame):

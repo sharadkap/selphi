@@ -133,21 +133,24 @@ class TestForm(tk.Frame):
             FANCY_LANGS[l] for l in FANCY_LANGS if self.locales.choices[FANCY_LANGS[l]].get() == 1]
         args['browsers'] = [b for b in BROWSERS if self.browsers.choices[b].get() == 1]
         args['tests'] = [t for t in aspnames if self.tests.choices[t].get() == 1]
-        args['username'] = self.user.name.get()
+        if self.user.name.get():
+            args['username'] = self.user.name.get()
+            args['userid'] = args['username'][-4:]    # The mail ID is the last four characters.
+            args['email'] = args['email'].format(args['userid'])
         args['environment'] = self.environs.environment.get()
         args['chenvironment'] = self.environs.chenvironment.get()
         prev = self.master.children.get('!resultsform')
         if prev:
             prev.grid_forget()
-        # fenestrate(self.launch_fake_test())
-        fenestrate(selene.launch_test_suite(args))
+        fenestrate(self.launch_fake_test())
+        # fenestrate(selene.launch_test_suite(args))
 
     def launch_fake_test(self) -> list:
         """Just so I don't have to do an actual test run each time I test this thing."""
         return [('Chrome', '/it-it', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
                 ('Chrome', '/en-gb', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
                 ('Firefox', '/it-it', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
-                ('Firefox', '/en-gb', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]})]
+                ('Firefox', '/en-gb', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, '\nFile "C:\\Users\\bzalakos\\Documents\\GitHub\\selphi\\ASP.py", line 799, in test_15_Aussie_Specialist_Club\nclub.click()\nselenium.common.exceptions.WebDriverException: Message: unknown error: Element <li id="nav-main-panel-5" class="has-children" style="animation-duration: 0.5s; animation-name:\nselhian;">...</li> is not clickable at point (1131, 108). Other element would receive the click: <div class="fancybox-overlay fancybox-overlay-fixed" style="width: auto; height: auto; display: block;"></div>\n(Session info: chrome=59.0.3071.115)\n(Driver info: chromedriver=2.30.477700 (0057494ad8732195794a7b32078424f92a5fce41),platform=Windows NT 6.3.9600 x86_64)\n')]})]
 
 class ResultsForm(tk.Frame):
     """A Frame containing a bunch of Frames containing a bunch of Frames"""
@@ -176,7 +179,8 @@ class ResultsForm(tk.Frame):
                     status = status.name
                     tk.Label(panelet.sub_frame, text=status, width=6,
                              background=relcol[status]).grid(row=i, column=0, sticky='nsew')
-                    tk.Label(panelet.sub_frame, text=info, anchor='w').grid(row=i, column=1, sticky='nsew')
+                    tk.Label(panelet.sub_frame, text=info, anchor='w', wraplength=500
+                            ).grid(row=i, column=1, sticky='nsew')
 
 class Collapser(tk.Frame):
     """A tk Frame that can be collapsed and expanded"""

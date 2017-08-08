@@ -33,12 +33,10 @@ class AUS(unittest.TestCase):
         self.maxDiff = None
         for err in self.verificationErrors:
             self.result.addFailure(self, err)
-        # self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
-        #                  ' assertions. Hopefully the custom messages are helpful enough.')
 
     def add_error(self) -> None:
         """Adds an error to the errors list. Shortcut."""
-        from selene import tidy_error    # Can I do this?
+        from selene import tidy_error
         self.verificationErrors.append(tidy_error())
 
     def test_01_social(self):   # Most of those branches are try/except. pylint: disable=R0912

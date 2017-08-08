@@ -25,7 +25,6 @@ aspnames = OrderedDict(
 class ASP(unittest.TestCase): # pylint: disable=R0904
     """The Test Suite for the ASP regresseion. Test methods are numbered because HipTest."""
     def __init__(self, name: str, glob: dict, result: 'MyTestResult'):
-        # super(ASP, self, name).__init__()
         super().__init__(methodName=name)
         self.globs = glob
         self.result = result
@@ -43,8 +42,6 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         self.maxDiff = None
         for err in self.verificationErrors:
             self.result.addFailure(self, err)
-        # self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
-        #                  ' assertions. Hopefully the custom messages are helpful enough.')
 
     def add_error(self) -> None:
         """Adds an error to the errors list. Shortcut."""

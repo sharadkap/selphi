@@ -155,16 +155,21 @@ class TestForm(tk.Frame):
 class ResultsForm(tk.Frame):
     """A Frame containing a bunch of Frames containing a bunch of Frames"""
     def __init__(self, results, master=None):
+        if master:
+            master.columnconfigure(0, weight=1)
+            master.columnconfigure(1, weight=1)
         super().__init__(master, borderwidth=2, relief='solid')
         self.grid(column=1, row=0, sticky="nsew")
 
         self.canvas = tk.Canvas(self, borderwidth=0, background="#ffffff")
-        self.frame = tk.Frame(self.canvas, background="#ffffff")
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.frame = tk.Frame(self.canvas, background="#ffffff")
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
-        self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=0)
+        self.canvas.grid(row=0, column=0, sticky='nsew')
+        self.vsb.grid(row=0, column=1, sticky='nse')
         self.canvas.create_window((4,4), window=self.frame, anchor="nw",
                                   tags="self.frame")
         self.frame.bind("<Configure>", self.onFrameConfigure)
@@ -172,7 +177,8 @@ class ResultsForm(tk.Frame):
 
     def onFrameConfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+        self.canvas.config(width=event.width, height=event.height)
 
     def create_widgets(self, results):
         """Creates all of the frames containing the results of each test."""

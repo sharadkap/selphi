@@ -280,8 +280,12 @@ class NavMenu(WrappedElement):
         self.element = self.dr.flashy_find_element('.navigation')
         attach_links(self, ['profile', 'logout'], selector='#link-{}')
         attach_links(self, ['logo'], selector='.header-masthead .{}-masthead')
-        attach_links(self, ['holiday'], selector='.is-current a')
+        attach_links(self, ['australia'], selector='[href*="www.australia.c"]')
+        attach_links(self, ['investment'], selector='[href*="tourism{}.c"]')
         attach_links(self, ['businessevents'], selector='[href*="{}.australia.c"]')
+        attach_links(self, ['corporate'], selector='[href*="www.tourism.australia.c"]')
+        attach_links(self, ['current'], selector='li.is-{} a')    # blar. What a hack.
+        attach_links(self, ['invcn'], selector='.l-center-1200>.nav-bar-left>li:nth-child(2)')
 
     # ASP ones.
     class About(NavSection):
@@ -371,7 +375,7 @@ class NavMenu(WrappedElement):
             attach_fancy_links(self, ['things-to-do', 'drive-australia', 'explore'])
 
     class PlanYourTrip(NavSection):
-        '''Represents the Plan Your Trip section in the nav menu.'''
+        """Represents the Plan Your Trip section in the nav menu."""
         def __init__(self, dr: Drivery):
             self.dr = dr
             self.element = self.dr.flashy_find_element('#nav-main-panel-3')
@@ -386,7 +390,7 @@ class NavMenu(WrappedElement):
 
     # And, the AUS.cn last two are a bit different.
     class PracticalInformation(NavSection):
-        '''Represents the 实用信息 section in the nav menu. A combination of Facts and Planning?'''
+        """Represents the 实用信息 section in the nav menu. A combination of Facts and Planning?"""
         def __init__(self, dr: Drivery):
             self.dr = dr
             self.element = self.dr.flashy_find_element('#nav-main-panel-2')
@@ -401,8 +405,8 @@ class NavMenu(WrappedElement):
             attach_fancy_links(self, ['weather', 'visa-information', 'embassy'])
 
     class ExploreAndPlan(NavSection):
-        '''Represents the 探索及计划行程 section in the nav menu.
-        Things to do, Itineraries, Campaigns and some other miscellaniea.'''
+        """Represents the 探索及计划行程 section in the nav menu.
+        Things to do, Itineraries, Campaigns and some other miscellaniea."""
         def __init__(self, dr: Drivery):
             self.dr = dr
             self.element = self.dr.flashy_find_element('#nav-main-panel-3')
@@ -417,6 +421,13 @@ class NavMenu(WrappedElement):
                                 'specialoffers', 'hertzselfdriving', 'download', 'follow-us'],
                          selector='[href*="{0}.html"] p')
             attach_fancy_links(self, ['aquatic', 'city-journeys', 'kdp'])
+
+    # INV ones. ALso: gggggggh, no unique classes or ids.
+    class WhyAustralia(NavSection):
+        """Represents the Why Australia section in the nav menu."""
+        def __init__(self, dr: Drivery):
+            self.dr = dr
+            self.element = self.dr.blip_element(self.dr.quietly_find_elements('.nav-toggle-panel')[1])
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.

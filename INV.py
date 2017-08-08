@@ -3,40 +3,33 @@
 import unittest
 from collections import OrderedDict
 from drivery import Drivery
-from selene import tidy_error
+import selene
 import components as CP
 
 # A mapping of the test names to their abbreviations
 invnames = OrderedDict(
     [('SPL', 'test_01_Splash_Page'),])
 
-class INV(unittest.TestCase): # pylint: disable=R0904
+class INV(selene.MyTestCase): # pylint: disable=R0904
     """The Test Suite for the Investment regression"""
-    def __init__(self, name: str, glob: dict, result: 'MyTestResult'):
-        super().__init__(methodName=name)
-        self.globs = glob
-        self.result = result
-
-    def setUp(self) -> None:
-        """Called just before each test is run, sets up the browser and test records"""
-        # Initialise the browser connection.
-        self.verificationErrors = []    # Keep a list of everything that went wrong.
-        self.accept_next_alert = True
-        self.dr = Drivery(self.globs)
+    def test_01_Navigation(self) -> None:
+        """Checks the various logos and links in the header"""
         self.dr.open_home_page()
+        # Click the logo link
+        CP.NavMenu(self.dr).logo().click()
+        with self.restraint('Logo link did not go to homepage'):
+            self.assertEqual(self.globs['locale_url'], self.dr.current_url())
 
-    def tearDown(self) -> None:
-        """Called after finishing each test, closes the browser and counts up the errors"""
-        self.dr.close()
-        self.maxDiff = None
-        for err in self.verificationErrors:
-            self.result.addFailure(self, err)
+        # Click the Invest In Australia site link
+        CP.NavMenu(self.dr).current().click()
+        with self.restraint('Invest In Australia link did not link to Investment Site'):
+            self.assertEqual(self.globs['locale_url'], self.dr.current_url())
 
-    def add_error(self) -> None:
-        """Adds an error to the errors list. Shortcut"""
-        # from selene import tidy_error
-        self.verificationErrors.append(tidy_error())
+        # Click the 中国大陆 (简体中文) link
+        CP.NavMenu(self.dr).invcn().click()
+        with self.restraint('INV CN Link did not open in new tab',
+                            AssertionError='INV CN Link did not link to the CN Investment Site'):
+            self.dr.switch_to_window(1)
+            self.assertEqual(self.globs['base_url'] + '/zh.html', self.dr.current_url())   # uh
 
-    # Tests start here.
-    def test_01_TA_Logo_Link(self) -> None:
-        """Checks the TA logo in the header"""
+        self.dr.switch_to_window(0)

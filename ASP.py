@@ -1,11 +1,11 @@
 """The test suite for the ASP website regression."""
 
 import random
-import unittest
 from collections import OrderedDict
-from drivery import Drivery, Email
+from drivery import Email
 import modules as MOD
 import components as CP
+import selene
 
 # A mapping of the test names to their abbreviations
 aspnames = OrderedDict(
@@ -22,34 +22,8 @@ aspnames = OrderedDict(
      ('FPW', 'test_23_Forgotten_Password'), ('CPW', 'test_24_Change_Password'),
      ('CMP', 'test_25_Campaign')])
 
-class ASP(unittest.TestCase): # pylint: disable=R0904
-    """The Test Suite for the ASP regresseion. Test methods are numbered because HipTest."""
-    def __init__(self, name: str, glob: dict, result: 'MyTestResult'):
-        super().__init__(methodName=name)
-        self.globs = glob
-        self.result = result
-
-    def setUp(self) -> None:
-        """Called just before each test is run, sets up the browser and test records."""
-        # Initialise the browser connection.
-        self.verificationErrors = []    # Keep a list of everything that went wrong.
-        self.accept_next_alert = True
-        self.dr = Drivery(self.globs)
-
-    def tearDown(self) -> None:
-        """Called after finishing each test, closes the browser and counts up the errors."""
-        self.dr.close()
-        self.maxDiff = None
-        for err in self.verificationErrors:
-            self.result.addFailure(self, err)
-
-    def add_error(self, message=None) -> None:
-        """Adds an error to the errors list. Shortcut.
-        message is a more readable Error message"""
-        from selene import tidy_error
-        self.verificationErrors.append(('' + message +':\n' if message else '') + tidy_error())
-
-    # Tests start here.
+class ASP(selene.MyTestCase): # pylint: disable=R0904
+    """The Test Suite for the ASP regression."""
     def test_01_Splash_Page(self) -> None:
         """Tests the Splash Page."""
         # Open the splash page.
@@ -804,7 +778,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             self.assertSetEqual({'mod1', 'mod2', 'mod3', modn, modq}, profile.module_badges(),
                                 'The Profile should contain the badges of the completed modules.')
         except NameError:
-            self.add_error('Did not finish the modules, but do have ' + str(profile.module_badges()))
+            self.add_error("Didn't finish the modules, but do have " + str(profile.module_badges()))
 
         # And you should have a Certification of Qualification.
         profile.download_certificate()
@@ -952,9 +926,9 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
                 # Product Page should have a unique Code, which also should not be N/A or null.
                 code = product.unique_code()
                 self.assertNotIn('N/A', code,
-                                 "It's important that the code not be 'N/A'. That isn't unique. ("+prodname+")")
+                                 "Product code has to be unique. 'N/A' is not. ("+prodname+")")
                 self.assertNotIn('null', code,
-                                 "It's important that the code not be 'null'. That isn't unique. ("+prodname+")")
+                                 "Product code has to be unique. 'null' is not. ("+prodname+")")
                 # Select a Quantity.
                 product.select_max_quantity()
                 # Click the Add To Cart button.
@@ -992,8 +966,8 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
                     product = CP.AussieStore.ProductPage(self.dr)
                     product.select_max_quantity()
                     # A panel should pop up, notifying that Maximum Quantity was exceeded.
-                    self.assertFalse(product.add_to_cart(),
-                                     "Shouldn't be able to add beyond max quantity, shows a popup. ("+prodname+")")
+                    self.assertFalse(product.add_to_cart(), "Shouldn't be able to add beyond " +
+                                     "max quantity, shows a popup. (" + prodname + ")")
                 # Back to Category Page, try the next one.
                 CP.AussieStore.CategoriesMenu(self.dr).goto_iteree(category)
                 grid = CP.AussieStore.ProductGrid(self.dr)

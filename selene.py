@@ -11,6 +11,7 @@ import unittest
 import configparser
 from typing import Tuple
 from collections import OrderedDict
+from contextlib import contextmanager
 from multiprocessing import cpu_count, Pool
 import drivery as DR
 import modules as MOD
@@ -55,6 +56,46 @@ def launch_test_suite(args: dict) -> list:
         # If there is an interrupt, shut down everything, that was the Cancel Run signal.
         pool.terminate()
         sys.exit()
+
+class MyTestCase(unittest.TestCase):
+    """A customised test case, to use my custom error handling"""
+    def __init__(self, name: str, glob: dict, result: 'MyTestResult'):
+        super().__init__(methodName=name)
+        self.globs = glob
+        self.result = result
+
+    def setUp(self) -> None:
+        """Called just before each test is run, sets up the browser and test records."""
+        # Initialise the browser connection.
+        self.verificationErrors = []    # Keep a list of everything that went wrong.
+        self.accept_next_alert = True
+        self.dr = DR.Drivery(self.globs)
+
+    def tearDown(self) -> None:
+        """Called after finishing each test, closes the browser and counts up the errors."""
+        self.dr.close()
+        self.maxDiff = None
+        for err in self.verificationErrors:
+            self.result.addFailure(self, err)
+
+    @contextmanager
+    def restraint(self, msg, **errors):
+        """Shortcut for the error handling. Put this in a with statement, it'll log any error.
+        msg is the default message, provide alternate messages for specific errors with the kwargs.
+        Something like ZeroDivisionError="Can't divide by zero" """
+        try:
+            yield
+        except:
+            erty = sys.exc_info()[0].__name__
+            if errors.get(erty):
+                self.add_error(errors[erty])
+            else:
+                self.add_error(msg)
+
+    def add_error(self, message=None) -> None:
+        """Adds an error to the errors list. Shortcut.
+        message is a more readable Error message"""
+        self.verificationErrors.append(('' + message +':\n' if message else '') + tidy_error())
 
 class MyTestRunner(unittest.TextTestRunner):
     def __init__(self, *args, **kwargs):
@@ -226,6 +267,8 @@ def launch_test(args) -> Tuple[str, str, dict]:
         except Exception as ex:
             print("Failed to save the output file:", ex)
         return (browser, locale, result.resultsList)
+
+
 
 def tidy_error(ex=None) -> str:
     """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI

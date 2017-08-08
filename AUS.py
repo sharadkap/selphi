@@ -3,8 +3,8 @@
 import random
 import unittest
 from collections import OrderedDict
-from drivery import Drivery
 import components as CP
+import selene
 
 # A mapping of the test names to the abbreviations.
 ausnames = OrderedDict(
@@ -13,32 +13,8 @@ ausnames = OrderedDict(
      ('WYC', 'test_07_wycs'), ('OFF', 'test_08_special_offers'), ('BRT', 'test_09_brightcove'),
      ('BVD', 'test_10_banner_video'), ('XPL', 'test_11_explore')])
 
-class AUS(unittest.TestCase):
-    """The Test Suite for the AUS regression. Tests methods are numbered because HipTest."""
-    def __init__(self, name, glob, result):
-        super().__init__(methodName=name)
-        self.globs = glob
-        self.result = result
-
-    def setUp(self):
-        """Called just before each test is run, sets up the browser and test records."""
-        self.verificationErrors = []    # Keep a list of everything that went wrong.
-        self.accept_next_alert = True
-        self.dr = Drivery(self.globs)
-        self.dr.open_home_page()
-
-    def tearDown(self):
-        """Called after finishing each test, closes the browser and counts up the errors."""
-        self.dr.close()
-        self.maxDiff = None
-        for err in self.verificationErrors:
-            self.result.addFailure(self, err)
-
-    def add_error(self) -> None:
-        """Adds an error to the errors list. Shortcut."""
-        from selene import tidy_error
-        self.verificationErrors.append(tidy_error())
-
+class AUS(selene.MyTestCase):
+    """The Australia.com test cases."""
     def test_01_social(self):   # Most of those branches are try/except. pylint: disable=R0912
         """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.
         Does not test the QR code links, can't seem to do that."""
@@ -218,8 +194,8 @@ class AUS(unittest.TestCase):
             # Should link to homepage
             self.assertEqual(self.dr.current_url(), self.globs['locale_url'])
 
-            # Click the Holiday In Australia link in the header
-            CP.NavMenu(self.dr).holiday().click()
+            # Click the Holiday In Australia link in the header, should be the highlit one
+            CP.NavMenu(self.dr).current().click()
             # Should link to homepage.
             self.assertEqual(self.dr.current_url(), self.globs['locale_url'])
 

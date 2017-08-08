@@ -12,15 +12,15 @@ Placeholder for Python Selenium scripts
   * `pip install beautifulsoup4`
 3. Download the WebDriver application for the browser(s) you intend to use, and ensure the executable is located on your PATH.
   * For example, place it in the Scripts directory of your Python installation.
-	* IE also requires that Protected Mode is set to the same value for every Security Level, set that in the Security tab in IE's Internet Options dialog. This setting has a habit of turning itself off, so be sure to check each time.
+  * IE also requires that Protected Mode is set to the same value for every Security Level, set that in the Security tab in IE's Internet Options dialog. This setting has a habit of turning itself off, so be sure to check each time.
 4. Clone or download this repository to some location in which you have file create/write access.
 
 ## Execution
 The test suite can be executed in two main ways: by running the `fenester.py` file, or by running the `selene.py` file.
 * The latter method will begin a test run with the settings as defined in the `test.properties` file.
-** To customise the test suite, edit the `test.properties` file, there should be examples and explanations already in there.
+  * To customise the test suite, edit the `test.properties` file, there should be examples and explanations already in there.
 * The former method will open up a dialog prepopulated with the `test.properties` settings, which can then be further modified in a more(maybe) user-friendly manner.
-** Changes made in this window will not be saved to the properties file, you will still have to edit that to set the default values.
+  * Changes made in this window will not be saved to the properties file, you will still have to edit that to set the default values.
 
 The ASP Modules test suite can currently only be run via the `modules.py` file, and even then, via the command line:
 * The `modulescripts.py` file contains the customisable values, rather more involved, due to the complexity of module hosting. However, the modules to test, which locales to test in, and the browsers to use are currently still command line arguments.

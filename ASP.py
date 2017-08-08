@@ -24,10 +24,10 @@ aspnames = OrderedDict(
 
 class ASP(unittest.TestCase): # pylint: disable=R0904
     """The Test Suite for the ASP regresseion. Test methods are numbered because HipTest."""
-    def __init__(self, name: str, glob: dict):
-        # super(ASP, self, name).__init__()
+    def __init__(self, name: str, glob: dict, result: 'MyTestResult'):
         super().__init__(methodName=name)
         self.globs = glob
+        self.result = result
 
     def setUp(self) -> None:
         """Called just before each test is run, sets up the browser and test records."""
@@ -40,8 +40,8 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         """Called after finishing each test, closes the browser and counts up the errors."""
         self.dr.close()
         self.maxDiff = None
-        self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
-                         ' assertions. Hopefully the custom messages are helpful enough.')
+        for err in self.verificationErrors:
+            self.result.addFailure(self, err)
 
     def add_error(self, message=None) -> None:
         """Adds an error to the errors list. Shortcut.
@@ -805,6 +805,9 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
                                 'The Profile should contain the badges of the completed modules.')
         except NameError:
             self.add_error('Did not finish the modules, but do have ' + str(profile.module_badges()))
+
+        # And you should have a Certification of Qualification.
+        profile.download_certificate()
 
     def test_15_Aussie_Specialist_Club(self):
         """Checks the Aussie Specialist Club nav menu links."""

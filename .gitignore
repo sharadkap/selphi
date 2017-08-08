@@ -3,6 +3,7 @@ results_archive/
 geckodriver.log
 debug.log
 __pycache__/
+REGR*.txt
 *.tap
 .cache/
 config.txt

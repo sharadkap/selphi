@@ -5,21 +5,21 @@ import os
 import io
 import sys
 import time
+import enum
 import signal
 import unittest
 import configparser
 from typing import Tuple
-from multiprocessing import cpu_count
-from multiprocessing.pool import Pool
-import tap
+from collections import OrderedDict
+from multiprocessing import cpu_count, Pool
 import drivery as DR
 import modules as MOD
 
-import fenester
 from ASP import ASP, aspnames
 from AUS import AUS, ausnames
 
 DEBUG = False
+STATES = enum.Enum('STATES', 'PASS SKIP FAIL ERROR')
 
 def main() -> None:
     """If selene.py is the entrypoint, read the settings from the config file and run the tests."""
@@ -38,7 +38,7 @@ def test_dr() -> Tuple[dict, DR.Drivery]:
     d['locale_url'] = d['base_url'] + d['locale']
     return d, DR.Drivery(d)
 
-def launch_test_suite(args: dict) -> None:
+def launch_test_suite(args: dict) -> list:
     """Set up the multiprocessing constructure, and kick off all of the tests."""
     outdir = os.path.split(__file__)[0]
     # Each locale and browser combination is to be run in parallel, break out the MultiProcessing.
@@ -49,15 +49,137 @@ def launch_test_suite(args: dict) -> None:
                                            for loc in args['locales'] for bro in args['browsers']])
         while True:     # But check every so often if they are all done.
             if asy.ready():
-                # fenester.fenestrate(asy.get())  # If so, cool, let's go.
-                return
+                return asy.get()  # If so, cool, let's go.
             time.sleep(1) # If not, wait a second and check again. This doesn't block the interrupt.
-
-    except:   # If there is an interrupt, shut down everything, that was the Cancel Run signal.
+    except KeyboardInterrupt:
+        # If there is an interrupt, shut down everything, that was the Cancel Run signal.
         pool.terminate()
-        raise
+        sys.exit()
 
-def launch_test(args) -> None:
+class MyTestRunner(unittest.TextTestRunner):
+    def __init__(self, *args, **kwargs):
+        super(MyTestRunner, self).__init__(*args, **kwargs)
+        self.result = self._makeResult()
+
+    def run(self, test):
+        "Run the given test case or test suite. All this overload for one measly line."
+        import warnings
+        from unittest.signals import registerResult
+        # result = self._makeResult()   Move this line into the init so I can mess with it interim.
+        registerResult(self.result)
+        self.result.failfast = self.failfast
+        self.result.buffer = self.buffer
+        self.result.tb_locals = self.tb_locals
+        with warnings.catch_warnings():
+            if self.warnings:
+                warnings.simplefilter(self.warnings)
+                if self.warnings in ['default', 'always']:
+                    warnings.filterwarnings('module',
+                                            category=DeprecationWarning,
+                                            message=r'Please use assert\w+ instead.')
+            startTime = time.time()
+            startTestRun = getattr(self.result, 'startTestRun', None)
+            if startTestRun is not None:
+                startTestRun()
+            try:
+                test(self.result)
+            finally:
+                stopTestRun = getattr(self.result, 'stopTestRun', None)
+                if stopTestRun is not None:
+                    stopTestRun()
+            stopTime = time.time()
+        timeTaken = stopTime - startTime
+        self.result.printErrors()
+        if hasattr(self.result, 'separator2'):
+            self.stream.writeln(self.result.separator2)
+        run = self.result.testsRun
+        self.stream.writeln("Ran %d test%s in %.3fs" %
+                            (run, run != 1 and "s" or "", timeTaken))
+        self.stream.writeln()
+
+        expectedFails = unexpectedSuccesses = skipped = 0
+        try:
+            results = map(len, (self.result.expectedFailures,
+                                self.result.unexpectedSuccesses,
+                                self.result.skipped))
+        except AttributeError:
+            pass
+        else:
+            expectedFails, unexpectedSuccesses, skipped = results
+
+        infos = []
+        if not self.result.wasSuccessful():
+            self.stream.write("FAILED")
+            failed, errored = len(self.result.failures), len(self.result.errors)
+            if failed:
+                infos.append("failures=%d" % failed)
+            if errored:
+                infos.append("errors=%d" % errored)
+        else:
+            self.stream.write("OK")
+        if skipped:
+            infos.append("skipped=%d" % skipped)
+        if expectedFails:
+            infos.append("expected failures=%d" % expectedFails)
+        if unexpectedSuccesses:
+            infos.append("unexpected successes=%d" % unexpectedSuccesses)
+        if infos:
+            self.stream.writeln(" (%s)" % (", ".join(infos),))
+        else:
+            self.stream.write("\n")
+        return self.result
+
+class MyTestResult(unittest.TextTestResult):
+    """Like a TextTestResult, but it actually remembers how all the tests went"""
+    def __init__(self, *args, **kwargs):
+        self.resultsList = OrderedDict()
+        super(MyTestResult, self).__init__(*args, **kwargs)
+
+    def _exc_info_to_string(self, err, test):
+        """Converts a sys.exc_info()-style tuple of values into a string."""
+        return tidy_error(err)
+
+    def addResult(self, test, status, info):
+        """Add a test's result to the record.
+        Ends up something like {name: [(status, info), (status, info)]}"""
+        name = test.id()
+        if self.resultsList.get(name):
+            self.resultsList[name].append((status, info))
+        else:
+            self.resultsList[name] = [(status, info)]
+
+    def addSuccess(self, test):
+        """If a test passed, make a note of that"""
+        super(MyTestResult, self).addSuccess(test)
+        self.addResult(test, STATES.PASS, "Test Passed")
+
+    def addSkip(self, test, reason):
+        """If a test was skipped, make a note of that"""
+        super(MyTestResult, self).addSkip(test, reason)
+        self.addResult(test, STATES.SKIP, reason)
+
+    def addFailure(self, test, err):
+        """If a test failed, make a note of that"""
+        super(MyTestResult, self).addFailure(test, err)
+        self.addResult(test, STATES.FAIL, tidy_error(err))
+
+    def addError(self, test, err):
+        """If a test crashed, make a note of that"""
+        super(MyTestResult, self).addError(test, err)
+        self.addResult(test, STATES.ERROR, tidy_error(err))
+
+    def printErrors(self):
+        """After running the test, print out the full results"""
+        self.stream.writeln()
+        for name in self.resultsList:
+            self.stream.writeln(self.separator1)
+            self.stream.writeln(name)
+            for status, info in self.resultsList[name]:
+                self.stream.writeln(self.separator2)
+                self.stream.writeln(status.name)
+                self.stream.writeln(info)
+
+def launch_test(args) -> Tuple[str, str, dict]:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
@@ -65,12 +187,6 @@ def launch_test(args) -> None:
     if globs['debug']:
         global DEBUG
         DEBUG = True
-    # Instantiate the test suites, and give them their process-unique globals
-    site = globs['site']
-    if site == 'ASP':
-        names = [ASP(aspnames[x], globs) for x in globs['tests'] or aspnames]
-    elif site == 'AUS':
-        names = [AUS(ausnames[x], globs) for x in globs['tests'] or ausnames]
     # Do a bunch of method overrides to get it to work properly.
     perform_hacks()
     # Set up the run settings.
@@ -88,37 +204,37 @@ def launch_test(args) -> None:
 
     # Create the test runner, choose the output path: right next to the test script file.
     with io.StringIO() as buf:
-        # TAP uses Module State, have to reset it for each test.
-        tap.runner._tracker = tap.tracker.Tracker()     #pylint: disable=W0212
-        runner = tap.TAPTestRunner()
-        runner.set_format('Result of: {method_name} - {short_description}')
-        runner.set_stream(True)
-        # Bit of a hack, but it doesn't support A Proper Way to reassign output, so.
-        tap.runner._tracker.stream = buf    # pylint: disable=W0212
-        # For whatever reason, there are two output streams. Ignore this one, I guess.
-        runner.stream.stream = sys.stdout
+        # A custom hack to enable multiple-test-failues
+        runner = MyTestRunner(stream=buf, resultclass=MyTestResult)
+        # Instantiate the test suites, and give them their process-unique globals and access to things
+        site = globs['site']
+        if site == 'ASP':
+            names = [ASP(aspnames[x], globs, runner.result) for x in globs['tests'] or aspnames]
+        elif site == 'AUS':
+            names = [AUS(ausnames[x], globs, runner.result) for x in globs['tests'] or ausnames]
         tests = unittest.TestSuite(names)
         suite = unittest.TestSuite()
         suite.addTests(tests)
         result = runner.run(suite)
 
         # Give a unique name to the output file so you don't overwrite it every time!
+        filna = 'REGR_{0}_{1}_{2}_{3}.txt'.format(locale[1:], site, browser,
+                                                  time.strftime('%Y%m%d_%H%M'))
         try:
-            with open(os.path.join( # Bleh.
-                outdir, 'REGR_{0}_{1}_{2}_{3}.tap'.format(
-                    locale.replace('/', ''), site, browser, time.strftime('%Y%m%d_%H%M'))),
-                      mode='w', encoding='UTF-8') as newfil:
+            with open(os.path.join(outdir, filna), mode='w', encoding='UTF-8') as newfil:
                 newfil.write(buf.getvalue())
-            # return result
         except Exception as ex:
-            print(ex)
-            # return ex
+            print("Failed to save the output file:", ex)
+        return (browser, locale, result.resultsList)
 
 def tidy_error(ex=None) -> str:
     """Reads exception info from sys.exc_info and only shows the lines that are from SELPHI
     Unless DEBUG is True, in which case, it prints the enrirety of the trace."""
     from os.path import join, abspath, dirname
     from traceback import extract_tb, format_list, format_exception_only
+    # If the exception is already pasted into a string, just return that.
+    if type(ex) is str:
+        return ex
 
     show = join(dirname(abspath(__file__)), '')
 
@@ -126,7 +242,8 @@ def tidy_error(ex=None) -> str:
         return name and name.startswith(show)
 
     def _print(typ, value, tb):     # If not debug, generator expression: filter trace to my files.
-        show = extract_tb(tb) if DEBUG else (fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
+        show = extract_tb(tb) if DEBUG else (
+            fs for fs in extract_tb(tb, limit=3) if _check_file(fs.filename))
         fmt = format_list(show) + format_exception_only(typ, value)
         return ''.join((f.strip('"\'').replace('\\n', '') for f in fmt))
 
@@ -145,31 +262,6 @@ def perform_hacks() -> None:
             args[0].parent.execute_script(DR.SCROLL_SCRIPT, args[0])
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
-
-    # By default, it will print out the full list of test failures at the end of the test.
-    # This is a terrible idea, as that list tends to be longer than the cmd window buffer.
-    # Especially when multiple test runs are underway. Here, set to skip that step.
-    def newprinterrors(self):
-        """Print a newline to the stream if in dot-drawing mode. Do not print the error report."""
-        if self.dots or self.showAll:
-            self.stream.writeln()
-    unittest.TextTestResult.printErrors = newprinterrors
-
-    # Striiped this entire method right out.
-    # The original method contains this unused argument, and yes, it isn't used there either.
-    def newex(self, err, test):     # pylint: disable=W0613
-        """Converts a sys.exc_info()-style tuple of values into a string."""
-        return tidy_error(err)
-    # And, override the existing method.
-    # I do need to access this private property to correctly HAX it into working.
-    # pylint: disable=W0212
-    unittest.result.TestResult._exc_info_to_string = newex
-    # Also, tap has its own renderer as well, so have to overwrite that too.
-    def newf(exc):
-        """Rewrite this method so as to remove the traceback."""
-        lines = tidy_error(exc).splitlines(True)
-        return tap.formatter.format_as_diagnostics(lines)
-    tap.formatter.format_exception = newf
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""

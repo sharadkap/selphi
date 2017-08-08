@@ -20,7 +20,7 @@ import bs4
 
     ###Some Magic Numbers, default values.###
 # """How long, in seconds, to search the DOM before declaring an Element Not Found."""
-LONG_WAIT = 60
+LONG_WAIT = 90
 # """Time in seconds to poll for something that should be absent or already here."""
 SHORT_WAIT = 2
 
@@ -224,7 +224,7 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         self.driver.execute_script(BLIP_SCRIPT, to_list(elle))
         return elle
 
-    def check_visible_quick(self, selector: str, within: WebElement=None) -> bool:
+    def check_visible_quick(self, selector: str, within: WebElement = None) -> bool:
         """Check for an element without potentially spending a lot of time polling the DOM.
         Ususally used when asserting an element's absence, saves waiting the full timeout."""
         within = within or self.driver
@@ -242,25 +242,25 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         ActionChains(self.driver).move_to_element(element).click().perform()
 
     @find_error_improver
-    def quietly_find_element(self, selector: str, within: WebElement=None) -> WebElement:
+    def quietly_find_element(self, selector: str, within: WebElement = None) -> WebElement:
         """Finds a single element matching a CSS selector, optionally within a given element."""
         within = within or self.driver
         return within.find_element_by_css_selector(selector)
 
     @find_error_improver
-    def quietly_find_elements(self, selector: str, within: WebElement=None) -> ELEMENT_LIST:
+    def quietly_find_elements(self, selector: str, within: WebElement = None) -> ELEMENT_LIST:
         """Finds multiple elements that match a CSS selector, optionally within a given element."""
         within = within or self.driver
         return to_list(within.find_elements_by_css_selector(selector))
 
     @find_error_improver
-    def flashy_find_element(self, selector: str, within: WebElement=None) -> WebElement:
+    def flashy_find_element(self, selector: str, within: WebElement = None) -> WebElement:
         """Finds a single element matching a CSS selector, highlights it as well."""
         within = within or self.driver
         return self.blip_element(within.find_element_by_css_selector(selector))
 
     @find_error_improver
-    def flashy_find_elements(self, selector: str, within: WebElement=None) -> ELEMENT_LIST:
+    def flashy_find_elements(self, selector: str, within: WebElement = None) -> ELEMENT_LIST:
         """Finds multiple elements that match a CSS selector, highlights them as well.
 
         The browser-provided webdriver self.driver implementations seem to not return a
@@ -269,7 +269,7 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         return self.blip_element(to_list(within.find_elements_by_css_selector(selector)))
 
     @find_error_improver
-    def find_visible_element(self, selector: str, within: WebElement=None) -> WebElement:
+    def find_visible_element(self, selector: str, within: WebElement = None) -> WebElement:
         """Given a selector that could match multiple different elements,
         return the one that is currently visible, not the first one that matches."""
         within = within or self.driver
@@ -317,7 +317,7 @@ class Email:
                 locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
         return locs
 
-    def get_new_messages(self, really_get_new: bool=True) -> List[str]: # pylint: disable=E1126
+    def get_new_messages(self, really_get_new: bool = True) -> List[str]: # pylint: disable=E1126
         """Polls the IMAP server untill a (maybe) new email(s) are found, then
         attempts to make sense of their ridiculous transmission formatting."""
         results = []
@@ -338,7 +338,7 @@ class Email:
                         results.append(quopri.decodestring(ema[1]).decode(LATIN_EMAIL_ENCODING))
         return results
 
-    def email_loop(self, imap: imaplib.IMAP4_SSL, really_get_new: bool=True) -> bytes:
+    def email_loop(self, imap: imaplib.IMAP4_SSL, really_get_new: bool = True) -> bytes:
         """SEARCHes the server, checking for (maybe) new email. Put this in a wait-until loop."""
         imap.noop()
         # Returns a tuple. (Result_code, Actual_results). Actual_results is also a list.

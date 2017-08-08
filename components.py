@@ -1165,6 +1165,11 @@ class Profile(WrappedElement):
         return {x.get_attribute('alt').split('_')[-1] for x in self.dr.flashy_find_elements(
             '.Achievements .profile-status img', self.element)}
 
+    def download_certificate(self) -> None:
+        """Clicks the Download Certificate link."""
+        link = self.dr.flashy_find_element('a[href*="certificate.pdfgenerator"]', self.element)
+        link.click()
+
 class TrainingModule(WrappedElement):
     """Represents a Module. Instantiating will switch into the module frame, so watch it."""
     def __init__(self, dr: Drivery):

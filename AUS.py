@@ -15,9 +15,10 @@ ausnames = OrderedDict(
 
 class AUS(unittest.TestCase):
     """The Test Suite for the AUS regression. Tests methods are numbered because HipTest."""
-    def __init__(self, name, glob):
+    def __init__(self, name, glob, result):
         super().__init__(methodName=name)
         self.globs = glob
+        self.result = result
 
     def setUp(self):
         """Called just before each test is run, sets up the browser and test records."""
@@ -30,12 +31,12 @@ class AUS(unittest.TestCase):
         """Called after finishing each test, closes the browser and counts up the errors."""
         self.dr.close()
         self.maxDiff = None
-        self.assertEqual([], self.verificationErrors, 'This will fail if there were any nonlethal'
-                         ' assertions. Hopefully the custom messages are helpful enough.')
+        for err in self.verificationErrors:
+            self.result.addFailure(self, err)
 
     def add_error(self) -> None:
         """Adds an error to the errors list. Shortcut."""
-        from selene import tidy_error    # Can I do this?
+        from selene import tidy_error
         self.verificationErrors.append(tidy_error())
 
     def test_01_social(self):   # Most of those branches are try/except. pylint: disable=R0912

@@ -983,7 +983,7 @@ class SignIn(WrappedElement):
         self.dr = asp.dr
         self.dr.flashy_find_element('.link-signin-text').click()
         self.element = self.dr.flashy_find_element('.fancybox-wrap')
-        attach_links(self, ['forgotten-username', 'forgotten-password'])
+        attach_links(self, ['forgotten-username', 'forgotten-password', 'resend'])
         self.add_error = asp.add_error
 
     def sign_in(self, user: str, passw: str, new_password=False) -> None:
@@ -1022,7 +1022,8 @@ class SignInUnsafe(WrappedElement):
             self.dr.wait_for_page()
 
 class ForgottenForm(WrappedElement):
-    """Represents the Forgotten Username/Password form. They are the same component."""
+    """Represents the Forgotten Username/Password / Resend Registration form.
+    They are the same component."""
     def __init__(self, dr: Drivery):
         self.dr = dr
         self.element = self.dr.flashy_find_element('#forgotform')
@@ -1770,6 +1771,10 @@ class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: 
     def password(self):
         """Opens the Forgotten Password page."""
         self.dr.get(self.dr.locale_url + '/forgotten-password.html')
+
+    def resend(self):
+        """Opens the Resend Verification Email page."""
+        self.dr.get(self.dr.locale_url + '/resend-verification-email.html')
 
     def change(self):
         """Opens the Change Password page."""

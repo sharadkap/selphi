@@ -43,10 +43,11 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         for err in self.verificationErrors:
             self.result.addFailure(self, err)
 
-    def add_error(self) -> None:
-        """Adds an error to the errors list. Shortcut."""
+    def add_error(self, message=None) -> None:
+        """Adds an error to the errors list. Shortcut.
+        message is a more readable Error message"""
         from selene import tidy_error
-        self.verificationErrors.append(tidy_error())
+        self.verificationErrors.append(('' + message +':\n' if message else '') + tidy_error())
 
     # Tests start here.
     def test_01_Splash_Page(self) -> None:
@@ -57,16 +58,17 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         langsel = CP.SplashSelect(self.dr)
         try:
             self.assertSetEqual(langsel.cn_locale_set if self.globs['cn_mode']
-                                else langsel.locale_set, langsel.get_values(),
-                                'The language selector should contain all locales.')
+                                else langsel.locale_set, langsel.get_values())
         except Exception:
-            self.add_error()
+            self.add_error('The language selector did not contain all locales')
         # Select the country from the dropdown.
         langsel.choose_locale()
         # Page should redirect to its respective locale.
         self.dr.wait_for_page()
-        self.assertIn(self.globs['locale'], self.dr.fix_url(self.dr.current_url()),
-                      'The selected locale should link to that locale.')
+        try:
+            self.assertIn(self.globs['locale'], self.dr.fix_url(self.dr.current_url()))
+        except Exception:
+            self.add_error('The selected locale option did not link to the right page')
 
     def test_02_Homepage(self) -> None:
         """Tests the Welcome Page content."""
@@ -75,25 +77,27 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         try:
             video = CP.WelcomeVideo(self.dr)
         except Exception:
-            self.add_error()
+            self.add_error('Video not present on the homepage')
         else:
             # Play the video.
             video.play()
             # Video loads and plays. Again, there are still other things to test.
             try:
-                self.dr.wait_until(video.is_playing, 'After clicking Play, the video should play.')
+                self.dr.wait_until(video.is_playing, 'Waiting until video is playing')
             except Exception:
-                self.add_error()
+                self.add_error('Video not playing after clicking play')
         # Login and Register buttons should be present in the body content.
         try:
             CP.BodyLoginButton(self.dr)
             CP.BodyRegisterButton(self.dr)
         except Exception:
-            self.add_error()
+            self.add_error('Login and Register buttons missing from page')
         # The What You Can See Mosaic is displayed, contains five tiles.
         mosaic = CP.WhatYouCanSeeMosaic(self.dr)
-        self.assertEqual(mosaic.tile_count(), 5,
-                         'There should be five mosaic tiles on the homepage.')
+        try:
+            self.assertEqual(mosaic.tile_count(), 5)
+        except Exception:
+            self.add_error('Five mosaic tiles were not present on the homepage')
 
     def test_03_Navigation(self) -> None:
         """Checks that the contents of the Signed Out Nav Menu are correct."""
@@ -109,7 +113,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             about.program_faq()
             about.contact_us()
         except Exception:
-            self.add_error()
+            self.add_error('About menu did not contain the right options')
 
         # Click on 'Sales Resources' in the Mega Menu.
         try:
@@ -126,7 +130,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             sales.destination_faq()
             sales.image_and_video_galleries()
         except Exception:
-            self.add_error()
+            self.add_error('Sales Resources menu did not contain the right options')
 
         # Click on 'Training' in the Mega Menu.
         try:
@@ -492,7 +496,25 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         regemail = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
         # In the Registration Confirmation email, click the Activate Account link.
         # Should open the Registration Acknowledgement page, confirming the account is set up.
-        self.dr.get(regemail.activation_link())
+        activa = regemail.activation_link()
+        # Then, go to the Resend Activation page
+        try:
+            CP.SignIn(self).resend().click()
+        except Exception:
+            self.add_error()
+            CP.BackupHrefs(self.dr).resend()
+        # Enter the user's email address into the Forgot Username form.
+        regus = CP.ForgottenForm(self.dr)
+        regus.email(self.globs['email'])
+        # Click the Submit button, a panel should appear confirming submission.
+        regus.submit()
+        # An email should be received at the given address; it's just the registration email again.
+        rerege = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
+        self.assertEqual(activa, rerege.activation_link(),
+                         "The Re Activation email should have the same link as the regular one.")
+
+
+        self.dr.get(activa)
 
     def test_11_Login(self):
         """Tests the Login-related functionality."""
@@ -694,7 +716,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             try:
                 MOD.do_module(self.dr.driver, mod)  # Cheating a little, but w/e
             except Exception:
-                self.add_error()
+                self.add_error('A failure occurred inside the module itself, (ran dofimo)')
                 # There are a lot of things that can go wrong here, just nuke the site from orbit.
                 self.dr.switch_to_frame(None)
                 self.dr.execute_script(dofimo)
@@ -704,7 +726,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             try:
                 CP.NavMenu.Training(self.dr).open().training_summary().click()
             except Exception:
-                self.add_error()
+                self.add_error("Couldn't get to Training Summary from nav")
                 CP.BackupHrefs(self.dr).training()
             modules = CP.TrainingSummary(self.dr)
         # Pre-condition: Should be signed in.
@@ -714,7 +736,7 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         try:
             CP.NavMenu.Training(self.dr).open().training_summary().click()
         except Exception:
-            self.add_error()
+            self.add_error("Couldn't get to Training Summary from nav")
             CP.BackupHrefs(self.dr).training()
 
         # Wrap this whole test in an Oops, It's Not Working? Just Cheat! layer.
@@ -734,19 +756,19 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             try:
                 Email.LocalizedEmail(self.globs, self.dr, self.globs['userid'])
             except Exception:
-                self.add_error()
+                self.add_error("Halfway email didn't come in or was wrong")
 
             modn = modules.module_nsw()
             do_mod_then_back(modn)
 
             # Open this one, but don't finish it.
+            modules.module_vic()
             try:
-                modules.module_vic()
                 # Get back out of the module before you try to access the menu.
                 self.dr.switch_to_frame(None)
                 CP.NavMenu.Training(self.dr).open().training_summary().click()
             except Exception:
-                self.add_error()
+                self.add_error("Couldn't get to Training Summary from nav")
                 CP.BackupHrefs(self.dr).training()
             # Unstarted Modules and Paths should have a New label
             # Started-Not-Finished Modules and Paths should have an Incomplete label
@@ -755,12 +777,12 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
             try:
                 modules.completion_types()
             except Exception:
-                self.add_error()
+                self.add_error('Modules did not have the correct set of states')
 
             modq = modules.module_qld()
             do_mod_then_back(modq)
         except Exception:   # Anything goes wrong with the modules, hack the badges and cugs in.
-            self.add_error()
+            self.add_error('Assignments page broken / modules could not be found (ran dofimo)')
             self.dr.switch_to_frame(None)
             self.dr.execute_script(dofimo)
 
@@ -768,18 +790,21 @@ class ASP(unittest.TestCase): # pylint: disable=R0904
         try:
             Email.LocalizedEmail(self.globs, self.dr, self.globs['userid'])
         except Exception:
-            self.add_error()
+            self.add_error('Qualification email was not received or was wrong')
 
         # Go back to the Profile page.
         try:
             CP.NavMenu(self.dr).profile().click()
         except Exception:
-            self.add_error()
+            self.add_error('Could not get to Profile from nav')
             CP.BackupHrefs(self.dr).profile()
         # The Modules' Completion Badges should be in the Recent Achievements list.
         profile = CP.Profile(self.dr)
-        self.assertSetEqual({'mod1', 'mod2', 'mod3', modn, modq}, profile.module_badges(),
-                            'The Profile should contain the badges of the modules just completed.')
+        try:
+            self.assertSetEqual({'mod1', 'mod2', 'mod3', modn, modq}, profile.module_badges(),
+                                'The Profile should contain the badges of the completed modules.')
+        except NameError:
+            self.add_error('Did not finish the modules, but do have ' + str(profile.module_badges()))
 
         # And you should have a Certification of Qualification.
         profile.download_certificate()

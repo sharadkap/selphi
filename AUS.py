@@ -15,7 +15,7 @@ ausnames = OrderedDict(
 
 class AUS(selene.MyTestCase):
     """The Australia.com test cases."""
-    def test_01_social(self):   # Most of those branches are try/except. pylint: disable=R0912
+    def test_01_social(self):
         """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.
         Does not test the QR code links, can't seem to do that."""
         # Navigate to any page (e.g. http://www.australia.cn/zh-cn/planning/getting-around.html)

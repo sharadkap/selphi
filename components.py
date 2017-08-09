@@ -427,7 +427,36 @@ class NavMenu(WrappedElement):
         """Represents the Why Australia section in the nav menu."""
         def __init__(self, dr: Drivery):
             self.dr = dr
-            self.element = self.dr.blip_element(self.dr.quietly_find_elements('.nav-toggle-panel')[1])
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[1])
+            attach_links(self, [
+                'why-australia', 'resilient-growth-economy', 'easy-place-to-do-business',
+                'globally-significant-tourism-industry', 'strong-performing-accommodation-sector',
+                'aviation-access', 'world-class-tourism-offering', 'strong-events-calendar',
+                'tourism-demand-strategy'], selector='[href*="{0}.html"] p')
+
+    class InvestmentOpportunities(NavSection):
+        """Represents the Investment Opportunities section in the nav menu."""
+        def __init__(self, dr: Drivery):
+            self.dr = dr
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[2])
+            attach_links(self, ['investment-opportunities', 'food-and-wine', 'beaches-and-islands',
+                                'nature-and-outback', 'cities'], selector='[href*="{0}.html"] p')
+
+    class DataRoom(NavSection):
+        """Represents the Investment Opportunities section in the nav menu."""
+        def __init__(self, dr: Drivery):
+            self.dr = dr
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[3])
+            attach_links(self, ['data-room', 'tourism-performance', 'hotel-performance', 'aviation',
+                                'the-markets', 'success-stories',], selector='[href*="{0}.html"] p')
+
+    class AboutUs(NavSection):
+        """Represents the About Us section in the nav menu."""
+        def __init__(self, dr: Drivery):
+            self.dr = dr
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[4])
+            attach_links(self, ['about-us','how-we-can-help','a-national-priority','contact-us',],
+                         selector='[href*="{0}.html"] p')
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.
@@ -857,7 +886,8 @@ class ContactUs(WrappedElement):
         self.dr = dr
         self.element = self.dr.flashy_find_element('a[href*="mailto:"]')
 
-class RegistrationForm(WrappedElement): # They aren't instance variables. pylint: disable=R0902
+class RegistrationForm(WrappedElement):
+     # They aren't instance variables. pylint: disable=R0902
     """Represents the Registration Form"""
     def __init__(self, dr: Drivery):
         self.dr = dr
@@ -1193,7 +1223,7 @@ class TrainingModule(WrappedElement):
         Returns the module code, just to be sure."""
         prop = json.loads(self.dr.quietly_find_element(
             'script[data-scf-json="true"]:not([id*="social"])')
-            .get_attribute('innerText'))['properties']  # the text property isn't good enough, apparently
+                          .get_attribute('innerText'))['properties']
         self.dr.flashy_find_element('.scf-play-button').click()
         # Switch into the frame stack
         self.enter()
@@ -1228,7 +1258,7 @@ class TrainingModule(WrappedElement):
              "updateModuleStatus(setStatusURL,undefined,'{0}',0,false, 0,getModuleID(),'{1}');"
              "switch('{2}'){{case 'mod3':modgo(6);break;default:modgo(4)}};"
              "SCORM2004_objAPI.RunTimeData.CompletionStatus = 'completed';").format(
-                self.code, self.resname, self.id))
+                 self.code, self.resname, self.id))
 
 class TrainingSummary(WrappedElement):
     """Represents the two Training Summary modules list things.

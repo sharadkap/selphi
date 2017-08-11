@@ -6,15 +6,16 @@ import sys
 import tkinter as tk
 import tkinter.ttk as ttk
 from math import ceil
-# from multiprocessing import Process
+from multiprocessing import Pool, cpu_count
 import selene
+from miklase import STATES
 from ASP import aspnames
 from drivery import BROWSERS
 from modulescripts import FANCY_LANGS
 # Too many ancestors. That's external wrapper libraries for you. pylint: disable=R0901
 
-relcol = {selene.STATES.PASS.name: 'green', selene.STATES.SKIP.name: 'grey',
-          selene.STATES.FAIL.name: 'yellow', selene.STATES.ERROR.name: 'red'}
+relcol = {STATES.PASS.name: 'green', STATES.SKIP.name: 'grey',
+          STATES.FAIL.name: 'yellow', STATES.ERROR.name: 'red'}
 
 class TestForm(tk.Frame):
     """A Frame containing a bunch of controls, used to customise test runs."""
@@ -142,15 +143,24 @@ class TestForm(tk.Frame):
         prev = self.master.children.get('!resultsform')
         if prev:
             prev.grid_forget()
-        fenestrate(self.launch_fake_test())
-        # fenestrate(selene.launch_test_suite(args))
+        # fenestrate(self.launch_fake_test())
+        self.launch_test_suite(args)
+
+    def launch_test_suite(self, args) -> None:
+        """Set up the multiprocessing constructure, and kick off all of the tests.
+        It's supposed to be asynchronous, so don't worry about all those extra handles"""
+        outdir = os.path.split(__file__)[0]
+        locs, bros = args['locales'], args['browsers']
+        count = min(cpu_count() * 3, len(locs) * len(bros))   # Make up to 3xcores processes
+        largs = [(loc, bro, outdir, args.copy()) for loc in locs for bro in bros] # Args to pass
+        Pool(count).map_async(selene.launch_test, largs, callback=fenestrate, error_callback=print)
 
     def launch_fake_test(self) -> list:
         """Just so I don't have to do an actual test run each time I test this thing."""
-        return [('Chrome', '/it-it', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
-                ('Chrome', '/en-gb', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
-                ('Firefox', '/it-it', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, 'Could not find element')]}),
-                ('Firefox', '/en-gb', {'Test_01_Something': [(selene.STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(selene.STATES.FAIL, 'Assertion: should not fail'), (selene.STATES.ERROR, '\nFile "C:\\Users\\bzalakos\\Documents\\GitHub\\selphi\\ASP.py", line 799, in test_15_Aussie_Specialist_Club\nclub.click()\nselenium.common.exceptions.WebDriverException: Message: unknown error: Element <li id="nav-main-panel-5" class="has-children" style="animation-duration: 0.5s; animation-name:\nselhian;">...</li> is not clickable at point (1131, 108). Other element would receive the click: <div class="fancybox-overlay fancybox-overlay-fixed" style="width: auto; height: auto; display: block;"></div>\n(Session info: chrome=59.0.3071.115)\n(Driver info: chromedriver=2.30.477700 (0057494ad8732195794a7b32078424f92a5fce41),platform=Windows NT 6.3.9600 x86_64)\n')]})]
+        return [('Chrome', '/it-it', {'Test_01_Something': [(STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(STATES.FAIL, 'Assertion: should not fail'), (STATES.ERROR, 'Could not find element')]}),
+                ('Chrome', '/en-gb', {'Test_01_Something': [(STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(STATES.FAIL, 'Assertion: should not fail'), (STATES.ERROR, 'Could not find element')]}),
+                ('Firefox', '/it-it', {'Test_01_Something': [(STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(STATES.FAIL, 'Assertion: should not fail'), (STATES.ERROR, 'Could not find element')]}),
+                ('Firefox', '/en-gb', {'Test_01_Something': [(STATES.PASS, 'Test Passed')], 'Test_02_Elsething': [(STATES.FAIL, 'Assertion: should not fail'), (STATES.ERROR, '\nFile "C:\\Users\\bzalakos\\Documents\\GitHub\\selphi\\ASP.py", line 799, in test_15_Aussie_Specialist_Club\nclub.click()\nselenium.common.exceptions.WebDriverException: Message: unknown error: Element <li id="nav-main-panel-5" class="has-children" style="animation-duration: 0.5s; animation-name:\nselhian;">...</li> is not clickable at point (1131, 108). Other element would receive the click: <div class="fancybox-overlay fancybox-overlay-fixed" style="width: auto; height: auto; display: block;"></div>\n(Session info: chrome=59.0.3071.115)\n(Driver info: chromedriver=2.30.477700 (0057494ad8732195794a7b32078424f92a5fce41),platform=Windows NT 6.3.9600 x86_64)\n')]})]
 
 class ResultsForm(tk.Frame):
     """A Frame containing a bunch of Frames containing a bunch of Frames"""
@@ -170,8 +180,7 @@ class ResultsForm(tk.Frame):
         self.columnconfigure(1, weight=0)
         self.canvas.grid(row=0, column=0, sticky='nsew')
         self.vsb.grid(row=0, column=1, sticky='nse')
-        self.canvas.create_window((4,4), window=self.frame, anchor="nw",
-                                  tags="self.frame")
+        self.canvas.create_window((4, 4), window=self.frame, anchor="nw", tags="self.frame")
         self.frame.bind("<Configure>", self.onFrameConfigure)
         self.create_widgets(results)
 
@@ -200,8 +209,8 @@ class ResultsForm(tk.Frame):
                     status = status.name
                     tk.Label(panelet.sub_frame, text=status, width=6,
                              background=relcol[status]).grid(row=i, column=0, sticky='nsew')
-                    tk.Label(panelet.sub_frame, text=info, anchor='w', justify='left', wraplength=500
-                            ).grid(row=i, column=1, sticky='nsew')
+                    tk.Label(panelet.sub_frame, text=info, anchor='w', justify='left',
+                             wraplength=500).grid(row=i, column=1, sticky='nsew')
 
 class Collapser(tk.Frame):
     """A tk Frame that can be collapsed and expanded"""

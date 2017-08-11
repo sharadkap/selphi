@@ -120,6 +120,10 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         """It's The Rules"""
         self.driver.refresh()
 
+    def page_title(self) -> str:
+        """Gets the Page Title.        RULES."""
+        return self.driver.title
+
     def get(self, url: str) -> None:
         """For whatever reason, there is no Basic Authentication that works across all browsers.
         This has workarounds for each. Ironically, only IE supports the correct method."""
@@ -145,18 +149,20 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         """Returns the window's vertical scroll position as stated by javascript's window.scrollY"""
         return self.driver.execute_script('return window.scrollY;')
 
-    def wait_for_page(self) -> None:
-        """Holds up execution until the current page's url contains the Last Link value
-        and its    document.readyState is 'complete'. A decent approximation?"""
+    def wait_for_page(self, url=None) -> None:
+        """Holds up execution until the current page's url contains the Last Link value (or, if
+        given, a custom url) and its document.readyState is 'complete'. A decent approximation?"""
         script = 'return document.readyState === "complete";'
+        if url is None:
+            url = self.last_link
         try:
             WebDriverWait(self.driver, LONG_WAIT).until(
-                lambda _: self.last_link in self.current_url())
+                lambda _: url in self.current_url())
             WebDriverWait(self.driver, LONG_WAIT).until(
                 lambda _: self.driver.execute_script(script))
         except TimeoutException:
             raise TimeoutException(
-                'Timed out waiting for {0} to load.'.format(self.last_link)) from None
+                'Timed out waiting for {0} to load.'.format(url)) from None
 
     def wait_until_present(self, selector: str) -> WebElement:
         """Holds up execution until the selectored elment is visibly present.
@@ -364,8 +370,7 @@ class Email:
             """Returns the address of the Click Here To Activate Your Account link."""
             if self.cn_mode:    # China does not have that format of link.
                 return self.email.a['href']
-            else:
-                return self.email.select('a[href*="activation"]')[0]['href']
+            return self.email.select('a[href*="activation"]')[0]['href']
 
     class ForgottenUsernameEmail(LocalizedEmail):    # pylint: disable=R0903
         """Represents the Forgotten Username Email.

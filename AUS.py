@@ -4,7 +4,7 @@ import random
 import unittest
 from collections import OrderedDict
 import components as CP
-import selene
+import miklase
 
 # A mapping of the test names to the abbreviations.
 ausnames = OrderedDict(
@@ -13,7 +13,7 @@ ausnames = OrderedDict(
      ('WYC', 'test_07_wycs'), ('OFF', 'test_08_special_offers'), ('BRT', 'test_09_brightcove'),
      ('BVD', 'test_10_banner_video'), ('XPL', 'test_11_explore')])
 
-class AUS(selene.MyTestCase):
+class AUS(miklase.MyTestCase):
     """The Australia.com test cases."""
     def test_01_social(self):
         """Tests the various Social Sharing components. WeChat/Weibo in CN, ShareThis elsewhere.

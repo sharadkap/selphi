@@ -5,7 +5,7 @@ from collections import OrderedDict
 from drivery import Email
 import modules as MOD
 import components as CP
-import selene
+import miklase
 
 # A mapping of the test names to their abbreviations
 aspnames = OrderedDict(
@@ -22,7 +22,7 @@ aspnames = OrderedDict(
      ('FPW', 'test_23_Forgotten_Password'), ('CPW', 'test_24_Change_Password'),
      ('CMP', 'test_25_Campaign')])
 
-class ASP(selene.MyTestCase): # pylint: disable=R0904
+class ASP(miklase.MyTestCase): # pylint: disable=R0904
     """The Test Suite for the ASP regression."""
     def test_01_Splash_Page(self) -> None:
         """Tests the Splash Page."""

@@ -120,7 +120,8 @@ class WelcomeVideo(WrappedElement):
         return self.dr.quietly_find_element('.vjs-play-control', self.element).is_displayed()
 
 class Hero(WrappedElement):
-    """Represents the Hero Banner of ASP pages, and its Add To Sales Tools button."""
+    """Represents the Hero Banner of ASP pages, and its Add To Sales Tools button.
+    Also represents the Common Hero banner, and its Pin It button. Try not to mix them up."""
     def __init__(self, dr: Drivery):
         self.dr = dr
         self.element = self.dr.flashy_find_element('.hero-video-copy')
@@ -131,9 +132,15 @@ class Hero(WrappedElement):
         self.dr.wait_until_gone('.is-touched')
 
     def get_title(self) -> str:
-        """Returns the page's title, as shown in the hero banenr.
+        """Returns the page's title, as shown in the hero banner.
         Only returns the first line, otherwise Dated Events mess with the FAV test."""
         return self.dr.flashy_find_element('.home-hero-title', self.element).text.split('\n')[0]
+
+    def pin_it(self) -> None:
+        """Moves the mouse over the hero, triggering the Pin It button to appear, then clicks it"""
+        self.element.point()
+        self.dr.flashy_find_element('.social-pinterest--container.social-pinterest--visible',
+                                    self.dr.get_parent_element(self.element.parent)).click()
 
 class Video(WrappedElement):
     """Generically represents either a Brightcove Video or a Youku video."""
@@ -455,8 +462,8 @@ class NavMenu(WrappedElement):
         def __init__(self, dr: Drivery):
             self.dr = dr
             self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[4])
-            attach_links(self, ['about-us','how-we-can-help','a-national-priority','contact-us',],
-                         selector='[href*="{0}.html"] p')
+            attach_links(self, ['about-us', 'how-we-can-help', 'a-national-priority', 'contact-us',]
+                         , selector='[href*="{0}.html"] p')
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.
@@ -584,7 +591,7 @@ class FilteredSearch(WrappedElement):
         # The largest number must be the total results, with the other two being 'this many shown'.
         return (1 + counter[1] - counter[0], counter[2])
 
-    def get_all_results(self) -> List[WrappedElement]: # pylint: disable=E1126
+    def get_all_results(self) -> List[self.SearchResult]: # pylint: disable=E1126
         """Gets all of the search results."""
         return [self.SearchResult(self.dr, e) for e in self.dr.flashy_find_elements('.mosaic-item')]
 
@@ -1534,10 +1541,13 @@ class ShareThis(WrappedElement):
         slides out the other two icons depends on the Gl/Cn environment."""
         self.dr.flashy_find_element(
             '.shareThisHolder,.shareicons-container>a>span', self.element).click()
-        if self.dr.check_visible_quick('ul', self.element):
+        if self.dr.cn_mode:
             slider = self.dr.quietly_find_element('ul.share2', self.element)
             self.dr.wait_until(lambda: 'display: block;' in slider.get_attribute('style'),
                                'display: block in slider.style')
+        else:
+            panel = self.dr.flashy_find_element('.at-expanded-menu')
+            return self.dr.quietly_find_element('.at-expanded-menu-page-title', panel).text
 
     def page_description(self) -> str:
         """Returns the page's Description: The Hero Text and the Summary combined."""
@@ -1737,7 +1747,7 @@ class Explore(WrappedElement):
             """Clicks the Add To Dream Trip button."""
             self.dr.flashy_find_element('.bubble-colour-favourite', self.element).click()
 
-class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: disable=R0904
+class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint: disable=R0904
     """Call on this if an important component is missing, it has links to the pages."""
     def __init__(self, dr: Drivery):
         self.dr = dr
@@ -1865,3 +1875,7 @@ class BackupHrefs:  # It's a namespace, lots of methods is intentional. pylint: 
     def sydney(self):
         """Opens the Tasmania page."""
         self.dr.get(self.dr.locale_url + '/places/sydney.html')
+
+    def why_australia(self):
+        """Opens the Why Australia page."""
+        self.dr.get(self.dr.locale_url + '/why-australia.html')

@@ -2,20 +2,19 @@
 
 from collections import OrderedDict
 import components as CP
-import selene
+import miklase
 
 # A mapping of the test names to their abbreviations
 invnames = OrderedDict(
     [('SPL', 'test_01_Splash_Page'),])
 
-class INV(selene.MyTestCase):
+class INV(miklase.MyTestCase):
     """The Test Suite for the Investment regression"""
     def test_01_Navigation(self) -> None:
         """Checks the various logos and links in the header"""
         self.dr.open_home_page()
         # Click the logo link
-        with self.restraint('Logo link is missing',
-                            AssertionError='Logo link did not go to homepage'):
+        with self.restraint('Logo link is missing', AssertionError='Logo link did not go to homepage'):
             CP.NavMenu(self.dr).logo().click()
             self.assertEqual(self.globs['locale_url'], self.dr.current_url())
 
@@ -26,13 +25,13 @@ class INV(selene.MyTestCase):
             self.assertEqual(self.globs['locale_url'], self.dr.current_url())
 
         # Click the 中国大陆 (简体中文) link        I assume you're testing the /en site, i guess??
-        with self.restraint('INV CN Link is missing or did not open in new tab',
+        with self.restraint('INV CN Link is missing', IndexError='INV CN Link did not open in new tab',
                             AssertionError='INV CN Link did not link to the CN Investment Site'):
             CP.NavMenu(self.dr).invcn().click()
             self.dr.switch_to_window(1)
-            self.assertEqual(self.globs['base_url'] + '/zh.html', self.dr.current_url())   # hm
+            self.assertEqual(self.globs['base_url'] + '/zh.html', self.dr.current_url())
         # Back to the main window.
-        self.dr.switch_to_window(0)
+        self.dr.close_other_windows()
 
         # Check every link in the header nav, make sure they are correct
         # Assuming of course, that the PROD content is correct, and never changes
@@ -72,3 +71,56 @@ class INV(selene.MyTestCase):
             abu.how_we_can_help()
             abu.a_national_priority()
             abu.contact_us()
+
+    def test_02_Hero(self) -> None:
+        """Tests the Hero Banner's Pin It button, mostly"""
+        self.dr.open_home_page()
+        # Open a page with a Hero Banner
+        with self.restraint('Why Australia link missing from nav', backuphref=CP.BackupHrefs(self.dr).why_australia):
+            CP.NavMenu.WhyAustralia(self.dr).open().why_australia().click()
+        # Find the banner and click the Pin It button
+        with self.restraint('Hero banner Pin It button is missing'):
+            CP.Hero(self.dr).pin_it()
+        # Confirm the Pinterest window opens in a new window
+        with self.restraint(IndexError='Pinterest link did not open in new window',
+                            TimeoutException='Pin It button did not open Pinterest site.'):
+            self.dr.switch_to_window(1)
+            self.dr.wait_for_page('pinterest.com')
+
+    def test_03_Share(self) -> None:
+        """Tests the ShareThis functionality"""
+        self.dr.open_home_page()
+        # Open a page with a Share component and click the Share button
+        with self.restraint('Why Australia link missing from nav', backuphref=CP.BackupHrefs(self.dr).why_australia):
+            CP.NavMenu.WhyAustralia(self.dr).open().why_australia().click()
+        # Confirm the AddThis window appears, and is populated with the page title
+        with self.restraint('Share button missing from the page',
+                            AssertionError='Page title is not shown in the share popup'):
+            self.assertIn(CP.ShareThis(self.dr).open_share(), self.dr.page_title())
+
+    def test_04_Search(self) -> None:
+        """Tests the Site Search funtionality"""
+        self.dr.open_home_page()
+        search_term = 'Investment'
+        # Enter a search term, there are no popular suggestions listed here
+        with self.restraint('Search section is missing from the header'):
+            CP.HeaderSearch(self.dr).open().search(search_term)
+        # Should go to the Search page, and have the Results listed
+        with self.destruction('Search Results component is missing',
+                              TimeoutException='Search form did not redirect to the Search page'):
+            self.dr.wait_for_page('search.html')
+            search = CP.SiteSearch(self.dr)
+        # Flip the view mode back and forth
+        with self.restraint('Mode switching not working'):
+            search.grid_mode()
+            search.list_mode()
+        # Click the View More results button, should load more results
+        with self.restraint('Search Results\' View More button missing',
+                            AssertionError='Viewing More did not increase result count'):
+            fico = search.count_results()
+            search.load_more()
+            self.assertGreater(search.count_results(), fico)
+        # The search results should actually contain the search term
+        with self.restraint('Search Results did not all match the search term'):
+            for res in search.get_all_results():
+                self.assertIn(search_term, res.get_title())

@@ -5,10 +5,9 @@ import time
 import enum
 import warnings
 import unittest
-from unittest.signals import registerResult
+from typing import Callable
 from contextlib import contextmanager
 from collections import OrderedDict
-from types import MethodType
 from drivery import Drivery
 
 STATES = enum.Enum('STATES', 'PASS SKIP FAIL ERROR')
@@ -38,7 +37,7 @@ class MyTestCase(unittest.TestCase):
             self.result.addFailure(self, err)
 
     @contextmanager
-    def restraint(self, msg=None, backuphref: MethodType = None, **errors):
+    def restraint(self, msg=None, backuphref: Callable = None, **errors):
         """Shortcut for the error handling. Put this in a with statement, it'll log any error.
         msg is the default message, used if none of the specific exception types in errors occur.
         Provide alternate messages with the kwargs like ZeroDivisionError="Can't divide by zero"
@@ -106,7 +105,7 @@ class MyTestRunner(unittest.TextTestRunner):
     def run(self, test):
         "Run the given test case or test suite. All this overload for one measly line."
         # result = self._makeResult()   Move this line into the init so I can mess with it interim.
-        registerResult(self.result)
+        unittest.signals.registerResult(self.result)
         self.result.failfast = self.failfast
         self.result.buffer = self.buffer
         self.result.tb_locals = self.tb_locals

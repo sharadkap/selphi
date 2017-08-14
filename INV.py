@@ -29,7 +29,7 @@ class INV(miklase.MyTestCase):
                             AssertionError='INV CN Link did not link to the CN Investment Site'):
             CP.NavMenu(self.dr).invcn().click()
             self.dr.switch_to_window(1)
-            self.assertEqual(self.globs['base_url'] + '/zh.html', self.dr.current_url())
+            self.assertEqual(self.globs['base_url'] + '/zh', self.dr.current_url())
         # Back to the main window.
         self.dr.close_other_windows()
 
@@ -123,4 +123,40 @@ class INV(miklase.MyTestCase):
         # The search results should actually contain the search term
         with self.restraint('Search Results did not all match the search term'):
             for res in search.get_all_results():
-                self.assertIn(search_term, res.get_title())
+                self.assertIn(search_term, res.get_title() + res.get_summary())
+
+    def test_05_Footer(self) -> None:
+        """Tests the Footer functionality"""
+        self.dr.open_home_page()
+        # Find the footer
+        with self.destruction('The Footer is missing'):
+            fot = CP.Footer(self.dr)
+        # About Us, About This Site, and External Sites links
+        with self.restraint('Footer is missing a link'):
+            fot.about_us()
+            fot.contact_us()
+            fot.sitemap()
+            fot.terms_conditions()
+            fot.austrade()
+            fot.tourism_australia()
+            fot.businessevents_australia()
+            fot.australia()
+        # Language Selector, the CN option should be present
+        with self.restraint('Footer locales list is incorrect'):
+            self.assertListEqual(['/en.html', '/zh.html'], fot.get_locales())
+        with self.restraint('The CN locale link is not working'):
+            fot.pick_locale('/zh.html')
+            self.assertIn(self.globs['base_url'] + '/zh', self.dr.current_url())
+
+    def test_06_Brightcove(self) -> None:
+        """Tests the Brightcove Video functionality"""
+        self.dr.open_home_page()
+        # Find a video
+        with self.restraint('World Class Tourism link is missing',
+                            CP.BackupHrefs(self.dr).world_class_tourism_offering):
+            CP.NavMenu.WhyAustralia(self.dr).open().world_class_tourism_offering().click()
+        with self.restraint('Video is missing from the page',
+                            TimeoutException='Video does not play when clicked'):
+            vide = CP.Video(self.dr)
+            vide.play()
+            self.dr.wait_until(vide.is_playing, 'Waiting for video to be in the Playing state')

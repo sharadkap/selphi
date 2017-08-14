@@ -5,8 +5,8 @@ import time
 import json
 import random
 import hashlib
-from types import MethodType
-from typing import Set, List, Tuple
+from typing import Set, List, Tuple, Callable
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.remote.webelement import WebElement
 from drivery import Drivery, SHORT_WAIT
 
@@ -482,7 +482,7 @@ class Footer(WrappedElement):
         self.dr = dr
         self.element = self.dr.flashy_find_element('#main-footer')
         attach_links(self, ['splash', 'sitemap', 'privacy-policy', 'terms-and-conditions',
-                            'terms-of-use', 'contact-us'])
+                            'terms-of-use', 'contact-us', 'about-us', 'contact-us', 'terms-conditions'])
         attach_links(self, ['facebook', 'plus.google', 'youtube', 'twitter', 'instagram', 'weibo'],
                      selector='[href*="{}.com"]')
         attach_links(self, ['wechat'], selector='[href*="#qr_image"],[href*="#china_qr_image"]')
@@ -490,6 +490,17 @@ class Footer(WrappedElement):
                      selector='[href*="www.{}.cn"]')
         attach_links(self, ['australia', 'tourism.australia'], selector='[href*="www.{}.c"]')
         attach_links(self, ['businessevents.australia'], selector='[href*="{}.c"]')
+        attach_links(self, ['austrade'], selector='[href*="www.{}.gov.au"]')
+
+    def get_locales(self) -> List[str]:
+        """Get a list of the countries available to the footer switcher. '/en-ca.html' format."""
+        return [opt.getattr('value') for opt in
+                self.dr.quietly_find_elements('#dropdown-select-language option', self.element)]
+
+    def pick_locale(self, locale):
+        """Selects a value in the Country Selector in the footer. Formatted like /en-ca.html"""
+        Select(self.dr.flashy_find_element('#dropdown-select-language', self.element)
+              ).select_by_value(locale)
 
 class Sitemap(WrappedElement):
     """Represents the Sitemap link cloud."""
@@ -521,6 +532,10 @@ class FilteredSearch(WrappedElement):
         def get_title(self) -> str:
             """Gets the page Title/Name of the result."""
             return self.dr.flashy_find_element('.line-through-container', self.element).text
+
+        def get_summary(self) -> str:
+            """Gets the page Description/Summary of the result."""
+            return self.dr.flashy_find_element('.mloverflow', self.element).text
 
         def view_more_information(self) -> None:
             """Navigates to the result's main page, clicks the View More Info link."""
@@ -1879,3 +1894,7 @@ class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint
     def why_australia(self):
         """Opens the Why Australia page."""
         self.dr.get(self.dr.locale_url + '/why-australia.html')
+
+    def world_class_tourism_offering(self):
+        """Opens the World Class Tourism Offering page."""
+        self.dr.get(self.dr.locale_url + '/why-australia/world-class-tourism-offering.html')

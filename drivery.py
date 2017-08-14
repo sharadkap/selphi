@@ -3,8 +3,7 @@
 import re
 import quopri
 import imaplib
-from types import FunctionType
-from typing import List, Set, Union, Any
+from typing import List, Set, Union, Any, Callable
 from selenium.webdriver import Chrome, Edge, Firefox, Ie, Opera, Safari, FirefoxProfile
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -50,7 +49,7 @@ def to_list(item) -> list:
     """Wraps the input into a list if it wasn't already one."""
     return item if isinstance(item, list) else [item]
 
-def find_error_improver(func: FunctionType):
+def find_error_improver(func: Callable):
     """A decorator, gets the NoSuchElementException to actually tell you what the problem is."""
     def actually_helpful(self, selector, within=None):
         """Does a thing, and if it didn't work, tells you what was missing from where."""
@@ -188,7 +187,7 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
             raise TimeoutException(
                 'Timed out waiting for {0} to disappear.'.format(selector)) from None
 
-    def wait_until(self, condition: FunctionType, desc: str) -> Any:
+    def wait_until(self, condition: Callable, desc: str) -> Any:
         """Holds up execution, repeatedly calling the given function until it returns truthy.
         The given condition lambda should have no inputs.
         desc should explain what the lambda does, as the contents can't really be examined."""

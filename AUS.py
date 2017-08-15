@@ -329,7 +329,7 @@ class AUS(miklase.MyTestCase):
                 self.add_error()
 
     def test_07_wycs(self):
-        """Tests the What You-Can-See-Mosaic-related functionality."""
+        """Tests the What-You-Can-See-Mosaic-related functionality."""
         # Navigate to the Three Days Itineraries page
         try:
             if self.globs['cn_mode']:

@@ -5,7 +5,8 @@ import time
 import json
 import random
 import hashlib
-from typing import Set, List, Tuple, Callable
+from types import MethodType
+from typing import Set, List, Tuple
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.remote.webelement import WebElement
 from drivery import Drivery, SHORT_WAIT
@@ -144,10 +145,13 @@ class Hero(WrappedElement):
 
 class Video(WrappedElement):
     """Generically represents either a Brightcove Video or a Youku video."""
-    def __init__(self, dr: Drivery):
+    def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
         # Youku has a state holder in the window object, Brightcove loads along with the page.
-        self.element = self.dr.flashy_find_element('.video-js,#youkuplayer')
+        if which:
+            self.element = self.dr.flashy_find_elements('.video-js,#youkuplayer')[which]
+        else:
+            self.element = self.dr.flashy_find_element('.video-js,#youkuplayer')
         self.dr.wait_until(lambda: self.dr.execute_script(
             'return window.YKP===undefined||window.YKP.playerCurrentState==="PLAYER_STATE_READY";'),
                            'Either YKP is undefined, or YKP state = PLAYER_STATE_READY')
@@ -179,9 +183,12 @@ class BodyRegisterButton(WrappedElement):
 
 class WhatYouCanSeeMosaic(WrappedElement):
     """Represents the What You Can See Mosaic, however many tiles may appear."""
-    def __init__(self, dr: Drivery):
+    def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
-        self.element = self.dr.flashy_find_element('div.whatYouCanSee div.mosaic')
+        if which:
+            self.element = self.dr.flashy_find_elements('div.whatYouCanSee div.mosaic')[which]
+        else:
+            self.element = self.dr.flashy_find_element('div.whatYouCanSee div.mosaic')
         self.tiles = [x for x in self.dr.quietly_find_elements('.mosaic-item') if x.is_displayed()]
 
     def tile_count(self) -> int:
@@ -233,7 +240,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
             """Clicks the Heart button in the tiles content. Has to be open first."""
             self.dr.flashy_find_element('.btn-bubble', self.contentpane).click()
 
-    def random_selection(self, num: int) -> List[WrappedElement]: # pylint: disable=E1126
+    def random_selection(self, num: int) -> List[self.MosaicTile]: # pylint: disable=E1126
         """Given a number, gets that many randomly selected tiles from the mosaic."""
         return [self.MosaicTile(self.dr, tile) for tile in random.sample(self.tiles, num)]
 
@@ -241,7 +248,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
         """Returns the number of tiles in the mosaic."""
         return len(self.tiles)
 
-    def __getitem__(self, title) -> WrappedElement:
+    def __getitem__(self, title) -> self.MosaicTile:
         """Select a particular tile by using its title in the [] index accessor. Maybe."""
         if isinstance(title, int):
             return self.MosaicTile(self.dr, self.tiles[title])
@@ -494,7 +501,7 @@ class Footer(WrappedElement):
 
     def get_locales(self) -> List[str]:
         """Get a list of the countries available to the footer switcher. '/en-ca.html' format."""
-        return [opt.getattr('value') for opt in
+        return [opt.get_attribute('value') for opt in
                 self.dr.quietly_find_elements('#dropdown-select-language option', self.element)]
 
     def pick_locale(self, locale):
@@ -618,11 +625,14 @@ class FilteredSearch(WrappedElement):
         return result
 
 class ItineraryDay(WrappedElement):
-    """Represents the Itinerary Day Links component, the anchor navigation link list.
-    There are many copies, this will pick up the first one."""
-    def __init__(self, dr: Drivery):
+    """Represents the Itinerary Day Links component, the anchor navigation link list."""
+    def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
-        self.element = self.dr.flashy_find_element('.itinerary-day-nav')
+        if which:
+            self.element = self.dr.flashy_find_elements('.itinerary-day-nav')[which]
+        else:
+            self.element = self.dr.flashy_find_element('.itinerary-day-nav')
+
 
     def back_to_top(self):
         """Clicks the Back To Top link."""
@@ -1722,9 +1732,12 @@ class SiteSearch(FilteredSearch):
 
 class SpecialOffer(WrappedElement):
     """Represents the Special Offer component."""
-    def __init__(self, dr: Drivery):
+    def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
-        self.element = self.dr.flashy_find_element('.specialoffer')
+        if which:
+            self.element = self.dr.flashy_find_elements('.specialoffer')[which]
+        else:
+            self.element = self.dr.flashy_find_element('.specialoffer')
 
     def view_more_information(self):
         """Clicks the View More Information link, or equivalent."""
@@ -1732,9 +1745,12 @@ class SpecialOffer(WrappedElement):
 
 class Explore(WrappedElement):
     """Represents the Explore component. Not the Map, the triple-minimap-flip things."""
-    def __init__(self, dr: Drivery):
+    def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
-        self.element = self.dr.flashy_find_element('.explore-container')
+        if which:
+            self.element = self.dr.flashy_find_elements('.explore-container')[which]
+        else:
+            self.element = self.dr.flashy_find_element('.explore-container')
         self.cards = [self.ExploreCard(self.dr, x) for x in self.dr.quietly_find_elements(
             '.explore-item-container', self.element) if x.is_displayed()]
 
@@ -1898,3 +1914,7 @@ class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint
     def world_class_tourism_offering(self):
         """Opens the World Class Tourism Offering page."""
         self.dr.get(self.dr.locale_url + '/why-australia/world-class-tourism-offering.html')
+
+    def data_room(self):
+        """Opens the Data Room page."""
+        self.dr.get(self.dr.locale_url + '/data-room.html')

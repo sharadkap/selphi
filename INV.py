@@ -160,3 +160,27 @@ class INV(miklase.MyTestCase):
             vide = CP.Video(self.dr)
             vide.play()
             self.dr.wait_until(vide.is_playing, 'Waiting for video to be in the Playing state')
+
+    def test_07_Mosaic(self) -> None:
+        """Tests the Mosaic functionality, and that the PDFs are hosted correctly."""
+        self.dr.open_home_page()
+        # Go to a page with a Mosaic
+        with self.restraint('Why Australia link is missing from the nav',
+                            CP.BackupHrefs(self.dr).why_australia):
+            CP.NavMenu.WhyAustralia(self.dr).open().why_australia().click()
+        # Find the mosaic
+        with self.restraint('Mosaic comonent missing from the page',
+                            TimeoutException='Tile did not link to its page'):
+            mos = CP.WhatYouCanSeeMosaic(self.dr)
+            mos.random_selection(1)[0].go()
+        # In case it was an external link
+        self.dr.close_other_windows()
+        # Find a page with PDFs Included
+        with self.restraint('Data Room link is missing from the nav',
+                            CP.BackupHrefs(self.dr).data_room):
+            CP.NavMenu.DataRoom(self.dr).open().data_room().click()
+        with self.restraint('Second Mosaic component is missing',
+                            AssertionError='A PDF link did not go to the right environment'):
+            mos = CP.WhatYouCanSeeMosaic(self.dr, 1)
+            for tile in mos:
+                self.assertIn(self.globs['base_url'], tile.get_link().get_attribute('href'))

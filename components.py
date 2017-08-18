@@ -24,7 +24,7 @@ class WrappedElement:
         return self
 
     def override_click(self) -> 'WrappedElement':
-        """Clicks on the element, even if it is ``behind"" another one."""
+        """Clicks on the element, even if it is "`'behind'`" another one."""
         self.dr.last_link = self.dr.fix_url(self.element.get_attribute('href'))
         self.dr.override_click(self.element)
         return self
@@ -149,7 +149,7 @@ class Video(WrappedElement):
         self.dr = dr
         # Youku has a state holder in the window object, Brightcove loads along with the page.
         if which:
-            self.element = self.dr.flashy_find_elements('.video-js,#youkuplayer')[which]
+            self.element = self.dr.blip(self.dr.quietly_find_elements('.video-js,#youkuplayer')[which])
         else:
             self.element = self.dr.flashy_find_element('.video-js,#youkuplayer')
         self.dr.wait_until(lambda: self.dr.execute_script(
@@ -186,7 +186,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
     def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
         if which:
-            self.element = self.dr.flashy_find_elements('div.whatYouCanSee div.mosaic')[which]
+            self.element = self.dr.blip(self.dr.quietly_find_elements('div.whatYouCanSee div.mosaic')[which])
         else:
             self.element = self.dr.flashy_find_element('div.whatYouCanSee div.mosaic')
         self.tiles = [x for x in self.dr.quietly_find_elements('.mosaic-item') if x.is_displayed()]
@@ -213,8 +213,8 @@ class WhatYouCanSeeMosaic(WrappedElement):
         def go(self) -> None:
             """Clicks on a tile, navigating to its link.
             Which of these two is correct is left as an exercise to the reader."""
-            self.dr.last_link = self.dr.quietly_find_element(
-                '.mosaic-item-detail-container p>a', self.element).get_attribute('href')
+            self.dr.last_link = self.dr.fix_url(self.dr.quietly_find_element(
+                '.mosaic-item-detail-container p>a', self.element).get_attribute('href'))
             self.dr.blip_element(self.element).click()
             # External links open in a new tab. No problem if not.
             try:
@@ -240,7 +240,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
             """Clicks the Heart button in the tiles content. Has to be open first."""
             self.dr.flashy_find_element('.btn-bubble', self.contentpane).click()
 
-    def random_selection(self, num: int) -> List[self.MosaicTile]: # pylint: disable=E1126
+    def random_selection(self, num: int) -> List['MosaicTile']: # pylint: disable=E1126
         """Given a number, gets that many randomly selected tiles from the mosaic."""
         return [self.MosaicTile(self.dr, tile) for tile in random.sample(self.tiles, num)]
 
@@ -248,7 +248,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
         """Returns the number of tiles in the mosaic."""
         return len(self.tiles)
 
-    def __getitem__(self, title) -> self.MosaicTile:
+    def __getitem__(self, title) -> 'MosaicTile':
         """Select a particular tile by using its title in the [] index accessor. Maybe."""
         if isinstance(title, int):
             return self.MosaicTile(self.dr, self.tiles[title])
@@ -475,7 +475,7 @@ class NavMenu(WrappedElement):
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the nav menu.
         The Five/Four section panels, that is, not the Icons, or the Sign In thing."""
-        return {x.get_attribute('href') for x in self.dr.flashy_find_elements(
+        return {self.dr.fix_url(x.get_attribute('href')) for x in self.dr.flashy_find_elements(
             '#nav-bar-top .nav-bar-left a:not([href^="#"])', self.element)}
 
     def user_names(self) -> str:
@@ -518,7 +518,7 @@ class Sitemap(WrappedElement):
 
     def get_all_links(self) -> Set[str]:
         """Gets a set containing the href of each link in the Sitemap link section."""
-        return {x.get_attribute('href') for x in self.dr.flashy_find_elements('a', self.element)}
+        return {self.dr.fix_url(x.get_attribute('href')) for x in self.dr.flashy_find_elements('a', self.element)}
 
 class FilteredSearch(WrappedElement):
     """Represents the Itinerary or Fact Sheet Search Components."""
@@ -596,24 +596,19 @@ class FilteredSearch(WrappedElement):
         """Returns the number of search results currently displayed."""
         return len(self.dr.flashy_find_elements('.mosaic-item', self.element))
 
-    def read_results_counter(self, wait: bool = False) -> (int, int) or None:
+    def read_results_counter(self) -> (int, int) or None:
         """Returns the number of results the 'Showing X-Y of Z results' thing says there are:
-        A tuple as (shown, total), or a None if it's not shown, such as with Travel Club.
-        If wait is set to True, will wait for the counter to load before assuming its absence."""
-        while True:
-            counter = self.dr.flashy_find_element('.search-result-count-copy', self.element).text
-            counter = [int(x) for x in re.findall(r'\d+', counter)]
-            if counter == []:
-                if not wait:
-                    return None
-            else:
-                break
+        A tuple as (shown, total), or a None if it's not shown, such as with Travel Club."""
+        counter = self.dr.flashy_find_element('.search-result-count-copy', self.element).text
+        counter = [int(x) for x in re.findall(r'\d+', counter)]
+        if counter == []:
+            return None
         # Different languages can show the numbers in different orders.
         counter.sort()
         # The largest number must be the total results, with the other two being 'this many shown'.
         return (1 + counter[1] - counter[0], counter[2])
 
-    def get_all_results(self) -> List[self.SearchResult]: # pylint: disable=E1126
+    def get_all_results(self) -> List['SearchResult']: # pylint: disable=E1126
         """Gets all of the search results."""
         return [self.SearchResult(self.dr, e) for e in self.dr.flashy_find_elements('.mosaic-item')]
 
@@ -629,7 +624,7 @@ class ItineraryDay(WrappedElement):
     def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
         if which:
-            self.element = self.dr.flashy_find_elements('.itinerary-day-nav')[which]
+            self.element = self.dr.blip(self.dr.quietly_find_elements('.itinerary-day-nav')[which])
         else:
             self.element = self.dr.flashy_find_element('.itinerary-day-nav')
 
@@ -799,13 +794,13 @@ class InteractiveMap(WrappedElement):
 
             def find_out_more(self) -> str:
                 """Returns the url of the Find Out More link."""
-                return self.dr.get_parent_element(self.dr.flashy_find_element(
-                    '#info-mainLink', self.element)).get_attribute('href')
+                return self.dr.fix_url(self.dr.get_parent_element(self.dr.flashy_find_element(
+                    '#info-mainLink', self.element)).get_attribute('href'))
 
             def view_highlights(self) -> str:
                 """Returns the url of the VIEW HIGHLIGHTS button."""
-                return self.dr.flashy_find_element(
-                    '#info-optionalLink', self.element).get_attribute('href')
+                return self.dr.fix_url(self.dr.flashy_find_element(
+                    '#info-optionalLink', self.element).get_attribute('href'))
 
             def count_photos(self) -> int:
                 """Counts the number of photographs shown for this location."""
@@ -1050,6 +1045,11 @@ class RegistrationForm(WrappedElement):
         self.dr.flashy_find_element("#register-submit", self.element).click()
         self.dr.wait_until_present('#fancybox-thanks')
 
+    def dismiss_popup(self) -> None:
+        """Closes the Thanks For Registering thing."""
+        self.dr.flashy_find_element('.fancybox-wrap a.fancybox-close').click()
+        self.dr.wait_until_gone('#fancybox-thanks')
+
 class SignIn(WrappedElement):
     """Represents the Sign In panel. Instantiating this class will open said panel."""
     def __init__(self, asp):
@@ -1064,11 +1064,10 @@ class SignIn(WrappedElement):
         self.dr.flashy_find_element('#j_username', self.element).send_keys(user)
         self.dr.flashy_find_element('[name="j_password"]', self.element).send_keys(passw)
         self.dr.flashy_find_element('#usersignin', self.element).click()
-        self.dr.last_link = '/change.html' if new_password else '/secure'
-        # This bit should maybe go in the selene.py, but I'm not putting
+        # This bit should probably go in the selene.py, but I'm not putting
         # fifteen identical trycatches around every invocation of this method.
         try:
-            self.dr.wait_for_page()
+            self.dr.wait_for_page(url='/change.html' if new_password else '/secure')
         except Exception:
             self.add_error()
 
@@ -1244,11 +1243,18 @@ class Profile(WrappedElement):
         link.click()
 
 class TrainingModule(WrappedElement):
-    """Represents a Module. Instantiating will switch into the module frame, so watch it."""
+    """Represents a Module. Can be used in a with statement, will execute that inside the frame."""
     def __init__(self, dr: Drivery):
         self.dr = dr
         self.code, self.resname = self.wait_for_module()
         self.id = self.code.split('_')[-1]
+
+    def __enter__(self):
+        self.enter()
+        return self
+
+    def __exit__(self, *args):
+        self.exit()
 
     def wait_for_module(self) -> Tuple[str, str]:
         """Iframes don't integrate into the DOM ReadyState, so have to check this one explicitly.
@@ -1257,16 +1263,16 @@ class TrainingModule(WrappedElement):
             'script[data-scf-json="true"]:not([id*="social"])')
                           .get_attribute('innerText'))['properties']
         self.dr.flashy_find_element('.scf-play-button').click()
-        # Switch into the frame stack
-        self.enter()
-        # Then, wait until something is actually present
-        self.dr.wait_until_present('[id^="Text_Caption_"]')
-        # Then, wait until the loading overlay is gone.
-        self.dr.wait_until_gone('#preloaderImage')
-        # And then, set the module to slide one, just in case.
-        self.dr.execute_script('cpCmndGotoSlide=0')
-        # Return the which module it is; nsw, mod1, wine, etc...
-        return prop['id'], prop['enablement-resource-name']
+        # Temporarily switch into the frame stack
+        with self:
+            # Then, wait until something is actually present
+            self.dr.wait_until_present('[id^="Text_Caption_"]')
+            # Then, wait until the loading overlay is gone.
+            self.dr.wait_until_gone('#preloaderImage')
+            # And then, set the module to slide one, just in case.
+            self.dr.execute_script('cpCmndGotoSlide=0')
+            # Return the which module it is; nsw, mod1, wine, etc...
+            return prop['id'], prop['enablement-resource-name']
 
     def enter(self):
         """Switches into the Module iFrame.
@@ -1280,21 +1286,21 @@ class TrainingModule(WrappedElement):
         self.dr.switch_to_frame(None)
 
     def fast_complete_module(self):
-        """Call this static method when on a training module page,
-        and in the module frame, to fast-complete the module.
-        Not really a part of SELPHI, just putting it here for convenience."""
+        """Call this method when on a training module page,
+        (and in the module frame) to fast-complete the module."""
         # Go do the MOD shortcut, basically. Send the module start event, go to the last slide
         # and tell SCORM that the module is totally finished, no, really, it's all suuper done.
-        self.dr.execute_script(
-            ("function modgo(n){{cpCmndGotoSlide=cpInfoSlideCount-n;}}"
-             "updateModuleStatus(setStatusURL,undefined,'{0}',0,false, 0,getModuleID(),'{1}');"
-             "switch('{2}'){{case 'mod3':modgo(6);break;default:modgo(4)}};"
-             "SCORM2004_objAPI.RunTimeData.CompletionStatus = 'completed';").format(
-                 self.code, self.resname, self.id))
+        sll = self.dr.execute_script((
+            'var sll;function modgo(n){{cpCmndGotoSlide=sll=cpInfoSlideCount-n;}}updateModuleStatus'
+            '(setStatusURL,undefined,"{0}",0,false, 0,getModuleID(),"{1}");switch("{2}"){{case "mod'
+            '3":modgo(6);break;default:modgo(4)}};SCORM2004_objAPI.RunTimeData.CompletionStatus="co'
+            'mpleted";return sll;').format(self.code, self.resname, self.id)) + 1
+        self.dr.wait_until(lambda: self.dr.execute_script('return cpInfoCurrentSlide==='+str(sll)),
+                           'Current Slide number being equal to the slide it was just set to')
 
 class TrainingSummary(WrappedElement):
     """Represents the two Training Summary modules list things.
-    Only instantiate this on the root assignments page."""
+    Only instantiate this on the root assignments page. Not guaranteed to get the order right."""
     def __init__(self, dr: Drivery):
         self.dr = dr
         lis = self.dr.flashy_find_elements('.scf-content-card:not(.disabled-link-card)')
@@ -1310,37 +1316,31 @@ class TrainingSummary(WrappedElement):
         """Opens the First Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()
-        TrainingModule(self.dr)
 
     def module_two(self) -> None:
         """Opens the Second Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[1]).click()
-        TrainingModule(self.dr)
 
     def module_three(self) -> None:
         """Opens the First Core Module."""
         self.dr.blip_element(self.core).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[2]).click()
-        TrainingModule(self.dr)
 
-    def module_nsw(self) -> str:
+    def module_nsw(self):
         """Opens the First Optional Module. Returns the module code, just to be sure."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[0]).click()
-        return TrainingModule(self.dr).id
 
-    def module_qld(self) -> str:
+    def module_qld(self):
         """Opens the Second Optional Module Returns the module code, just to be sure.."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[1]).click()
-        return TrainingModule(self.dr).id
 
-    def module_vic(self) -> str:
+    def module_vic(self):
         """Opens the Third Optional Module. Returns the module code, just to be sure."""
         self.dr.blip_element(self.optional).click()
         self.dr.blip_element(self.dr.quietly_find_elements('.scf-content-card')[2]).click()
-        return TrainingModule(self.dr).id
 
     def completion_types(self) -> None:
         """Gets all of the Module entries, then checks how complete they are,
@@ -1349,6 +1349,17 @@ class TrainingSummary(WrappedElement):
         self.dr.flashy_find_element('.assignment-status-completed')
         self.dr.flashy_find_element('.assignment-status-inprogress')
         self.dr.flashy_find_element('.assignment-status-new')
+
+    @classmethod
+    def fast_complete_five_modules(cls, dr):
+        """Tells the site that the user has completed five modules. Use this as a backup.
+        Also, this switches the driver back to the default framing, for convenience. Class Method"""
+        dr.switch_to_frame(None)
+        dr.execute_script((
+            'var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],f="{0}",e=f.split'
+            '("-").reverse().join("_").replace("gb","uk");o=o.concat(o);for(m in o)if(o.hasOwnPrope'
+            'rty(m))$.ajax({{url:"/bin/asp/trainingModule",type:"POST",cache:!1,dataType:"json",dat'
+            'a:{{isComplete:!0,moduleId:e+o[m],locale:f}}}})').format(self.dr.locale[1:]))
 
 class Famils(WrappedElement):
     """Represents the content of the Famils page."""
@@ -1735,7 +1746,7 @@ class SpecialOffer(WrappedElement):
     def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
         if which:
-            self.element = self.dr.flashy_find_elements('.specialoffer')[which]
+            self.element = self.dr.blip(self.dr.quietly_find_elements('.specialoffer')[which])
         else:
             self.element = self.dr.flashy_find_element('.specialoffer')
 
@@ -1748,7 +1759,7 @@ class Explore(WrappedElement):
     def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
         if which:
-            self.element = self.dr.flashy_find_elements('.explore-container')[which]
+            self.element = self.dr.blip(self.dr.quietly_find_elements('.explore-container')[which])
         else:
             self.element = self.dr.flashy_find_element('.explore-container')
         self.cards = [self.ExploreCard(self.dr, x) for x in self.dr.quietly_find_elements(
@@ -1777,6 +1788,27 @@ class Explore(WrappedElement):
         def add_to_favourites(self):
             """Clicks the Add To Dream Trip button."""
             self.dr.flashy_find_element('.bubble-colour-favourite', self.element).click()
+
+class Livefyre(WrappedElement):
+    """Represents the Livefyre component"""
+    def __init__(self, dr: Drivery, which: int = None):
+        self.dr = dr
+        if which:
+            self.element = self.dr.blip(self.dr.quietly_find_elements('.livefyre-container')[which])
+        else:
+            self.element = self.dr.flashy_find_element('.livefyre-container')
+        self.tiles = [self.LivefyreTile(self.dr, e) for e in
+                      self.dr.quietly_find_elements('.gallery--open-link')]
+
+    def get_description(self) -> str:
+        """Gets the caption/description text above the images area."""
+        return self.dr.flashy_find_element('.section-intro .type-intro + p', self.element).text
+
+    class LivefyreTile(WrappedElement):
+        """Represents the individual tiles of a Livefyre collection. Don't instantiate directly."""
+        def __init__(self, dr: Drivery, element: WebElement):
+            self.dr = dr
+            self.element = element
 
 class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint: disable=R0904
     """Call on this if an important component is missing, it has links to the pages."""

@@ -184,3 +184,10 @@ class INV(miklase.MyTestCase):
             mos = CP.WhatYouCanSeeMosaic(self.dr, 1)
             for tile in mos:
                 self.assertIn(self.globs['base_url'], tile.get_link().get_attribute('href'))
+
+    def test_08_Livefyre(self) -> None:
+        """Tests the Livefyre functionality."""
+        self.dr.open_home_page()
+        # Find the Livefyre carousel
+        with self.restraint('Livefyre component is missing'):
+            liv = CP.Livefyre(self.dr)

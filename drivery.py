@@ -11,10 +11,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
-#JA BLU ET
 from selenium.webdriver.chrome.options import Options as ChromeOptions
-
-
 import bs4
 
     ###Some Magic Numbers, default values.###
@@ -31,16 +28,16 @@ BROWSERS = {'chrome': Chrome, 'edge': Edge, 'firefox': Firefox,
             'ie': Ie, 'opera': Opera, 'safari': Safari}
 
 # A script to scroll a single element into view proper, just in case.
-SCROLL_SCRIPT = ('try{wp=window.top;wp.scrollTo(0,arguments[0].getBoundingClientRect().top'
-                 '-wp.innerHeight/2)}catch(DOMException){wp=window;wp.scrollTo(0,arguments[0]'
-                 '.getBoundingClientRect().top-wp.innerHeight/2)}')
+SCROLL_SCRIPT = (
+    'var w=window.top,a=arguments[0];try{w.scrollTo(0,a.getBoundingClientRect().top-w.innerHeight/'
+    '2)}catch(DOMException){w=window;w.scrollTo(0,a.getBoundingClientRect().top-w.innerHeight/2)}')
 # """A JS script that applies the 'element-highlighted' animation."""
-BLIP_SCRIPT = ('try{$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;'
-               '}50%{outline: 10px outset yellow; background-color: yellow}100%{outline: 0px outset'
-               ' transparent;}} </style>");wp=window.top;b=arguments[0];for(var a=0;a<b.length;a++)'
-               ' {var c=b[a];wp.scrollTo(0,c.getBoundingClientRect().top+wp.pageYOffset-wp.innerHei'
-               'ght/2), c.style.animationDuration="0.5s",c.style.animationName="",setTimeout(functi'
-               'on(e) {e.style.animationName="selhian"}, 10, c)}}catch(e){}')
+BLIP_SCRIPT = (
+    'try{$("head").append("<style>@keyframes selhian{0%{outline: 0px outset transparent;}50%{outlin'
+    'e: 10px outset yellow; background-color: yellow}100%{outline: 0px outset transparent;}} </styl'
+    'e>");wp=window.top;b=arguments[0];for(var a=0;a<b.length;a++){var c=b[a];wp.scrollTo(0,c.getBo'
+    'undingClientRect().top+wp.pageYOffset-wp.innerHeight/2),c.style.animationDuration="0.5s",c.sty'
+    'le.animationName="",setTimeout(function(e){e.style.animationName="selhian"},10,c)}}catch(e){}')
 # """Type annotation, referring to either a WebElement, or a list of them."""
 ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable=E1126
 ELEMENT_LIST = List[WebElement] # pylint: disable=E1126

@@ -3,7 +3,6 @@
 import random
 from collections import OrderedDict
 from drivery import Email
-import modules as MOD
 import components as CP
 import miklase
 
@@ -29,68 +28,51 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         # Open the splash page.
         self.dr.splash_page()
         # Concerning the Languages Selector
-        langsel = CP.SplashSelect(self.dr)
-        try:
+        with self.restraint('Language Selector is missing from the Splash page',
+                            AssertionError='Language selector does not have the full locale set'):
+            langsel = CP.SplashSelect(self.dr)
             self.assertSetEqual(langsel.cn_locale_set if self.globs['cn_mode']
                                 else langsel.locale_set, langsel.get_values())
-        except Exception:
-            self.add_error('The language selector did not contain all locales')
         # Select the country from the dropdown.
-        langsel.choose_locale()
+        with self.restraint('The option corresponding to this locale was missing'):
+            langsel.choose_locale()
         # Page should redirect to its respective locale.
-        self.dr.wait_for_page()
-        try:
-            self.assertIn(self.globs['locale'], self.dr.fix_url(self.dr.current_url()))
-        except Exception:
-            self.add_error('The selected locale option did not link to the right page')
+        with self.restraint('The selected locale option did not link to the right page'):
+            self.dr.wait_for_page(self.globs['locale'])
 
     def test_02_Homepage(self) -> None:
         """Tests the Welcome Page content."""
         self.dr.open_home_page()
-        # Video should be present. But its absence isn't worth aborting the test over.
-        try:
+        # Check the video
+        with self.restraint('Video not present on the homepage'):
             video = CP.WelcomeVideo(self.dr)
-        except Exception:
-            self.add_error('Video not present on the homepage')
-        else:
-            # Play the video.
             video.play()
-            # Video loads and plays. Again, there are still other things to test.
-            try:
-                self.dr.wait_until(video.is_playing, 'Waiting until video is playing')
-            except Exception:
-                self.add_error('Video not playing after clicking play')
+        with self.restraint('Video not playing after clicking play'):
+            self.dr.wait_until(video.is_playing, 'Waiting until video is playing')
         # Login and Register buttons should be present in the body content.
-        try:
+        with self.restraint('Sign In or Register button missing from the page'):
             CP.BodyLoginButton(self.dr)
             CP.BodyRegisterButton(self.dr)
-        except Exception:
-            self.add_error('Login and Register buttons missing from page')
         # The What You Can See Mosaic is displayed, contains five tiles.
-        mosaic = CP.WhatYouCanSeeMosaic(self.dr)
-        try:
+        with self.restraint('The mosaic was not present on the homepage',
+                            AssertionError='Five tiles not present in the mosaic'):
+            mosaic = CP.WhatYouCanSeeMosaic(self.dr)
             self.assertEqual(mosaic.tile_count(), 5)
-        except Exception:
-            self.add_error('Five mosaic tiles were not present on the homepage')
 
     def test_03_Navigation(self) -> None:
         """Checks that the contents of the Signed Out Nav Menu are correct."""
         self.dr.open_home_page()
         # Click on 'About' in the Mega Menu.
-        try:
+        with self.restraint('About menu did not contain the right options'):
             about = CP.NavMenu.About(self.dr).open()
-            # The About section should have: About, Why Register,
-            # Program FAQ, Site Usage, Contact Us
+            # About section should have: About, Why Register, Program FAQ, Site Usage, Contact Us
             about.about()
             about.benefits()
             about.how_to_use_the_site()
             about.program_faq()
             about.contact_us()
-        except Exception:
-            self.add_error('About menu did not contain the right options')
-
         # Click on 'Sales Resources' in the Mega Menu.
-        try:
+        with self.restraint('Sales Resources menu did not contain the right options'):
             sales = CP.NavMenu.SalesResources(self.dr).open()
             # The Sales section should have: Sales Resources (Landing), Interactive Map,
             # Fact Sheets, Useful Websites, Image and video galleries, My sales tools,
@@ -103,173 +85,144 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             sales.useful_sites()
             sales.destination_faq()
             sales.image_and_video_galleries()
-        except Exception:
-            self.add_error('Sales Resources menu did not contain the right options')
-
-        # Click on 'Training' in the Mega Menu.
-        try:
+        # Click on 'Training' in the Mega Menu, should only have the landing page
+        with self.restraint('Training menu section missing'):
             train = CP.NavMenu.Training(self.dr).open()
-            # The Training section should have: *Training (Landing page only)
             train.training()
-        except Exception:
-            self.add_error()
-
-        # Click on 'News & Products' in the Mega Menu.
-        try:
+        # Click on 'News & Products' in the Mega Menu, should only have the landing page
+        with self.restraint('News And Products menu section missing'):
             news = CP.NavMenu.NewsAndProducts(self.dr).open()
-            # The News section should have: *News and Product Updates (Landing page only)
             news.news_and_product_updates()
-        except Exception:
-            self.add_error()
-
-        # Click on 'Aussie Specialist Club' in the Mega Menu.
-        try:
+        # Click on 'Aussie Specialist Club' in the Mega Menu, should only have the landing page
+        with self.restraint('Aussie Specialist Club menu missing'):
             club = CP.NavMenu.AussieSpecialistClub(self.dr).open()
-            # The Club section should have: *Aussie Specialist Club (Landing page only)
             club.aussie_specialist_club()
-        except Exception:
-            self.add_error()
 
     def test_04_Footer(self) -> None:
         """Checks the content of the Footer."""
         self.dr.open_home_page()
-        footer = CP.Footer(self.dr)
-        if self.globs['cn_mode']:
-            # China is different, of course.
-            try:
+        with self.destruction('Footer was missing'):
+            footer = CP.Footer(self.dr)
+        # Check the Social Media links
+        with self.restraint('A Social Media link was missing from the footer'):
+            if self.globs['cn_mode']:
                 footer.wechat()
-            except Exception:
-                self.add_error()
-        else:
-            # The Footer should have: Find us on: Social icons and links.
-            try:
+            else:
                 footer.facebook()
                 footer.twitter()
                 footer.plus_google()
                 footer.instagram()
                 footer.youtube()
-            except Exception:
-                self.add_error()
         # About this site: links through to relevant pages
-        try:
+        with self.restraint('About This Site section missing a link'):
             footer.sitemap()
             footer.privacy_policy()
             footer.terms_and_conditions()
             footer.terms_of_use()
             footer.contact_us()
-        except Exception:
-            self.add_error()
         # Other sites: Links through to Aus.com, Corporate site and Business Events.
-        try:
+        with self.restraint('Other Sites section missing a link'):
             footer.australia()
             footer.businessevents_australia()
             if not self.globs['cn_mode']:    # China doesn't have this one.
                 footer.tourism_australia()
-        except Exception:
-            self.add_error()
         # Click the Change Your Country link.
-        footer.splash().click()
-        # Should link back to the Splash page.
-        self.dr.wait_for_page()
-        self.assertIn('/splash.html', self.dr.current_url(), 'The Splash link should lead to the '
-                      'Splash page, of course.')
+        with self.restraint('Splash Page link missing',
+                            TimeoutException='Splash Page link not linking to the Splash Page'):
+            footer.splash().click()
+            # Should link back to the Splash page.
+            self.dr.wait_for_page('/splash.html')
 
     def test_05_Sitemap(self) -> None:
         """Checks the Sitemap page links."""
         self.dr.open_home_page()
-        # Click the Sitemap link in the Footer.
-        try:
+        # Click the Sitemap link in the Footer, should link to the Sitemap page
+        with self.restraint('Sitemap Link not linking to the Sitemap',
+                            CP.BackupHrefs(self.dr).sitemap):
             CP.Footer(self.dr).sitemap().click()
-            # Should link to the Sitemap page."
-            self.dr.wait_for_page()
-            self.assertIn('/sitemap.html', self.dr.current_url(), 'The Sitemap link should link '
-                          'to the Sitemap page.')
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).sitemap()
+            self.dr.wait_for_page('/sitemap.html')
+        with self.destruction('Sitemap is missing from the sitemap page'):
+            sitemap = CP.Sitemap(self.dr)
         # Sitemap page should have links to each of the pages in the Nav Menu
-        sitemap = CP.Sitemap(self.dr)
-        try:
+        with self.restraint('The sitemap not containing each of the links in the Nav Menu'):
             nav_links = CP.NavMenu(self.dr).get_all_links()
             sitemap_links = sitemap.get_all_links()
-            self.assertTrue(nav_links.issubset(sitemap_links),
-                            'The sitemap should contain each of the links in the Nav Menu.')
-        except Exception:
-            self.add_error()
-        try:
-            # And should also have Change Password, Unsubscribe, and Coming Soon links.
-            # But China doesn't.
+            self.assertTrue(nav_links.issubset(sitemap_links))
+        # And should also have Change Password, Unsubscribe, and Coming Soon links. But not China
+        with self.restraint('Sitemap not containing Other Misc Links'):
             if not self.globs['cn_mode']:
                 sitemap.change()
                 sitemap.newsletter_unsubscribe()
                 sitemap.coming_soon()
-        except Exception:
-            self.add_error()
 
     def test_06_Filtered_Search_Itineraries(self) -> None:
         """Checks the Itineraries Search."""
         self.dr.open_home_page()
         # Navigate to Sales Resources > Itinerary Suggestions.
-        try:
+        with self.restraint('Couldn\'t get to Itinerary Suggestions via the nav',
+                            CP.BackupHrefs(self.dr).itineraries):
             CP.NavMenu.SalesResources(self.dr).open().itineraries_search_and_feature().click()
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).itineraries()
         # Do a random search and validate the results.
-        search = CP.FilteredSearch(self.dr)
-        search.random_search()
+        with self.destruction('Filtered search component missing from Itineraries page'):
+            search = CP.FilteredSearch(self.dr)
+        with self.destruction('Couldn\'t submit a search'):
+            search.random_search()
         self.look_at_search_results(search)
 
     def test_07_Filtered_Search_Fact_Sheets(self) -> None:
         """Tests the Fact Sheet Search."""
         self.dr.open_home_page()
         # Navigate to Sales Resources > Fact Sheets.
-        try:
+        with self.restraint('Couldn\'t get to Fact Sheets from the nav',
+                            CP.BackupHrefs(self.dr).factsheets):
             CP.NavMenu.SalesResources(self.dr).open().fact_sheets_overview().click()
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).factsheets()
         # Do a random search. (In Fact Sheet +PDFs Mode) Then validate the results.
-        search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
-        search.random_search()
-        try:
-            self.look_at_search_results(search)
-        except Exception:
-            self.add_error()
-        # Alright, done there back up.
+        with self.destruction('Filtered search component missing from the Fact Sheets page'):
+            search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
+        with self.destruction('Couldn\'t submit a search'):
+            search.random_search()
+        self.look_at_search_results(search)
+        # Alright, done there, back out of the checked page
         self.dr.back()
         # Because the page was reloaded, have to refresh the references.
-        search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
-        result = search.get_random_result()
-        # Click on a result's Download PDF link.
-        result.download_pdf()
-        # The relevant PDF should open in a new (second) (so number 1) window.
-        self.dr.switch_to_window(1)
-        CP.PDFPage(self.dr)
+        with self.destruction('Filtered search component disappeared from the Fact Sheets page'):
+            search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
+        # Click on a result's Download PDF link, should open in new window
+        with self.restraint('Couldn\'t get the search result\'s details',
+                            IndexError='PDF link did not open in new window'):
+            result = search.get_random_result()
+            result.download_pdf()
+            self.dr.switch_to_window(1)
+        with self.restraint('PDF link page did not contain a PDF file'):
+            CP.PDFPage(self.dr)
 
     def look_at_search_results(self, searcher: CP.FilteredSearch) -> None:
         """Validates the search results and the View More button."""
         # If the counter is present on this page, validate it against the number of results.
-        count = searcher.read_results_counter()
-        if count is not None:
-            firstcount = searcher.count_results()
-            self.assertEqual(count[0], firstcount,
-                             'The counter should initially show the number of results visible.')
-            # Now see if it updates upon Loading More Results.
-            searcher.load_more()
-            secondcount = searcher.count_results()
+        count = None    # This probably looks odd, but None can actually be a legal value here
+        with self.restraint('Results counter (or its empty placeholder) is missing'):
             count = searcher.read_results_counter()
+        if count is not None:
+            with self.restraint('Result Counter not showing the number of results'):
+                firstcount = searcher.count_results()
+                self.assertEqual(count[0], firstcount)
+            # Now see if it updates upon Loading More Results.
+            with self.restraint('Load More button missing'):
+                searcher.load_more()
             # At most five more results should be displayed, up to the maximum matching amount.
-            self.assertEqual(secondcount, min(firstcount + 5, count[1]),
-                             'The counter should show the new number of results visible.')
+            with self.restraint('Counter not updating to reflect additional results'):
+                secondcount = searcher.count_results()
+                count = searcher.read_results_counter()
+                self.assertEqual(secondcount, min(firstcount + 5, count[1]))
             # Check a random result, make sure it links to the right page.
-            result = searcher.get_random_result()
-            name = result.get_title().casefold()
-            # Click on the result's More Info link.
-            result.view_more_information()
-            # Should link to that result's More Info page.
-            self.assertEqual(result.SearchResultPage(self.dr).get_title().casefold(), name,
-                             "The result's link should go to the relevant page.")
+            with self.restraint('Countn\'t get the search Result details',
+                                AssertionError='Result\'s link went to a different page'):
+                result = searcher.get_random_result()
+                name = result.get_title().casefold()
+                # Click on the result's More Info link.
+                result.view_more_information()
+                # Should link to that result's More Info page.
+                self.assertEqual(result.SearchResultPage(self.dr).get_title().casefold(), name)
 
     def test_08_Interactive_Map(self) -> None:
         """Checks the Interactive Map page."""
@@ -472,6 +425,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         # Should open the Registration Acknowledgement page, confirming the account is set up.
         activa = regemail.activation_link()
         # Then, go to the Resend Activation page
+        form.dismiss_popup()
         try:
             CP.SignIn(self).resend().click()
         except Exception:
@@ -676,33 +630,16 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
 
     def test_14_Training_Summary(self):
         """Checks the Training Summary page."""
-        # Tells the site that the user has completed five modules.
-        dofimo = ('var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],f="{0}",e=f'
-                  '.split("-").reverse().join("_").replace("gb","uk");o=o.concat(o);for(m in o)if(o'
-                  '.hasOwnProperty(m))$.ajax({{url:"/bin/asp/trainingModule",type:"POST",cache:!1,d'
-                  'ataType:"json",data:{{isComplete:!0,moduleId:e+o[m],locale:f}}}})').format(
-                      self.dr.locale[1:])
-
-        def do_mod_then_back(mod: str) -> None:
-            """Doing the Module clicks the Back To Training button, which leads to LIVE
-            No guarantee that the testing is going on in LIVE, so go back manually."""
+        def do_mod_then_back() -> str:
+            """Do a module and go back to the Assignments page. Returns the module's ID too."""
             nonlocal modules
-            try:
-                MOD.do_module(self.dr.driver, mod)  # Cheating a little, but w/e
-            except Exception:
-                self.add_error('A failure occurred inside the module itself, (ran dofimo)')
-                # There are a lot of things that can go wrong here, just nuke the site from orbit.
-                self.dr.switch_to_frame(None)
-                self.dr.execute_script(dofimo)
-                    # It's the only way to be   certain.
-            self.dr.switch_to_frame(None)
-            self.dr.back()
-            try:
+            with CP.TrainingModule(self.dr) as modu:
+                mid = modu.id
+                modu.fast_complete_module()
+            with self.restraint('Couldn\'t get to Training Summary from nav', CP.BackupHrefs(self.dr).training):
                 CP.NavMenu.Training(self.dr).open().training_summary().click()
-            except Exception:
-                self.add_error("Couldn't get to Training Summary from nav")
-                CP.BackupHrefs(self.dr).training()
             modules = CP.TrainingSummary(self.dr)
+            return mid
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
         CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
@@ -720,11 +657,11 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             # I did say that implementation details are to be done elsewhere.
             # But error handling is to be done here, and that takes priority.
             modules.module_one()
-            do_mod_then_back('mod1')
+            do_mod_then_back()
             modules.module_two()
-            do_mod_then_back('mod2')
+            do_mod_then_back()
             modules.module_three()
-            do_mod_then_back('mod3')
+            do_mod_then_back()
 
             # Should receive a halfway email here.
             try:
@@ -732,8 +669,8 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             except Exception:
                 self.add_error("Halfway email didn't come in or was wrong")
 
-            modn = modules.module_nsw()
-            do_mod_then_back(modn)
+            modules.module_nsw()
+            modn = do_mod_then_back()
 
             # Open this one, but don't finish it.
             modules.module_vic()
@@ -753,12 +690,11 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             except Exception:
                 self.add_error('Modules did not have the correct set of states')
 
-            modq = modules.module_qld()
-            do_mod_then_back(modq)
+            modules.module_qld()
+            modq = do_mod_then_back()
         except Exception:   # Anything goes wrong with the modules, hack the badges and cugs in.
-            self.add_error('Assignments page broken / modules could not be found (ran dofimo)')
-            self.dr.switch_to_frame(None)
-            self.dr.execute_script(dofimo)
+            self.add_error('Assignments page broken / modules could not be found')
+            CP.TrainingSummary.fast_complete_five_modules(self.dr)
 
         # Should receive the qualification email here.
         try:

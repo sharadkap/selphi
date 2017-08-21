@@ -699,10 +699,16 @@ class HeaderSearch(WrappedElement):
 
 class InteractiveMap(WrappedElement):
     """Represents the Interactive Map.
-    Note that instantiating this class will also switch WebDriver focus into the map's iframe."""
+    Use in a with statement to switch WebDriver focus into the map's iframe."""
     def __init__(self, dr: Drivery):
         self.dr = dr
+
+    def __enter__(self):
         self.dr.switch_to_frame('#interactiveMapId')
+        return self
+
+    def __exit__(self, *args):
+        self.dr.switch_to_frame(None)
 
     class Controls(WrappedElement):
         """Represents the menu to the left of the map area."""
@@ -1350,8 +1356,8 @@ class TrainingSummary(WrappedElement):
         self.dr.flashy_find_element('.assignment-status-inprogress')
         self.dr.flashy_find_element('.assignment-status-new')
 
-    @classmethod
-    def fast_complete_five_modules(cls, dr):
+    @staticmethod
+    def fast_complete_five_modules(dr):
         """Tells the site that the user has completed five modules. Use this as a backup.
         Also, this switches the driver back to the default framing, for convenience. Class Method"""
         dr.switch_to_frame(None)
@@ -1359,7 +1365,7 @@ class TrainingSummary(WrappedElement):
             'var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],f="{0}",e=f.split'
             '("-").reverse().join("_").replace("gb","uk");o=o.concat(o);for(m in o)if(o.hasOwnPrope'
             'rty(m))$.ajax({{url:"/bin/asp/trainingModule",type:"POST",cache:!1,dataType:"json",dat'
-            'a:{{isComplete:!0,moduleId:e+o[m],locale:f}}}})').format(self.dr.locale[1:]))
+            'a:{{isComplete:!0,moduleId:e+o[m],locale:f}}}})').format(dr.locale[1:]))
 
 class Famils(WrappedElement):
     """Represents the content of the Famils page."""
@@ -1699,7 +1705,7 @@ class KDPSearch(FilteredSearch):
         """Returns the number of total results shown on the component's Count thing."""
         # This really is quite a bother?
         time.sleep(1)
-        return self.read_results_counter(True)[1]
+        return self.read_results_counter()[1]
 
     def lit_icons(self):
         """Gets a string of which of the Region Filters are active. may contain n, e, w, or s.

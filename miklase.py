@@ -38,7 +38,7 @@ class MyTestCase(unittest.TestCase):
 
     @contextmanager
     def restraint(self, msg=None, backuphref: Callable = None, **errors):
-        """Shortcut for the error handling. Put this in a with statement, it'll log any error.
+        """Shortcut for logging: Used in a with statement, it'll log any errors that may appear.
         msg is the default message, used if none of the specific exception types in errors occur.
         Provide alternate messages with the kwargs like ZeroDivisionError="Can't divide by zero"
         backuphref should be a BackupHrefs' method reference. Mind you don't invoke it instead."""

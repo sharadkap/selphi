@@ -28,13 +28,13 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         # Open the splash page.
         self.dr.splash_page()
         # Concerning the Languages Selector
-        with self.restraint('Language Selector is missing from the Splash page',
-                            AssertionError='Language selector does not have the full locale set'):
+        with self.destruction('Language Selector is missing from the Splash page'):
             langsel = CP.SplashSelect(self.dr)
+        # Select the country from the dropdown.
+        with self.restraint('The option corresponding to this locale was missing',
+                            AssertionError='Language selector does not have the full locale set'):
             self.assertSetEqual(langsel.cn_locale_set if self.globs['cn_mode']
                                 else langsel.locale_set, langsel.get_values())
-        # Select the country from the dropdown.
-        with self.restraint('The option corresponding to this locale was missing'):
             langsel.choose_locale()
         # Page should redirect to its respective locale.
         with self.restraint('The selected locale option did not link to the right page'):
@@ -44,13 +44,13 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Tests the Welcome Page content."""
         self.dr.open_home_page()
         # Check the video
-        with self.restraint('Video not present on the homepage'):
+        with self.restraint('Video not present on the homepage',
+                            TimeoutException='Video not playing after clicking play'):
             video = CP.WelcomeVideo(self.dr)
             video.play()
-        with self.restraint('Video not playing after clicking play'):
             self.dr.wait_until(video.is_playing, 'Waiting until video is playing')
         # Login and Register buttons should be present in the body content.
-        with self.restraint('Sign In or Register button missing from the page'):
+        with self.restraint('Sign In/Register button missing from the page'):
             CP.BodyLoginButton(self.dr)
             CP.BodyRegisterButton(self.dr)
         # The What You Can See Mosaic is displayed, contains five tiles.
@@ -144,12 +144,13 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         with self.destruction('Sitemap is missing from the sitemap page'):
             sitemap = CP.Sitemap(self.dr)
         # Sitemap page should have links to each of the pages in the Nav Menu
-        with self.restraint('The sitemap not containing each of the links in the Nav Menu'):
+        with self.restraint('Could not collect list of nav/sitemap links',
+                            AssertionError='The sitemap/nav menu link sets do not match'):
             nav_links = CP.NavMenu(self.dr).get_all_links()
             sitemap_links = sitemap.get_all_links()
             self.assertTrue(nav_links.issubset(sitemap_links))
         # And should also have Change Password, Unsubscribe, and Coming Soon links. But not China
-        with self.restraint('Sitemap not containing Other Misc Links'):
+        with self.restraint('Sitemap is missing some Other Misc Links'):
             if not self.globs['cn_mode']:
                 sitemap.change()
                 sitemap.newsletter_unsubscribe()
@@ -228,133 +229,115 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Checks the Interactive Map page."""
         # Navigate to Sales Resources > Interactive Map
         self.dr.open_home_page()
-        try:
+        with self.restraint('Couldn\'t get to the Interactive Map via the nav',
+                            CP.BackupHrefs(self.dr).map):
             CP.HeaderMapIcon(self.dr).click()
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).map()
-        # (Switches into the Map Iframe.)
-        imap = CP.InteractiveMap(self.dr)
-        # Map Menu should have: Cities, Iconic Destinaions, Itineraries, and Flight Times.
-        controls = imap.Controls(self.dr)
-        try:
-            cities = controls.Cities(self.dr)
-        except Exception:
-            self.add_error()
-        else:
-            try:
-                # Open the Cities menu, the Cities list should be shown.
+        # Get the map
+        with self.destruction('Interactive Map is missing from the page'):
+            imap = CP.InteractiveMap(self.dr)
+        # Do all this stuff inside the map's frame
+        with imap:
+            # Map Menu should have: Cities, Iconic Destinaions, Itineraries, and Flight Times
+            with self.destruction('Controls pane is missing from the map'):
+                controls = imap.Controls(self.dr)
+            # Open the Cities menu, the Cities list should be shown
+            with self.restraint('Cities menu is missing from the map controls'):
+                cities = controls.Cities(self.dr)
                 cities.open_menu()
-                # The Map should be populated with Map Pins.
-                # Click a pinned City, remember which one it was.
-                pin = imap.MapArea.MapPins(self.dr).pick_random()
-                # That City's Info Panel should be shown. Go examine it.
+                # The Map should be populated with Map Pins, pick a City, examine the Info Panel
+                with self.restraint('Couldn\'t get City map pin'):
+                    pin = imap.MapArea.MapPins(self.dr).pick_random()
+                # This next method (along with the invocation under Icons) doesn't throw anything,
+                # I just only want it to be executed if there were no errors leading up to it.
                 self.map_info_panel(pin)
-            except Exception:
-                self.add_error()
-        try:
-            icons = controls.IconicDestinations(self.dr)
-        except Exception:
-            self.add_error()
-        else:
-            try:
-                # Open the Iconic Destinations menu
+            # Now do the Iconic Destinations menu
+            with self.restraint('Iconic Destinations pane is missing from the map controls'):
+                icons = controls.IconicDestinations(self.dr)
                 icons.open_menu()
-                # The Icons list should be shown, the Map should be populated with Destination Pins.
-                # Click a random pinned Destination.
-                pin = imap.MapArea.MapPins(self.dr).pick_random()
-                # That Icon's Info Panel should be shown, verify all that.
+                # Map should be populated with Destination Pins, pick one and verify the Info
+                with self.restraint('Couldn\'t get Icon pin'):
+                    pin = imap.MapArea.MapPins(self.dr).pick_random()
                 self.map_info_panel(pin)
-            except Exception:
-                self.add_error()
-        try:
-            controls.Itineraries(self.dr)
-        except Exception:
-            self.add_error()
-        try:
-            flights = controls.FlyingTimes(self.dr)
-        except Exception:
-            self.add_error()
-        else:
-            # Open the Flying Times section, the Flying Times device appears.
-            flights.open_menu()
-            # Select a city in each of the From and To drop menus.
-            ffrom = flights.choose_from()
-            fto = flights.choose_to()
-            # The selected cities' Pins appear on the map,
-            #   connected by a flight path, traversed by a plane icon.
-            pins = imap.MapArea.MapPins(self.dr)
-            self.assertEqual(pins.count(), 2, 'A flight path should have two pins.')
-            names = pins.get_names()
-            self.assertIn(ffrom, names, 'The flight path should have the From pin.')
-            self.assertIn(fto, names, 'The flight path should have the To pin.')
-            # The flying Times panel shows the approximate flight time and distance.
-            flights.flight_time()
-            flights.flight_distance()
+            # This one is really more of the same, just verify it's there
+            with self.restraint('Itineraries menu is missing from the map controls'):
+                controls.Itineraries(self.dr)
+            # Open the Flying Times section, the Flying Times device appears
+            with self.restraint('Flying Times section missing from the map controls'):
+                flights = controls.FlyingTimes(self.dr)
+                flights.open_menu()
+                # Select a city in each of the From and To drop menus.
+                with self.restraint('Couldn\'t select a flight city'):
+                    ffrom = flights.choose_from()
+                    fto = flights.choose_to()
+                # The cities appear on the map, connected by a flight path, complete with plane icon
+                with self.restraint('Selected Flight cities not appearing on the map',
+                                    AssertionError='Flight path didn\'t have two pins.'):
+                    pins = imap.MapArea.MapPins(self.dr)
+                    self.assertEqual(pins.count(), 2)
+                with self.restraint('Flight City names couldn\'t be retrieved',
+                                    AssertionError='Flight path missing the selected city names'):
+                    names = pins.get_names()
+                    self.assertIn(ffrom, names)
+                    self.assertIn(fto, names)
+                # The flying Times panel shows the approximate flight time and distance.
+                with self.restraint('Flight details missing time/distance'):
+                    flights.flight_time()
+                    flights.flight_distance()
 
     def map_info_panel(self, name: str) -> None:
         """Look at a Map Location Info Pane. Checks the various links and images."""
         # The right Info panel should be open.
-        panel = CP.InteractiveMap.Controls.InfoPanel(self.dr)
-        try:
-            self.assertEqual(name, panel.get_title(),
-                             'The link should open the City of the same name.')
-            # The Find Out More and View Highlights buttons should link
-            #   to a relevant Fact Sheet/Itinerary Plan.
-            fomlink = panel.find_out_more()
-            self.assertIn(self.globs['locale'], fomlink,
-                          'The More Info link should remain within the same locale.')
-            self.assertEqual(fomlink, panel.view_highlights(),
-                             'Both of the More Info Links should go to the same page.')
-        except Exception:
-            self.add_error()
-        # Click the Photos
-        try:
-            imgnum = panel.count_photos()
-            # Open the Photo viewer.
-            photos = panel.open_photos()
+        with self.restraint('Couldn\'t open the Info panel on ' + name,
+                            AssertionError='The link should open the City of the same name.'):
+            panel = CP.InteractiveMap.Controls.InfoPanel(self.dr)
+            self.assertEqual(name, panel.get_title())
+            # Find Out More/View Highlights buttons should link to a relevant Fact Sheet/Itinerary
+            with self.restraint('Find Out More button missing from ' + name,
+                                AssertionError='More Info link goes to another locale'):
+                fomlink = panel.find_out_more()
+                self.assertIn(self.globs['locale'], fomlink)
+                with self.restraint('More Info link and View More button go to different pages'):
+                    self.assertEqual(fomlink, panel.view_highlights())
+            # Click the Photos, open the Photo viewer.
+            with self.restraint('Photo viewer not working on ' + name,
+                                AssertionError='Images on {} are not distinct'.format(name)):
+                imgnum = panel.count_photos()
+                photos = panel.open_photos()
             # The Photo Viewer should appear, can be scrolled through, displays different images.
             # But if there was only one image available, skip this scrolling bit.
-            if not imgnum == 1:
-                imgone = photos.current_image_source()
-                photos.next()
-                imgtwo = photos.current_image_source()
-                self.assertNotEqual(imgone, imgtwo,
-                                    'One image should be distinct from the next.')
-                photos.next()
-                imgone = photos.current_image_source()
-                self.assertNotEqual(imgtwo, imgone,
-                                    'Two image should also be distinct from the nexter.')
-            # Close the Photo Viewer
-            photos.close()
-        except Exception:
-            self.add_error()
+                if not imgnum == 1:
+                    imgone = photos.current_image_source()
+                    photos.next()
+                    imgtwo = photos.current_image_source()
+                    self.assertNotEqual(imgone, imgtwo)
+                    photos.next()
+                    imgone = photos.current_image_source()
+                    self.assertNotEqual(imgtwo, imgone)
+                # Close the Photo Viewer
+                photos.close()
         # Click on one of the Itinerary Suggestion links
-        try:
+        with self.restraint('Could not open Itinerary Suggestion'):
             itiname = panel.random_itinerary()
             # If there were no Itinerary links, skip this bit.
             if itiname != '':
                 # New panel, renew the selector.
-                panel = CP.InteractiveMap.Controls.InfoPanel(self.dr)
-                # The selected Itinerary should open.
-                self.assertEqual(itiname, panel.get_title(),
-                                 'The link should open the Itinerary of the same name.')
-                # Its route should appear and gain focus on the map, but zoom out a bit first,
-                # the pins will sometimes pop up behind the menu panel.
-                CP.InteractiveMap.ZoomTools(self.dr).zoom_out()
-                pins = CP.InteractiveMap.MapArea.MapPins(self.dr)
-                # The Find Out More link should link to the relevant Itinerary Page.
-                self.assertIn(self.globs['locale'], panel.find_out_more(),
-                              'The More Info link should remain within the same locale.')
-                # Click on one of the Route Pins
-                pins.pick_random()
-                # An info box should appear at the pin.
-                CP.InteractiveMap.MapArea.InfoPopup(self.dr)
-            # Click the Back To Menu Button, the panel should spin back to the Main Map Menu
-        except Exception:
-            self.add_error()
-        finally:
-            panel.back_to_menu()
+                with self.restraint('Could not open Itinerary panel',
+                                    AssertionError='Itinerary link {} opened different itinerary'.format(itiname)):
+                    panel = CP.InteractiveMap.Controls.InfoPanel(self.dr)
+                    self.assertEqual(itiname, panel.get_title())
+                    # Its route should appear and gain focus on the map, but zoom out a bit first,
+                    # the pins will sometimes pop up behind the menu panel.
+                    CP.InteractiveMap.ZoomTools(self.dr).zoom_out()
+                    pins = CP.InteractiveMap.MapArea.MapPins(self.dr)
+                    # The Find Out More link should link to the relevant Itinerary Page.
+                    with self.restraint('The More Info link should remain within the same locale.'):
+                        self.assertIn(self.globs['locale'], panel.find_out_more())
+                    # Click on one of the Route Pins, an info box should appear at the pin.
+                    with self.restraint('Route Point Info Box not working'):
+                        pins.pick_random()
+                        CP.InteractiveMap.MapArea.InfoPopup(self.dr)
+        # Click the Back To Menu Button, the panel should spin back to the Main Map Menu
+        panel.back_to_menu()
 
     def test_09_Contact_Us(self) -> None:
         """Checks the Contact Us page."""

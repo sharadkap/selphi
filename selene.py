@@ -96,6 +96,7 @@ def launch_test(args) -> Tuple[str, str, dict]:
                                                   time.strftime('%Y%m%d_%H%M'))
         try:
             with open(os.path.join(outdir, filna), mode='w', encoding='UTF-8') as newfil:
+                newfil.write(globs.get('username'))
                 newfil.write(buf.getvalue())
         except Exception as ex:
             print("Failed to save the output file:", ex)

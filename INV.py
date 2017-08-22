@@ -14,7 +14,7 @@ class INV(miklase.MyTestCase):
         """Checks the various logos and links in the header"""
         self.dr.open_home_page()
         # Click the logo link
-        with self.restraint('Logo link is missing', AssertionError='Logo link did not go to homepage'):
+        with self.restraint('Logo link missing', AssertionError='Logo link did not go to homepage'):
             CP.NavMenu(self.dr).logo().click()
             self.assertEqual(self.globs['locale_url'], self.dr.current_url())
 
@@ -25,7 +25,7 @@ class INV(miklase.MyTestCase):
             self.assertEqual(self.globs['locale_url'], self.dr.current_url())
 
         # Click the 中国大陆 (简体中文) link        I assume you're testing the /en site, i guess??
-        with self.restraint('INV CN Link is missing', IndexError='INV CN Link did not open in new tab',
+        with self.restraint('INV CN Link missing', IndexError='INV CN Link did not open in new tab',
                             AssertionError='INV CN Link did not link to the CN Investment Site'):
             CP.NavMenu(self.dr).invcn().click()
             self.dr.switch_to_window(1)
@@ -35,7 +35,8 @@ class INV(miklase.MyTestCase):
 
         # Check every link in the header nav, make sure they are correct
         # Assuming of course, that the PROD content is correct, and never changes
-        nav = CP.NavMenu(self.dr)
+        with self.destruction('Header Nav is missing'):
+            nav = CP.NavMenu(self.dr)
         with self.restraint('Why Australia section was missing an option'):
             why = nav.WhyAustralia(self.dr).open()
             why.why_australia()
@@ -76,10 +77,11 @@ class INV(miklase.MyTestCase):
         """Tests the Hero Banner's Pin It button, mostly"""
         self.dr.open_home_page()
         # Open a page with a Hero Banner
-        with self.restraint('Why Australia link missing from nav', backuphref=CP.BackupHrefs(self.dr).why_australia):
+        with self.restraint('Why Australia link missing from nav',
+                            CP.BackupHrefs(self.dr).why_australia):
             CP.NavMenu.WhyAustralia(self.dr).open().why_australia().click()
         # Find the banner and click the Pin It button
-        with self.restraint('Hero banner Pin It button is missing'):
+        with self.destruction('Hero banner Pin It button is missing'):
             CP.Hero(self.dr).pin_it()
         # Confirm the Pinterest window opens in a new window
         with self.restraint(IndexError='Pinterest link did not open in new window',
@@ -91,11 +93,12 @@ class INV(miklase.MyTestCase):
         """Tests the ShareThis functionality"""
         self.dr.open_home_page()
         # Open a page with a Share component and click the Share button
-        with self.restraint('Why Australia link missing from nav', backuphref=CP.BackupHrefs(self.dr).why_australia):
+        with self.restraint('Why Australia link missing from nav',
+                            CP.BackupHrefs(self.dr).why_australia):
             CP.NavMenu.WhyAustralia(self.dr).open().why_australia().click()
         # Confirm the AddThis window appears, and is populated with the page title
-        with self.restraint('Share button missing from the page',
-                            AssertionError='Page title is not shown in the share popup'):
+        with self.destruction('Share button missing from the page',
+                              AssertionError='Page title is not shown in the share popup'):
             self.assertIn(CP.ShareThis(self.dr).open_share(), self.dr.page_title())
 
     def test_04_Search(self) -> None:
@@ -155,8 +158,8 @@ class INV(miklase.MyTestCase):
         with self.restraint('World Class Tourism link is missing',
                             CP.BackupHrefs(self.dr).world_class_tourism_offering):
             CP.NavMenu.WhyAustralia(self.dr).open().world_class_tourism_offering().click()
-        with self.restraint('Video is missing from the page',
-                            TimeoutException='Video does not play when clicked'):
+        with self.destruction('Video is missing from the page',
+                              TimeoutException='Video does not play when clicked'):
             vide = CP.Video(self.dr)
             vide.play()
             self.dr.wait_until(vide.is_playing, 'Waiting for video to be in the Playing state')
@@ -189,5 +192,8 @@ class INV(miklase.MyTestCase):
         """Tests the Livefyre functionality."""
         self.dr.open_home_page()
         # Find the Livefyre carousel
-        with self.restraint('Livefyre component is missing'):
+        with self.destruction('Livefyre component is missing'):
             liv = CP.Livefyre(self.dr)
+        # Should have a description text
+        with self.restraint('Livefyre missing the description paragraph'):
+            self.assertGreater(liv.get_description(), '')

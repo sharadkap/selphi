@@ -321,8 +321,8 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             # If there were no Itinerary links, skip this bit.
             if itiname != '':
                 # New panel, renew the selector.
-                with self.restraint('Could not open Itinerary panel',
-                                    AssertionError='Itinerary link {} opened different itinerary'.format(itiname)):
+                with self.restraint('Could not open Itinerary panel', AssertionError=
+                                    'Itinerary link {} opened different itinerary'.format(itiname)):
                     panel = CP.InteractiveMap.Controls.InfoPanel(self.dr)
                     self.assertEqual(itiname, panel.get_title())
                     # Its route should appear and gain focus on the map, but zoom out a bit first,
@@ -336,21 +336,19 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
                     with self.restraint('Route Point Info Box not working'):
                         pins.pick_random()
                         CP.InteractiveMap.MapArea.InfoPopup(self.dr)
-        # Click the Back To Menu Button, the panel should spin back to the Main Map Menu
-        panel.back_to_menu()
+            # Click the Back To Menu Button, the panel should spin back to the Main Map Menu
+            panel.back_to_menu()
 
     def test_09_Contact_Us(self) -> None:
         """Checks the Contact Us page."""
         self.dr.open_home_page()
         # Navigate to About > Contact Us.
-        try:
+        with self.restraint('Could not get to Contact Us page via the nav',
+                            CP.BackupHrefs(self.dr).contact):
             CP.NavMenu.About(self.dr).open().contact_us().click()
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).contact()
-        # "Click the Contact Us link, Default email client should open, with the To field populated
-        #   with the relevant contact." Can't actually test that, so a 'mailto:' will have to do.
-        CP.ContactUs(self.dr)
+        # Can't actually test an email with webdriver, so presence of a 'mailto:' will have to do
+        with self.destruction('Contact Us page is missing the mailing link'):
+            CP.ContactUs(self.dr)
 
     def test_10_Registration(self) -> None:
         """Checks the Registration process."""

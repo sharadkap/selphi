@@ -86,9 +86,8 @@ def launch_test(args) -> Tuple[str, str, dict]:
         elif site == 'AUS':
             names = [AUS.AUS(AUS.ausnames[x], globs, runner.result)
                      for x in globs['tests'] or AUS.ausnames]
-        tests = unittest.TestSuite(names)
         suite = unittest.TestSuite()
-        suite.addTests(tests)
+        suite.addTests(unittest.TestSuite(names))
         result = runner.run(suite)
 
         # Give a unique name to the output file so you don't overwrite it every time!
@@ -118,7 +117,7 @@ def perform_hacks() -> None:
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""
     conf = configparser.ConfigParser()
-    conf.read('test.properties')
+    conf.read(os.path.join(os.path.dirname(__file__), 'test.properties'))
     result = dict(conf['Main Section'])
     result['auth'] = result['auth'].split(',') if result['auth'] else []
     result['locales'] = result['locales'].split(',')

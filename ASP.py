@@ -354,122 +354,114 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Checks the Registration process."""
         self.dr.open_home_page()
         # Navigate to the Registration Page
-        try:
+        with self.restraint('Could not get to the Registration page via the page Register button',
+                            CP.BackupHrefs(self.dr).register):
             CP.BodyRegisterButton(self.dr).click()
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).register()
-        # Random letters to make a unique username.
-        self.globs['userid'] = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
-        self.globs['email'] = self.globs['email'].format(self.globs['userid'])
-        # The Country Code.                  To account for the ROW locales, have this bit.
-        langcode, localecode = (self.globs['locale'].replace('/', '').split('-')*2)[0:2]
-        environ = self.globs['base_url'].split('/')[2].split('.')[0][0:3] #pylint: disable=E1101
-        # Username stuff, add the Environment prefix to identify the user.
-        # Different zip codes in different countries.
-        zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345',
-                   'it': '12345', 'fr': '12345', 'de': '12345'}.get(localecode, '123456')
+        with self.destruction('Could not create the user details, likely the test config is wrong'):
+            # Random letters to make a unique username.
+            self.globs['userid'] = ''.join([chr(random.randrange(65, 91)) for i in range(4)])
+            self.globs['email'] = self.globs['email'].format(self.globs['userid'])
+            # The Country Code.                  To account for the ROW locales, have this bit.
+            langcode, localecode = (self.globs['locale'].replace('/', '').split('-')*2)[0:2]
+            environ = self.globs['base_url'].split('/')[2].split('.')[0][0:3] #pylint: disable=E1101
+            self.globs['username'] = localecode + environ + self.globs['userid']
+            # Username stuff, add the Environment prefix to identify the user.
+            # Different zip codes in different countries.
+            zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345',
+                       'it': '12345', 'fr': '12345', 'de': '12345'}.get(localecode, '123456')
         # Fill out the Registration Form with dummy information.
         # Ensure the Name fields are/contain TEST.
-        form = CP.RegistrationForm(self.dr)
-        form.plain_text_fields('TEST')
-        form.web = 'www.TEST.com'
-        form.fname = 'TEST ' + localecode + environ
-        form.date_of_birth('12/12/1212')
-        form.pick_business_profile()
-        form.zip = zipcode
-        # If in China, pick an Official Preferred Travel Partner
-        if self.globs['cn_mode']: form.pick_partner()
-        # If in China, it is already China.
-        if not self.globs['cn_mode']: form.pick_country(localecode.upper())
-        form.pick_state()
-        # If in China, it is already Chinese.
-        if not self.globs['cn_mode']: form.pick_language(langcode)
-        # Use an overloaded email.
-        form.email_address(self.globs['email'].format(self.globs['userid']))
-        form.how_many_years()
-        form.how_many_times()
-        form.how_many_bookings()
-        form.standard_categories()
-        form.experiences()
-        # Better hope this test comes before the other ones!
-        self.globs['username'] = localecode + environ + self.globs['userid']
-        form.username = self.globs['username']
-        form.password(self.globs['password'])
-        form.terms_and_conditions()
-        form.decaptcha()
-        # Click the Create Account button, popup should appear confirming account creation.
-        form.submit()
+        with self.destruction('Registration form missing or incomplete'):
+            form = CP.RegistrationForm(self.dr)
+            form.plain_text_fields('TEST')
+            form.web = 'www.TEST.com'
+            form.fname = 'TEST ' + localecode + environ
+            form.date_of_birth('12/12/1212')
+            form.pick_business_profile()
+            form.zip = zipcode
+            # If in China, pick an Official Preferred Travel Partner
+            if self.globs['cn_mode']: form.pick_partner()
+            # If in China, it is already China.
+            if not self.globs['cn_mode']: form.pick_country(localecode.upper())
+            form.pick_state()
+            # If in China, it is already Chinese.
+            if not self.globs['cn_mode']: form.pick_language(langcode)
+            # Use an overloaded email.
+            form.email_address(self.globs['email'].format(self.globs['userid']))
+            form.how_many_years()
+            form.how_many_times()
+            form.how_many_bookings()
+            form.standard_categories()
+            form.experiences()
+            # Better hope this test comes before the other ones!
+            form.username = self.globs['username']
+            form.password(self.globs['password'])
+            form.terms_and_conditions()
+            form.decaptcha()
+            # Click the Create Account button, popup should appear confirming account creation.
+            form.submit()
         # Email should be sent confirming this.
-        regemail = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
+        with self.destruction('Registration email was not received'):
+            regemail = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
         # In the Registration Confirmation email, click the Activate Account link.
         # Should open the Registration Acknowledgement page, confirming the account is set up.
-        activa = regemail.activation_link()
+        with self.destruction('The Registration email did not contain the Activation link'):
+            activa = regemail.activation_link()
         # Then, go to the Resend Activation page
-        form.dismiss_popup()
-        try:
-            CP.SignIn(self).resend().click()
-        except Exception:
-            self.add_error()
-            CP.BackupHrefs(self.dr).resend()
+        with self.restraint('Registratiopn Success popup not present or can\'t be closed'):
+            form.dismiss_popup()
+        with self.restraint('Could not get to the Resend Email page via the sign in pane',
+                            CP.BackupHrefs(self.dr).resend):
+            CP.SignIn(self.dr).resend().click()
         # Enter the user's email address into the Forgot Username form.
-        regus = CP.ForgottenForm(self.dr)
-        regus.email(self.globs['email'])
-        # Click the Submit button, a panel should appear confirming submission.
-        regus.submit()
+        with self.restraint('Resend Email form missing from the Resend Email page'):
+            regus = CP.ForgottenForm(self.dr)
+            regus.email(self.globs['email'])
+            # Click the Submit button, a panel should appear confirming submission.
+            regus.submit()
         # An email should be received at the given address; it's just the registration email again.
-        rerege = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
-        self.assertEqual(activa, rerege.activation_link(),
-                         "The Re Activation email should have the same link as the regular one.")
-
+        with self.restraint('Resent Registration email was not received', AssertionError=
+                            'The Re-Activation email should have the same link as the regular one'):
+            rerege = Email.RegistrationEmail(self.globs, self.dr, self.globs['userid'])
+            self.assertEqual(activa, rerege.activation_link())
 
         self.dr.get(activa)
 
     def test_11_Login(self):
         """Tests the Login-related functionality."""
-        # Log in.
+        # Log in, should proceed to the Secure welcome page
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
-        # Should proceed to the Secure welcome page.
-        try:
-            self.assertIn(self.globs['locale'] + '/secure.html', self.dr.current_url(),
-                          'After logging in, should redirect to a/the secure page.')
-        except Exception:
-            self.add_error()
-        # Check the Nav Menu
-        # The Sales section should now have the My Sales Tools link
-        try:    # It can sometimes take a minute for the stuff to be set up for a new user.
+        with self.destruction('Sign In pane missing'):
+            CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        with self.restraint(TimeoutException='User not directed to /secure on login'):
+            self.dr.wait_for_page('/secure')
+        # Check the Nav Menu, the Sales section should now have the My Sales Tools link
+        # It can sometimes take a minute for the stuff to be set up for a new user
+        with self.restraint('Secure nav not available immediately on first login', self.dr.refresh):
             CP.NavMenu.SalesResources(self.dr).open().my_sales_tools()
-        except Exception:   # So try again if it wasn't there the first time.
-            self.dr.refresh()
-            try:
-                CP.NavMenu.SalesResources(self.dr).open().my_sales_tools()
-            except Exception:
-                self.add_error()
+        with self.destruction('Secure nav still not available after refresh'):
+            CP.NavMenu.SalesResources(self.dr).open().my_sales_tools()
         # The Training Section should now have the Training Summary and Webinars links.
-        try:
+        with self.restraint('Training Summary section missing from the nav'):
             train = CP.NavMenu.Training(self.dr).open()
             train.webinars()
             train.training_summary()
-        except Exception:
-            self.add_error()
         # The News & Updates section should have the Latest News Link
         # The News section should now  have the Product Updates link.
-        try:
+        with self.restraint('News And Products section missing from the nav'):
             news = CP.NavMenu.NewsAndProducts(self.dr).open()
             news.latest_news()
             news.product_videos()
-        except Exception:
-            self.add_error()
         # China shows most of its ASC stuff to unqualified users, yes.
-        if self.globs['cn_mode']:
-            club = CP.NavMenu.AussieSpecialistClub(self.dr).open()
-            club.famils()
-            club.aussie_specialist_photos()
-        else:
+        with self.restraint('Aussie Specialist Club section missing from the nav', AssertionError=
+                            'Aussie Specialist Club section being shown to trainee user'):
+            if self.globs['cn_mode']:
+                club = CP.NavMenu.AussieSpecialistClub(self.dr).open()
+                club.famils()
+                club.aussie_specialist_photos()
+            else:
             # The Club section should not be present. (Don't instantiate it, it isn't there)
-            self.assertTrue(CP.NavMenu.AussieSpecialistClub.not_present(self.dr),
-                            'A trainee should not have access to the Aussie Specialist Club.')
+                self.assertTrue(CP.NavMenu.AussieSpecialistClub.not_present(self.dr))
 
     def test_12_Favourites(self):
         """Tests the Sales Tools functionality."""
@@ -478,28 +470,25 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             """Opens a mosaic, checks it, and adds it to sales tools"""
             nonlocal favtitles
             # Click on some of the Mosaic panels.
-            try:
+            with self.restraint('Opening Tile or Finding Hero failed',
+                                TimeoutException='Favourites Count did not increment on add fave'):
                 # Bleh. Can't just use the tile list, pages change, StaleElementExceptions.
                 # pick a bunch of random numbers from zero to the number of tiles.
                 for i in random.sample(range(len(CP.WhatYouCanSeeMosaic(self.dr))), num):
-                    tile = CP.WhatYouCanSeeMosaic(self.dr)[i]
-                    # The Panels direct to their page when clicked.
-                    tile.go()
-                    # Click on the Heart buttons of those mosaics.
+                    # Go to the page of those mosaic tiles, add to faves
+                    CP.WhatYouCanSeeMosaic(self.dr)[i].go()
                     hero = CP.Hero(self.dr)
                     hero.add()
                     favtitles.add(hero.get_title())
-                    # The Heart Icon in the header should pulse and have a number incremented.
+                    # The Heart Icon in the header should pulse and have a number incremented
                     self.dr.wait_until(
                         lambda: len(favtitles) == CP.HeaderHeartIcon(self.dr).favourites_count(),
-                        'Added page to faves to increment favourites count.')
+                        'After adding page to faves, favourites count to be incremented')
                     self.dr.back()
-            except Exception:
-                self.add_error()
 
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # If there are already favourites, that's a problem, remove them. Messes with the count.
         if CP.HeaderHeartIcon(self.dr).favourites_count() != 0:
             CP.NavMenu.SalesResources(self.dr).open().my_sales_tools().click()
@@ -573,7 +562,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Tests the Profile page."""
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to the Profile page.
         try:
             CP.NavMenu(self.dr).profile().click()
@@ -623,7 +612,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             return mid
         # Pre-condition: Should be signed in.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to Training > Training Summary.
         try:
             CP.NavMenu.Training(self.dr).open().training_summary().click()
@@ -704,7 +693,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Checks the Aussie Specialist Club nav menu links."""
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Open the Aussie Specialist Club section in the Nav menu
         club = CP.NavMenu.AussieSpecialistClub(self.dr)
         club.click()
@@ -724,7 +713,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Tests the Travel Club search."""
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > Travel Club
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().travel_club().click()
@@ -741,7 +730,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Checks the Famils page."""
         # pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > Famils
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().famils().click()
@@ -756,7 +745,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Checks the Aussie Specialist Photos page."""
         # pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > AS Photos
         try:
             CP.NavMenu.AussieSpecialistClub(self.dr).open().aussie_specialist_photos().click()
@@ -778,7 +767,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             self.skipTest("China doesn't have the Qualification Badge Download.")
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to ASC > Download Qualification Badge
         CP.NavMenu.AussieSpecialistClub(self.dr).open().asp_logo().click()
         # Click the Download Qualification Badge link.
@@ -891,7 +880,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
 
         # Pre-condition: Logged in as a Qualified User.
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Preamblic mess.
         try:
             CP.NavMenu(self.dr).profile().click()
@@ -969,7 +958,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         """Checks that the Profile Page has a Premier Badge. Expect this one to fail."""
         # Pre-condition: Logged in as a Premier User
         self.dr.open_home_page()
-        CP.SignIn(self).sign_in(self.globs['username'], self.globs['password'])
+        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # Navigate to the Profile Page.
         try:
             CP.NavMenu(self.dr).profile().click()
@@ -988,7 +977,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         # Click the Sign In link
         # In the Sign In panel, click the Forgotten Username link.
         try:
-            CP.SignIn(self).forgotten_username().click()
+            CP.SignIn(self.dr).forgotten_username().click()
         except Exception:
             self.add_error()
             CP.BackupHrefs(self.dr).username()
@@ -1008,7 +997,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         # Click the Sign In link
         # In the Sign In panel, click the Forgotten Password link.
         try:
-            CP.SignIn(self).forgotten_password().click()
+            CP.SignIn(self.dr).forgotten_password().click()
         except Exception:
             self.add_error()
             CP.BackupHrefs(self.dr).password()
@@ -1030,8 +1019,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         # Sign in with the new password, because these tests *are* being executed in order, right?
         try:
             # Signing in with a temp password should redirect to the Change page, catch it if not.
-            CP.SignIn(self).sign_in(
-                self.globs['username'], self.globs['temp_pass'], new_password=True)
+            CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['temp_pass'])
             change = CP.ChangePassword(self.dr)
         except Exception:
             self.add_error()

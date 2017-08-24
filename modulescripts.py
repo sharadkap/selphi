@@ -22,6 +22,7 @@ Open Menu Button, so the z-index is added to be more specific.
 A Tuple, like ('s15_GBR', 'gbr_drop') signifies a Drag And Drop, with the first
 one being dragged to the second. Note, Tuples can contain Lists too."""
 
+from os import path
 import json
 from collections import OrderedDict
 
@@ -105,7 +106,7 @@ MODULES = OrderedDict([('mod1', {}), ('mod2', {}), ('mod3', {}), ('act', {}), ('
                        ('aboriginal', {}), ('golf', {}), ('lodges', {}), ('ra', {}),
                        ('walks', {}), ('wine', {}), ('coastal', {}), ('cruise', {})])
 
-with open(JSON, encoding='UTF-8') as fil:
+with open(path.join(path.dirname(__file__), JSON), encoding='UTF-8') as fil:
     thelist = json.load(fil)
 try:
     for lang in LANGS:

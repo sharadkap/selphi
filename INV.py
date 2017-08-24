@@ -1,5 +1,6 @@
 """The test suite for the Investment website regression."""
 
+import random
 from collections import OrderedDict
 import components as CP
 import miklase
@@ -197,3 +198,5 @@ class INV(miklase.MyTestCase):
         # Should have a description text
         with self.restraint('Livefyre missing the description paragraph'):
             self.assertGreater(liv.get_description(), '')
+        with self.destruction('Livefyre component has no images'):
+            til = random.choice(liv.tiles)

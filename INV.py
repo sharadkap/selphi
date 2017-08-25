@@ -200,3 +200,5 @@ class INV(miklase.MyTestCase):
             self.assertGreater(liv.get_description(), '')
         with self.destruction('Livefyre component has no images'):
             til = random.choice(liv.tiles)
+            til.open()
+        

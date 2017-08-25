@@ -1785,14 +1785,17 @@ class Livefyre(WrappedElement):
         return self.dr.flashy_find_element('.section-intro .type-intro + p', self.element).text
 
     class LivefyreTile(WrappedElement):
-        """Represents the individual tiles of a Livefyre collection. Don't instantiate directly."""
+        """Represents the individual tiles of a Livefyre collection. Don't instantiate directly.
+        Can be used as a context manager to open and close the tile as needed."""
         def __init__(self, dr: Drivery, element: WebElement):
             self.dr = dr
             self.element = element
 
-        def open(self):
-            """Clicks the tile, opening its full description pane."""
-            self.element.click()
+        def __enter__(self):
+            return self.click()
+
+        def __exit__(self, *args):
+            self.dr.flashy_find_element('.livefyre-lightbox--button-arrow-close').click()
 
 class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint: disable=R0904
     """Call on this if an important component is missing, it has links to the pages."""

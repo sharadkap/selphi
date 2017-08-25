@@ -314,7 +314,7 @@ class Email:
                 hrefs = {x['href'].split('.')[-1] for x in links}
                 locs = locs.union({'zh-cn'} if hrefs == {'json'} else hrefs)
             else:
-                links = ema.select('a[href*="t.updates.tourism.australia.com"]')
+                links = ema.select('a[href*="t.campaign.adobe.com"]')
                 hrefs = [re.search(r'p1\=\w\w((-|_)\w\w)?', x['href']) for x in links]
                 locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
         return locs

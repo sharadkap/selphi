@@ -206,8 +206,10 @@ class MyTestResult(unittest.TextTestResult):
 
     def addError(self, test, err):
         """If a test crashed, make a note of that"""
-        super(MyTestResult, self).addError(test, err)
-        self.addResult(test, STATES.ERROR, test.tidy_error(err))
+        # The JustStopError is raised by me, right after I have already logged the error in question
+        if not isinstance(err, JustStopError):      # You can ignore it
+            super(MyTestResult, self).addError(test, err)
+            self.addResult(test, STATES.ERROR, test.tidy_error(err))
 
     def printErrors(self):
         """After running the test, print out the full results"""

@@ -486,14 +486,16 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
                         'After adding page to faves, favourites count to be incremented')
                     self.dr.back()
 
-        # Pre-condition: Should be signed in.
+        # Sign in first
         self.dr.open_home_page()
-        CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
+        with self.destruction('Could not sign in'):
+            CP.SignIn(self.dr).sign_in(self.globs['username'], self.globs['password'])
         # If there are already favourites, that's a problem, remove them. Messes with the count.
-        if CP.HeaderHeartIcon(self.dr).favourites_count() != 0:
-            CP.NavMenu.SalesResources(self.dr).open().my_sales_tools().click()
-            for x in CP.MySalesTools(self.dr).get_favourites():
-                x.close()
+        with self.destruction('Favourites section is missing from the Header'):
+            if CP.HeaderHeartIcon(self.dr).favourites_count() != 0:
+                CP.NavMenu.SalesResources(self.dr).open().my_sales_tools().click()
+                for x in CP.MySalesTools(self.dr).get_favourites():
+                    x.close()
         # Navigate to the About page.
         try:
             CP.NavMenu.About(self.dr).open().about().click()

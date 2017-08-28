@@ -499,6 +499,10 @@ class Footer(WrappedElement):
         attach_links(self, ['businessevents.australia'], selector='[href*="{}.c"]')
         attach_links(self, ['austrade'], selector='[href*="www.{}.gov.au"]')
 
+    def get_all_links(self) -> Set[str]:
+        """Get a list of all of the links on the footer. Won't get the languages dropdown though."""
+        return {li.get_attribute('href') for li in self.dr.flashy_find_elements('a', self.element)}
+
     def get_locales(self) -> List[str]:
         """Get a list of the countries available to the footer switcher. '/en-ca.html' format."""
         return [opt.get_attribute('value') for opt in
@@ -1784,18 +1788,40 @@ class Livefyre(WrappedElement):
         """Gets the caption/description text above the images area."""
         return self.dr.flashy_find_element('.section-intro .type-intro + p', self.element).text
 
+    def scroll(self) -> None:
+        """Clicks the Next Arrow button on the carousel, scrolling the tiles"""
+        self.dr.flashy_find_element('.owl-next', self.element).click()
+        time.sleep(1)   # Yeah, but there's no real indication as to when the animation is done
+
     class LivefyreTile(WrappedElement):
         """Represents the individual tiles of a Livefyre collection. Don't instantiate directly.
         Can be used as a context manager to open and close the tile as needed."""
         def __init__(self, dr: Drivery, element: WebElement):
             self.dr = dr
             self.element = element
+            self.telemen = None
 
         def __enter__(self):
+            self.telemen = self.dr.flashy_find_element('.livefyre-lightbox-item')
             return self.click()
 
         def __exit__(self, *args):
-            self.dr.flashy_find_element('.livefyre-lightbox--button-arrow-close').click()
+            if self.dr.check_visible_quick('.livefyre-lightbox--container'):
+                self.dr.flashy_find_element('.livefyre-lightbox--button-arrow-close').click()
+
+        def get_links(self) -> List[WrappedElement]:
+            """Use only if the tile is open, gets a list of all of the @ or # links in the text."""
+            return [WrappedElement(x) for x in
+                    self.dr.flashy_find_elements('.livefyre-lightbox-content a', self.telemen)]
+
+        def share(self) -> None:
+            """Clicks the Share icon, opens the Share interface"""
+            self.dr.flashy_find_element('.stButton').click()
+            self.dr.flashy_find_element('.at-expanded-menu')
+
+        def close_share(self) -> None:
+            """Closes the share interface"""
+            self.dr.flashy_find_element('.at-expanded-menu-close').click()
 
 class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint: disable=R0904
     """Call on this if an important component is missing, it has links to the pages."""

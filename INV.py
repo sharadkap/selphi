@@ -193,12 +193,61 @@ class INV(miklase.MyTestCase):
         """Tests the Livefyre functionality."""
         self.dr.open_home_page()
         # Find the Livefyre carousel
-        with self.destruction('Livefyre component is missing'):
+        with self.destruction('Livefyre component is missing or has no tile content'):
             liv = CP.Livefyre(self.dr)
+            til = random.choice([x for x in liv.tiles if x.is_displayed()])
         # Should have a description text
         with self.restraint('Livefyre missing the description paragraph'):
             self.assertGreater(liv.get_description(), '')
-        with self.destruction('Livefyre component has no images'):
-            til = random.choice(liv.tiles)
-            til.open()
-        
+        with til:
+            # Open a link
+            with self.restraint('No links are present in the photo description'):
+                lin = random.choice(til.get_links())
+                te = lin.element.text
+                lin.click()
+                with self.restraint(IndexError='Link did not open in a new tab', AssertionError=
+                                    'Link did not go to the relevant Instagram page'):
+                    self.dr.switch_to_window(1)
+                    self.assertIn('instagram', self.dr.current_url())
+                    self.assertIn(te[1:], self.dr.current_url())
+            self.dr.close_other_windows()
+            # Check the Share button
+            with self.restraint('Could not open the Share interface'):
+                til.share()
+                til.close_share()
+        with self.restraint('Could not scroll the Livefyre Carousel', AssertionError=
+                            'Scrolling the Livefyre Carousel did not change the tiles visible'):
+            fir = [x for x, y in enumerate(liv.tiles) if y.is_displayed()]
+            liv.scroll()
+            sec = [x for x, y in enumerate(liv.tiles) if y.is_displayed()]
+            self.assertNotEqual(fir, sec)
+
+    def test_09_FilteredSearch(self) -> None:
+        """Tests the Filtered Search functionality."""
+
+    def test_10_Sitemap(self) -> None:
+        """Tests the Sitemap functionality."""
+        self.dr.open_home_page()
+        # Go to the sitemap page, and get the Sitemap
+        with self.restraint('Cannot get to sitemap page via footer nav',
+                            CP.BackupHrefs(self.dr).sitemap):
+            CP.Footer(self.dr).sitemap().click()
+        with self.destruction('Sitemap is missing from the sitemap page'):
+            sma = CP.Sitemap(self.dr)
+        # Sitemap should have links to each of the pages in the Nav Menu
+        with self.restraint('Could not collect list of nav/sitemap links',
+                            AssertionError='The sitemap/nav menu link sets do not match'):
+            nav_links = CP.NavMenu(self.dr).get_all_links()
+            sitemap_links = sma.get_all_links()
+            self.assertTrue(nav_links.issubset(sitemap_links))
+        # And should also links corresponding to the footer links
+        with self.restraint('Could not collect the list of footer links',
+                            AssertionError='The sitemap/footer link sets do not match'):
+            fo = CP.Footer(self.dr)
+            fo_li = fo.get_all_links()
+            self.assertTrue(fo_li.issubset(sitemap_links))
+        # And, a bit for the languages
+        with self.restraint('Could not collect the list of locales',
+                            AssertionError='The sitemap/footer locales sets do not match'):
+            loc = {self.dr.base_url + f.replace('.html', '/sitemap.html') for f in fo.get_locales()}
+            self.assertTrue(loc.issubset(sitemap_links))

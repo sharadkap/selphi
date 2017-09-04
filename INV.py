@@ -7,7 +7,10 @@ import miklase
 
 # A mapping of the test names to their abbreviations
 invnames = OrderedDict(
-    [('SPL', 'test_01_Splash_Page'),])
+    [('NAV', 'test_01_Navigation'), ('HER', 'test_02_Hero'),  ('SHR', 'test_03_Share'),
+    ('SER', 'test_04_Search'), ('FOO', 'test_05_Footer'), ('VID', 'test_06_Brightcove'),
+    ('MOS', 'test_07_Mosaic'), ('LFR', 'test_08_Livefyre'), ('FIL', 'test_09_FilteredSearch'),
+    ('MAP', 'test_10_Sitemap'), ])
 
 class INV(miklase.MyTestCase):
     """The Test Suite for the Investment regression"""
@@ -224,6 +227,25 @@ class INV(miklase.MyTestCase):
 
     def test_09_FilteredSearch(self) -> None:
         """Tests the Filtered Search functionality."""
+        self.dr.open_home_page()
+        # Go to the Contact Us page
+        with self.restraint('Cannot get to the Contact Us page via the footer link',
+                            CP.BackupHrefs(self.dr).contact_inv):
+            CP.Footer(self.dr).contact_us().click()
+        # Get the contact Search
+        with self.destruction('The Contact Us page is missing the Filtered Search component'):
+            fil = CP.FilteredSearch(self.dr)
+        with self.destruction('No contact search results are present'):
+            ress = fil.get_all_results()
+        # Check each of the results has a name, an email address, and a phone link
+        with self.restraint('Results are missing fields'):
+            for res in ress:
+                self.assertGreater(res.name, ''), res.email, res.phone
+        # Add some filters, and confirm that filtering did, in fact, occur
+        with self.restraint('Unable to apply a search filter', AssertionError=
+                            'Filtering the search did not change the results present'):
+            fil.random_search()
+            self.assertNotEqual(ress, fil.get_all_results())
 
     def test_10_Sitemap(self) -> None:
         """Tests the Sitemap functionality."""

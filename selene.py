@@ -54,8 +54,7 @@ def launch_test_suite(args: dict) -> list:
 def launch_test(args) -> Tuple[str, str, dict]:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
     # Put these here to resolve circular importing.
-    import ASP
-    import AUS
+    import ASP, AUS, INV
 
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
     locale, browser, outdir, globs = args   # Unpack arguments.
@@ -86,6 +85,9 @@ def launch_test(args) -> Tuple[str, str, dict]:
         elif site == 'AUS':
             names = [AUS.AUS(AUS.ausnames[x], globs, runner.result)
                      for x in globs['tests'] or AUS.ausnames]
+        elif site == 'INV':
+            names = [INV.INV(INV.invnames[x], globs, runner.result)
+                     for x in globs['tests'] or INV.invnames]
         suite = unittest.TestSuite()
         suite.addTests(unittest.TestSuite(names))
         result = runner.run(suite)

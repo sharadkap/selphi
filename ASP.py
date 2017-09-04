@@ -179,7 +179,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             CP.NavMenu.SalesResources(self.dr).open().fact_sheets_overview().click()
         # Do a random search. (In Fact Sheet +PDFs Mode) Then validate the results.
         with self.destruction('Filtered search component missing from the Fact Sheets page'):
-            search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
+            search = CP.FilteredSearch(self.dr, pdf_mode=True)
         with self.destruction('Couldn\'t submit a search'):
             search.random_search()
         self.look_at_search_results(search)
@@ -187,7 +187,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
         self.dr.back()
         # Because the page was reloaded, have to refresh the references.
         with self.destruction('Filtered search component disappeared from the Fact Sheets page'):
-            search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
+            search = CP.FilteredSearch(self.dr, pdf_mode=True)
         # Click on a result's Download PDF link, should open in new window
         with self.restraint('Couldn\'t get the search result\'s details',
                             IndexError='PDF link did not open in new window'):
@@ -368,7 +368,8 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             # Username stuff, add the Environment prefix to identify the user.
             # Different zip codes in different countries.
             zipcode = {'gb': 'A12BC', 'us': '12345', 'ca': '12345', 'my': '12345', 'id': '12345',
-                       'it': '12345', 'fr': '12345', 'de': '12345'}.get(localecode, '123456')
+                       'it': '12345', 'fr': '12345', 'de': '12345', 'nz': '1234'}.get(
+                           localecode, '123456')
         # Fill out the Registration Form with dummy information.
         # Ensure the Name fields are/contain TEST.
         with self.destruction('Registration form missing or incomplete'):
@@ -520,7 +521,7 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             CP.BackupHrefs(self.dr).factsheets()
         # Click the Add To Sales Tools buttons on a few of the results.
         try:
-            search = CP.FilteredSearch(self.dr, fact_sheet_mode=True)
+            search = CP.FilteredSearch(self.dr, pdf_mode=True)
             for result in search.get_all_results():
                 result.add_to_favourites()
                 favtitles.add(result.get_title())
@@ -608,7 +609,8 @@ class ASP(miklase.MyTestCase): # pylint: disable=R0904
             with CP.TrainingModule(self.dr) as modu:
                 mid = modu.id
                 modu.fast_complete_module()
-            with self.restraint('Couldn\'t get to Training Summary from nav', CP.BackupHrefs(self.dr).training):
+            with self.restraint('Couldn\'t get to Training Summary from nav',
+                                CP.BackupHrefs(self.dr).training):
                 CP.NavMenu.Training(self.dr).open().training_summary().click()
             modules = CP.TrainingSummary(self.dr)
             return mid

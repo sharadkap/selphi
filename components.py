@@ -293,7 +293,7 @@ class NavMenu(WrappedElement):
         self.dr = dr
         self.element = self.dr.flashy_find_element('.navigation')
         attach_links(self, ['profile', 'logout'], selector='#link-{}')
-        attach_links(self, ['logo'], selector='.header-masthead .{}-masthead')
+        attach_links(self, ['logo'], selector='.header-masthead a[class*={}-masthead]')
         attach_links(self, ['australia'], selector='[href*="www.australia.c"]')
         attach_links(self, ['investment'], selector='[href*="tourism{}.c"]')
         attach_links(self, ['businessevents'], selector='[href*="{}.australia.c"]')
@@ -525,44 +525,59 @@ class Sitemap(WrappedElement):
         return {self.dr.fix_url(x.get_attribute('href')) for x in self.dr.flashy_find_elements('a', self.element)}
 
 class FilteredSearch(WrappedElement):
-    """Represents the Itinerary or Fact Sheet Search Components."""
-    def __init__(self, dr: Drivery, fact_sheet_mode: bool = False) -> None:
+    """Represents the Itinerary or Fact Sheet Search or Generic Filtered Search Components."""
+    def __init__(self, dr: Drivery, pdf_mode: bool = False) -> None:
         self.dr = dr
         self.element = self.dr.flashy_find_element('.filteredSearch')
-        self.fact_sheet_mode = fact_sheet_mode
+        self.pdf_mode = pdf_mode
         # Hold up, have to wait for the initial results to come in first,
         # they'll interrupt if they appear halfway through something else.
         self.dr.quietly_find_element('.mosaic-item')
 
     class SearchResult(WrappedElement):
-        """Represents a Result of a Filtered Search."""
+        """Represents a Result of a Filtered Search.
+        Also handles the Contact Mode stuff, so be careful about which methods you call."""
         def __init__(self, dr: Drivery, which: WebElement):
             self.dr = dr
             self.element = which
 
         def get_title(self) -> str:
-            """Gets the page Title/Name of the result."""
+            """Gets the page Title/Name of the result"""
             return self.dr.flashy_find_element('.line-through-container', self.element).text
 
         def get_summary(self) -> str:
-            """Gets the page Description/Summary of the result."""
+            """Gets the page Description/Summary of the result"""
             return self.dr.flashy_find_element('.mloverflow', self.element).text
 
         def view_more_information(self) -> None:
-            """Navigates to the result's main page, clicks the View More Info link."""
+            """Navigates to the result's main page, clicks the View More Info link"""
             link = self.dr.flashy_find_element('.search-results-copy-container a', self.element)
             self.dr.last_link = self.dr.fix_url(link.get_attribute('href'))
             link.click()
             self.dr.wait_for_page()
 
         def add_to_favourites(self) -> None:
-            """Clicks the result's Heart Icon: Add To My Sales Tool Kit."""
+            """Clicks the result's Heart Icon: Add To My Sales Tool Kit"""
             self.dr.flashy_find_element('a.btn-bubble', self.element).click()
 
         def download_pdf(self) -> None:
-            """Clicks the Download PDF link."""
+            """Clicks the Download PDF link"""
             link = self.dr.flashy_find_element('a.download-pdf', self.element)
             link.click()
+
+        def name(self) -> str:
+            """Gets the value of the Name field"""
+            return self.dr.flashy_find_element('.icon-company+p', self.element).text
+
+        def email(self) -> str:
+            """Gets the destination email of the Email field"""
+            return self.dr.flashy_find_element('.icon-email+p a[href^="mailto:"]',
+                                               self.element).get_attribute('href')[7:]
+
+        def phont(self) -> str:
+            """Gets the number in the Phone field"""
+            return self.dr.flashy_find_element('.icon-tel+p a[href^="tel:"]',
+                                               self.element).get_attribute('href')[4:]
 
         class SearchResultPage(WrappedElement):
             """Represents the full More Info page pointed to by a Filtered Search's result."""
@@ -591,7 +606,7 @@ class FilteredSearch(WrappedElement):
             # Check if any results are returned, and if in Fact Sheet Mode, any PDF links.
             if self.dr.check_visible_quick('.mosaic-item', self.element):
                 # If not in Fact mode, don't need pdf, so done. If in Fact, do need pdf.
-                if not self.fact_sheet_mode or (self.dr.check_visible_quick(
+                if not self.pdf_mode or (self.dr.check_visible_quick(
                         '.mosaic-item-detail-container .search-favourite a[href$="pdf"]',
                         self.element)):
                     break
@@ -1845,8 +1860,12 @@ class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint
         self.dr.get(self.dr.locale_url + '/sales-resources/interactive-map.html')
 
     def contact(self):
-        """Opens the Contact Us page."""
+        """Opens the ASP Contact Us page."""
         self.dr.get(self.dr.locale_url + '/about/contact-us.html')
+
+    def contact_inv(self):
+        """Opens the Investment Site Contact Us page."""
+        self.dr.get(self.dr.locale_url + '/about-us/contact-us.html')
 
     def register(self):
         """Opens the Registration Form page."""

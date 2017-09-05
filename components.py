@@ -1356,9 +1356,12 @@ class TrainingSummary(WrappedElement):
         dr.switch_to_frame(None)
         dr.execute_script((
             'var o=["_core_mod1","_core_mod2","_core_mod3","_sto_vic","_sto_nsw"],f="{0}",e=f.split'
-            '("-").reverse().join("_").replace("gb","uk");o=o.concat(o);for(m in o)if(o.hasOwnPrope'
-            'rty(m))$.ajax({{url:"/bin/asp/trainingModule",type:"POST",cache:!1,dataType:"json",dat'
-            'a:{{isComplete:!0,moduleId:e+o[m],locale:f}}}})').format(dr.locale[1:]))
+            '("-"),l=[];e="es"==e[0]&&"cl"==e[1]||"pt"==e[0]&&"br"==e[1]?e:e.reverse(),e=e.join("_"'
+            ').replace("gb","uk");for(m in o)o.hasOwnProperty(m)&&l.push($.ajax({{url:"/bin/asp/tra'
+            'iningModule",type:"POST",cache:!1,dataType:"json",data:{{isComplete:!1,moduleId:e+o[m]'
+            ',locale:f}}}}));Promise.all(l).then(()=>{{for(m in o)o.hasOwnProperty(m)&&$.ajax({{url'
+            ':"/bin/asp/trainingModule",type:"POST",cache:!1,dataType:"json",data:{{isComplete:!0,m'
+            'oduleId:e+o[m],locale:f}}}})}});').format(dr.locale[1:]))
 
 class Famils(WrappedElement):
     """Represents the content of the Famils page."""

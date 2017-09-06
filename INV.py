@@ -7,10 +7,10 @@ import miklase
 
 # A mapping of the test names to their abbreviations
 invnames = OrderedDict(
-    [('NAV', 'test_01_Navigation'), ('HER', 'test_02_Hero'),  ('SHR', 'test_03_Share'),
-    ('SER', 'test_04_Search'), ('FOO', 'test_05_Footer'), ('VID', 'test_06_Brightcove'),
-    ('MOS', 'test_07_Mosaic'), ('LFR', 'test_08_Livefyre'), ('FIL', 'test_09_FilteredSearch'),
-    ('MAP', 'test_10_Sitemap'), ])
+    [('NAV', 'test_01_Navigation'), ('HER', 'test_02_Hero'), ('SHR', 'test_03_Share'),
+     ('SER', 'test_04_Search'), ('FOO', 'test_05_Footer'), ('VID', 'test_06_Brightcove'),
+     ('MOS', 'test_07_Mosaic'), ('LFR', 'test_08_Livefyre'), ('FIL', 'test_09_FilteredSearch'),
+     ('MAP', 'test_10_Sitemap'), ])
 
 class INV(miklase.MyTestCase):
     """The Test Suite for the Investment regression"""
@@ -57,7 +57,7 @@ class INV(miklase.MyTestCase):
             oppo = nav.InvestmentOpportunities(self.dr).open()
             oppo.investment_opportunities()
             oppo.cities()
-            oppo.beaches_and_island()
+            oppo.beaches_and_islands()
             oppo.nature_and_outback()
             oppo.food_and_wine()
 
@@ -130,7 +130,7 @@ class INV(miklase.MyTestCase):
         # The search results should actually contain the search term
         with self.restraint('Search Results did not all match the search term'):
             for res in search.get_all_results():
-                self.assertIn(search_term, res.get_title() + res.get_summary())
+                self.assertIn(search_term.casefold(), (res.get_title() + res.get_summary()).casefold())
 
     def test_05_Footer(self) -> None:
         """Tests the Footer functionality"""

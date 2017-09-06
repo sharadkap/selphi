@@ -139,9 +139,9 @@ class Hero(WrappedElement):
 
     def pin_it(self) -> None:
         """Moves the mouse over the hero, triggering the Pin It button to appear, then clicks it"""
-        self.element.point()
+        self.point()
         self.dr.flashy_find_element('.social-pinterest--container.social-pinterest--visible',
-                                    self.dr.get_parent_element(self.element.parent)).click()
+                                    self.dr.get_parent_element(self.element)).click()
 
 class Video(WrappedElement):
     """Generically represents either a Brightcove Video or a Youku video."""
@@ -441,7 +441,7 @@ class NavMenu(WrappedElement):
         """Represents the Why Australia section in the nav menu."""
         def __init__(self, dr: Drivery):
             self.dr = dr
-            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[1])
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-panel-list-item')[0])
             attach_links(self, [
                 'why-australia', 'resilient-growth-economy', 'easy-place-to-do-business',
                 'globally-significant-tourism-industry', 'strong-performing-accommodation-sector',
@@ -452,7 +452,7 @@ class NavMenu(WrappedElement):
         """Represents the Investment Opportunities section in the nav menu."""
         def __init__(self, dr: Drivery):
             self.dr = dr
-            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[2])
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-panel-list-item')[1])
             attach_links(self, ['investment-opportunities', 'food-and-wine', 'beaches-and-islands',
                                 'nature-and-outback', 'cities'], selector='[href*="{0}.html"] p')
 
@@ -460,7 +460,7 @@ class NavMenu(WrappedElement):
         """Represents the Investment Opportunities section in the nav menu."""
         def __init__(self, dr: Drivery):
             self.dr = dr
-            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[3])
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-panel-list-item')[2])
             attach_links(self, ['data-room', 'tourism-performance', 'hotel-performance', 'aviation',
                                 'the-markets', 'success-stories',], selector='[href*="{0}.html"] p')
 
@@ -468,7 +468,7 @@ class NavMenu(WrappedElement):
         """Represents the About Us section in the nav menu."""
         def __init__(self, dr: Drivery):
             self.dr = dr
-            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-toggle-panel')[4])
+            self.element = self.dr.blip_element(dr.quietly_find_elements('.nav-panel-list-item')[3])
             attach_links(self, ['about-us', 'how-we-can-help', 'a-national-priority', 'contact-us',]
                          , selector='[href*="{0}.html"] p')
 
@@ -1584,12 +1584,16 @@ class ShareThis(WrappedElement):
             self.dr.wait_until(lambda: 'display: block;' in slider.get_attribute('style'),
                                'display: block in slider.style')
         else:
+            # For whatever reason, the element gets recreated halfway through opening.
+            panel = self.dr.quietly_find_element('.at-expanded-menu')
+            self.dr.wait_until(lambda: self.dr.quietly_find_element('.at-expanded-menu') != panel,
+                               'Share window element to be recreated')
             panel = self.dr.flashy_find_element('.at-expanded-menu')
             return self.dr.quietly_find_element('.at-expanded-menu-page-title', panel).text
 
     def page_description(self) -> str:
         """Returns the page's Description: The Hero Text and the Summary combined."""
-        return '  '.join([self.dr.quietly_find_element('.hero').text,
+        return '\t'.join([self.dr.quietly_find_element('.hero').text,
                           self.dr.quietly_find_element('.summary').text])
 
     def page_image(self) -> str:

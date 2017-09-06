@@ -95,7 +95,6 @@ class MyTestCase(unittest.TestCase):
         args = ex or sys.exc_info()
         return _print(*args)
 
-
 class MyTestRunner(unittest.TextTestRunner):
     """Custom runner for this increasingly elabourate actually-readable-results-output hack"""
     def __init__(self, *args, **kwargs):

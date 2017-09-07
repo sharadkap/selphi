@@ -108,7 +108,7 @@ class INV(miklase.MyTestCase):
     def test_04_Search(self) -> None:
         """Tests the Site Search funtionality"""
         self.dr.open_home_page()
-        search_term = 'Investment'
+        search_term = random.choice('Aviation Hotel Data National Market Strategy Business'.split())
         # Enter a search term, there are no popular suggestions listed here
         with self.restraint('Search section is missing from the header'):
             CP.HeaderSearch(self.dr).open().search(search_term)
@@ -122,15 +122,19 @@ class INV(miklase.MyTestCase):
             search.grid_mode()
             search.list_mode()
         # Click the View More results button, should load more results
-        with self.restraint('Search Results\' View More button missing',
-                            AssertionError='Viewing More did not increase result count'):
+        with self.restraint('Search Results\' View More button missing (' + search_term + ')',
+                            AssertionError='Viewing More did not increase result count (' + search_term + ')'):
             fico = search.count_results()
             search.load_more()
             self.assertGreater(search.count_results(), fico)
         # The search results should actually contain the search term
-        with self.restraint('Search Results did not all match the search term'):
+        with self.restraint('Could not get a result\'s text (' + search_term + ')',
+                            AssertionError='Search Results did not all match the search term (' + search_term + ')'):
             for res in search.get_all_results():
-                self.assertIn(search_term.casefold(), (res.get_title() + res.get_summary()).casefold())
+                if not search_term.casefold() in (res.get_title() + res.get_summary()).casefold():
+                    res.view_more_information(True)
+                    self.assertIn(search_term.casefold(), CP.Page(self.dr).text())
+                    self.dr.close_other_windows()
 
     def test_05_Footer(self) -> None:
         """Tests the Footer functionality"""
@@ -159,9 +163,9 @@ class INV(miklase.MyTestCase):
         """Tests the Brightcove Video functionality"""
         self.dr.open_home_page()
         # Find a video
-        with self.restraint('World Class Tourism link is missing',
-                            CP.BackupHrefs(self.dr).world_class_tourism_offering):
-            CP.NavMenu.WhyAustralia(self.dr).open().world_class_tourism_offering().click()
+        with self.restraint('Tourism Demand Strategy link is missing',
+                            CP.BackupHrefs(self.dr).tourism_demand_strategy):
+            CP.NavMenu.WhyAustralia(self.dr).open().tourism_demand_strategy().click()
         with self.destruction('Video is missing from the page',
                               TimeoutException='Video does not play when clicked'):
             vide = CP.Video(self.dr)
@@ -189,8 +193,8 @@ class INV(miklase.MyTestCase):
         with self.restraint('Second Mosaic component is missing',
                             AssertionError='A PDF link did not go to the right environment'):
             mos = CP.WhatYouCanSeeMosaic(self.dr, 1)
-            for tile in mos:
-                self.assertIn(self.globs['base_url'], tile.get_link().get_attribute('href'))
+            for tile in mos:    # Eeh, the AUTH throws it off a bit. Trim https bit to compensate
+                self.assertIn(self.globs['base_url'][8:], tile.get_link())
 
     def test_08_Livefyre(self) -> None:
         """Tests the Livefyre functionality."""
@@ -206,7 +210,7 @@ class INV(miklase.MyTestCase):
             # Open a link
             with self.restraint('No links are present in the photo description'):
                 lin = random.choice(til.get_links())
-                te = lin.element.text
+                te = lin.text
                 lin.click()
                 with self.restraint(IndexError='Link did not open in a new tab', AssertionError=
                                     'Link did not go to the relevant Instagram page'):
@@ -218,12 +222,19 @@ class INV(miklase.MyTestCase):
             with self.restraint('Could not open the Share interface'):
                 til.share()
                 til.close_share()
-        with self.restraint('Could not scroll the Livefyre Carousel', AssertionError=
-                            'Scrolling the Livefyre Carousel did not change the tiles visible'):
-            fir = [x for x, y in enumerate(liv.tiles) if y.is_displayed()]
-            liv.scroll()
-            sec = [x for x, y in enumerate(liv.tiles) if y.is_displayed()]
-            self.assertNotEqual(fir, sec)
+        # If the livefyre is in Mosaic mode, try clicking the Load More
+        with self.restraint('Could not view more on the Livefyre Mosaic', AssertionError=
+                            'Clicking Load More on the Livefyre Mosaic did not load more tiles'):
+            fir = len(liv.tiles)
+            liv.view_more()
+            self.assertGreater(len(liv.tiles), fir)
+        # # If the Livefyre is in Carousel mode, try scrolling across it
+        # with self.restraint('Could not scroll the Livefyre Carousel', AssertionError=
+        #                     'Scrolling the Livefyre Carousel did not change the tiles visible'):
+        #     fir = [x for x, y in enumerate(liv.tiles) if y.is_displayed()]
+        #     liv.scroll()
+        #     sec = [x for x, y in enumerate(liv.tiles) if y.is_displayed()]
+        #     self.assertNotEqual(fir, sec)
 
     def test_09_FilteredSearch(self) -> None:
         """Tests the Filtered Search functionality."""
@@ -240,7 +251,7 @@ class INV(miklase.MyTestCase):
         # Check each of the results has a name, an email address, and a phone link
         with self.restraint('Results are missing fields'):
             for res in ress:
-                self.assertGreater(res.name, ''), res.email, res.phone
+                self.assertGreater(res.name(), ''), res.email(), res.phone()
         # Add some filters, and confirm that filtering did, in fact, occur
         with self.restraint('Unable to apply a search filter', AssertionError=
                             'Filtering the search did not change the results present'):

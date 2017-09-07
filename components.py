@@ -18,19 +18,25 @@ class WrappedElement:
     dr = Drivery(None)
 
     def click(self) -> 'WrappedElement':
-        """Clicks on the element."""
+        """Clicks on the element"""
         self.dr.last_link = self.dr.fix_url(self.element.get_attribute('href'))
         self.element.click()
         return self
 
+    def ctrl_click(self) -> 'WrappedElement':
+        """Control-clicks on the element"""
+        self.dr.last_link = self.dr.fix_url(self.element.get_attribute('href'))
+        self.element.ctrl_click()
+        return self
+
     def override_click(self) -> 'WrappedElement':
-        """Clicks on the element, even if it is "`'behind'`" another one."""
+        """Clicks on the element, even if it is "`'behind'`" another one"""
         self.dr.last_link = self.dr.fix_url(self.element.get_attribute('href'))
         self.dr.override_click(self.element)
         return self
 
     def point(self) -> 'WrappedElement':
-        """Moves the mouse cursor over the element."""
+        """Moves the mouse cursor over the element"""
         self.dr.execute_mouse_over(self.element)
         return self
 
@@ -55,6 +61,16 @@ class MinorElementParent(WrappedElement):
         self.dr = dr
         self.element = self.dr.blip_element(self.dr.get_parent_element(
             self.dr.quietly_find_element(selector, within)))
+
+class Page(WrappedElement):
+    """Represents the content of an entire page, sans the headers and footers"""
+    def __init__(self, dr: Drivery):
+        self.dr = dr
+        self.element = self.dr.flashy_find_element('#main-content')
+
+    def text(self) -> str:
+        """Gets all the text on the page that isn\'t part of the template framing"""
+        return self.element.text
 
 class SplashSelect(WrappedElement):
     """Represents the Language Selector on the Splash Page."""
@@ -186,9 +202,9 @@ class WhatYouCanSeeMosaic(WrappedElement):
     def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
         if which:
-            self.element = self.dr.blip(self.dr.quietly_find_elements('div.whatYouCanSee div.mosaic')[which])
+            self.element = self.dr.blip_element(self.dr.quietly_find_elements('div.whatyoucansee div.mosaic')[which])
         else:
-            self.element = self.dr.flashy_find_element('div.whatYouCanSee div.mosaic')
+            self.element = self.dr.flashy_find_element('div.whatyoucansee div.mosaic')
         self.tiles = [x for x in self.dr.quietly_find_elements('.mosaic-item') if x.is_displayed()]
 
     def tile_count(self) -> int:
@@ -234,7 +250,8 @@ class WhatYouCanSeeMosaic(WrappedElement):
 
         def get_link(self) -> MinorElement:
             """Returns the More Info link from a tiles pane. Has to be open."""
-            return MinorElement(self.dr, 'a:not(.btn-bubble):not([href="#"])', self.contentpane)
+            return self.dr.quietly_find_element('a:not(.btn-bubble):not([href="#"])',
+                                                self.contentpane).get_attribute('href')
 
         def add_to_favourites(self) -> None:
             """Clicks the Heart button in the tiles content. Has to be open first."""
@@ -476,7 +493,7 @@ class NavMenu(WrappedElement):
         """Gets a set containing the href of each link in the nav menu.
         The Five/Four section panels, that is, not the Icons, or the Sign In thing."""
         return {self.dr.fix_url(x.get_attribute('href')) for x in self.dr.flashy_find_elements(
-            '#nav-bar-top .nav-bar-left a:not([href^="#"])', self.element)}
+            '#nav-bar-top .nav-bar-left a:not([href^="#"]):not([href^="javascript"])', self.element)}
 
     def user_names(self) -> str:
         """Gets the text displayed in the corner that shows the user names.
@@ -501,7 +518,8 @@ class Footer(WrappedElement):
 
     def get_all_links(self) -> Set[str]:
         """Get a list of all of the links on the footer. Won't get the languages dropdown though."""
-        return {li.get_attribute('href') for li in self.dr.flashy_find_elements('a', self.element)}
+        return {li.get_attribute('href') for li in
+                self.dr.flashy_find_elements('a', self.element) if li.is_displayed()}
 
     def get_locales(self) -> List[str]:
         """Get a list of the countries available to the footer switcher. '/en-ca.html' format."""
@@ -532,7 +550,7 @@ class FilteredSearch(WrappedElement):
         self.pdf_mode = pdf_mode
         # Hold up, have to wait for the initial results to come in first,
         # they'll interrupt if they appear halfway through something else.
-        self.dr.quietly_find_element('.mosaic-item')
+        self.dr.quietly_find_element('.mosaic-item,.filter001')
 
     class SearchResult(WrappedElement):
         """Represents a Result of a Filtered Search.
@@ -549,12 +567,16 @@ class FilteredSearch(WrappedElement):
             """Gets the page Description/Summary of the result"""
             return self.dr.flashy_find_element('.mloverflow', self.element).text
 
-        def view_more_information(self) -> None:
+        def view_more_information(self, newtab: bool = False) -> None:
             """Navigates to the result's main page, clicks the View More Info link"""
             link = self.dr.flashy_find_element('.search-results-copy-container a', self.element)
-            self.dr.last_link = self.dr.fix_url(link.get_attribute('href'))
-            link.click()
-            self.dr.wait_for_page()
+            href = self.dr.fix_url(link.get_attribute('href'))
+            if newtab:
+                link.ctrl_click()
+                self.dr.switch_to_window(-1)
+            else:
+                link.click()
+            self.dr.wait_for_page(href)
 
         def add_to_favourites(self) -> None:
             """Clicks the result's Heart Icon: Add To My Sales Tool Kit"""
@@ -574,7 +596,7 @@ class FilteredSearch(WrappedElement):
             return self.dr.flashy_find_element('.icon-email+p a[href^="mailto:"]',
                                                self.element).get_attribute('href')[7:]
 
-        def phont(self) -> str:
+        def phone(self) -> str:
             """Gets the number in the Phone field"""
             return self.dr.flashy_find_element('.icon-tel+p a[href^="tel:"]',
                                                self.element).get_attribute('href')[4:]
@@ -601,10 +623,10 @@ class FilteredSearch(WrappedElement):
             for select in self.dr.quietly_find_elements('select', self.element):
                 self.dr.blip_element(select)
                 random.choice(self.dr.quietly_find_elements('option', select)).click()
-            self.dr.flashy_find_element('#btn-id', self.element).click()
+            self.dr.flashy_find_element('#btn-id,.button-refresh-results', self.element).click()
             self.dr.wait_until_gone('.filteredSearch .preload-image-wrapper img')
             # Check if any results are returned, and if in Fact Sheet Mode, any PDF links.
-            if self.dr.check_visible_quick('.mosaic-item', self.element):
+            if self.dr.check_visible_quick('.mosaic-item,.filter001', self.element):
                 # If not in Fact mode, don't need pdf, so done. If in Fact, do need pdf.
                 if not self.pdf_mode or (self.dr.check_visible_quick(
                         '.mosaic-item-detail-container .search-favourite a[href$="pdf"]',
@@ -613,7 +635,7 @@ class FilteredSearch(WrappedElement):
 
     def count_results(self) -> int:
         """Returns the number of search results currently displayed."""
-        return len(self.dr.flashy_find_elements('.mosaic-item', self.element))
+        return len(self.dr.flashy_find_elements('.mosaic-item,filter001', self.element))
 
     def read_results_counter(self) -> (int, int) or None:
         """Returns the number of results the 'Showing X-Y of Z results' thing says there are:
@@ -629,13 +651,13 @@ class FilteredSearch(WrappedElement):
 
     def get_all_results(self) -> List['SearchResult']: # pylint: disable=E1126
         """Gets all of the search results."""
-        return [self.SearchResult(self.dr, e) for e in self.dr.flashy_find_elements('.mosaic-item')]
+        return [self.SearchResult(self.dr, e) for e in self.dr.flashy_find_elements('.mosaic-item,.filter001')]
 
     def get_random_result(self) -> WrappedElement:
         """Picks a random one from the search results."""
         result = self.SearchResult(
             self.dr, self.dr.blip_element(
-                random.choice(self.dr.quietly_find_elements('.mosaic-item'))))
+                random.choice(self.dr.quietly_find_elements('.mosaic-item,.filter001'))))
         return result
 
 class ItineraryDay(WrappedElement):
@@ -1811,9 +1833,19 @@ class Livefyre(WrappedElement):
         return self.dr.flashy_find_element('.section-intro .type-intro + p', self.element).text
 
     def scroll(self) -> None:
-        """Clicks the Next Arrow button on the carousel, scrolling the tiles"""
+        """Clicks the Next Arrow button on the carousel, don't use in Mosaic mode"""
         self.dr.flashy_find_element('.owl-next', self.element).click()
         time.sleep(1)   # Yeah, but there's no real indication as to when the animation is done
+
+    def view_more(self) -> None:
+        """Clicks the Load More button under the mosaic, don't try this in Carousel mode"""
+        x = len(self.tiles)
+        self.dr.flashy_find_element('.livefyre-mosaic--load-more').click()
+        self.dr.wait_until(lambda: len(self.dr.quietly_find_elements('.gallery--open-link')) > x,
+                           'Number of tiles to have increased')
+        self.tiles = [self.LivefyreTile(self.dr, e) for e in
+                      self.dr.quietly_find_elements('.gallery--open-link')]
+
 
     class LivefyreTile(WrappedElement):
         """Represents the individual tiles of a Livefyre collection. Don't instantiate directly.
@@ -1824,8 +1856,9 @@ class Livefyre(WrappedElement):
             self.telemen = None
 
         def __enter__(self):
+            self.click()
             self.telemen = self.dr.flashy_find_element('.livefyre-lightbox-item')
-            return self.click()
+            return self
 
         def __exit__(self, *args):
             if self.dr.check_visible_quick('.livefyre-lightbox--container'):
@@ -1833,17 +1866,21 @@ class Livefyre(WrappedElement):
 
         def get_links(self) -> List[WrappedElement]:
             """Use only if the tile is open, gets a list of all of the @ or # links in the text."""
-            return [WrappedElement(x) for x in
+            return [x for x in
                     self.dr.flashy_find_elements('.livefyre-lightbox-content a', self.telemen)]
 
         def share(self) -> None:
             """Clicks the Share icon, opens the Share interface"""
-            self.dr.flashy_find_element('.stButton').click()
+            self.dr.flashy_find_element('.shareThis').click()
             self.dr.flashy_find_element('.at-expanded-menu')
 
         def close_share(self) -> None:
             """Closes the share interface"""
-            self.dr.flashy_find_element('.at-expanded-menu-close').click()
+            # This is so dumb you guys
+            try:
+                self.dr.flashy_find_element('.at-expanded-menu-close').click()
+            except:
+                self.dr.flashy_find_element('.at-expanded-menu-close').click()
 
 class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint: disable=R0904
     """Call on this if an important component is missing, it has links to the pages."""
@@ -1985,6 +2022,10 @@ class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint
     def world_class_tourism_offering(self):
         """Opens the World Class Tourism Offering page."""
         self.dr.get(self.dr.locale_url + '/why-australia/world-class-tourism-offering.html')
+
+    def tourism_demand_strategy(self):
+        """Opens the Tourism Demand Strategy page."""
+        self.dr.get(self.dr.locale_url + '/why-australia/tourism-demand-strategy.html')
 
     def data_room(self):
         """Opens the Data Room page."""

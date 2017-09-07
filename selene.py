@@ -10,6 +10,8 @@ import unittest
 import configparser
 from typing import Tuple
 from multiprocessing import cpu_count, Pool
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 import drivery as DR
 import modules as MOD
 import miklase
@@ -111,10 +113,22 @@ def perform_hacks() -> None:
         """Overwrite the WebElement.click method to make sure that it isn't behind the nav menu."""
         try:
             oldclick(*args, **kwargs)
+        except DR.ElementNotVisibleException:
+            time.sleep(1)   # Just. wait. for. a. second.
+            oldclick(*args, **kwargs)
         except MOD.WebDriverException:  # args[0] will be the 'self' argument, so, the WebElement.
             args[0].parent.execute_script(DR.SCROLL_SCRIPT, args[0])
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
+
+    def newcclick(*args, **kwargs):
+        """Create a new method, for control-clicking"""
+        try:
+            ActionChains(args[0].parent).key_down(Keys.CONTROL).click(args[0]).key_up(Keys.CONTROL).perform()
+        except MOD.WebDriverException:
+            args[0].parent.execute_script(DR.SCROLL_SCRIPT, args[0])
+            ActionChains(args[0].parent).key_down(Keys.CONTROL).click(args[0]).key_up(Keys.CONTROL).perform()
+    DR.WebElement.ctrl_click = newcclick
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""

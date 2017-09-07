@@ -10,7 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementNotVisibleException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 import bs4
 
@@ -196,7 +196,6 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
 
     def switch_to_window(self, window: int) -> None:
         """Switch WebDriver's focus to the given open tab or window. Zero based indexing."""
-        # Disable warning on missing property. Pylint just can't find it. pylint: disable=E1101
         self.driver.switch_to.window(self.driver.window_handles[window])
 
     def switch_to_frame(self, selector: str) -> None:
@@ -205,7 +204,7 @@ class Drivery:  # Don't give me that 'too many public methods' nonsense. pylint:
         if selector is None:
             self.driver.switch_to.default_content()
         else:
-            self.driver.switch_to.frame(self.flashy_find_element(selector))  # pylint: disable=E1101
+            self.driver.switch_to.frame(self.flashy_find_element(selector))
 
     def fix_url(self, url: str) -> str:
         """Use this to remove that /content/asp/ stuff from URLs."""

@@ -44,7 +44,7 @@ class MyTestCase(unittest.TestCase):
         backuphref should be a BackupHrefs' method reference. Mind you don't invoke it instead."""
         try:
             yield
-        except:
+        except Exception:
             erty = sys.exc_info()[0].__name__
             if errors.get(erty):
                 self.add_error(errors[erty])

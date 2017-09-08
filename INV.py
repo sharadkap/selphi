@@ -123,13 +123,15 @@ class INV(miklase.MyTestCase):
             search.list_mode()
         # Click the View More results button, should load more results
         with self.restraint('Search Results\' View More button missing (' + search_term + ')',
-                            AssertionError='Viewing More did not increase result count (' + search_term + ')'):
+                            AssertionError='Viewing More did not increase result count ('
+                            + search_term + ')'):
             fico = search.count_results()
             search.load_more()
             self.assertGreater(search.count_results(), fico)
         # The search results should actually contain the search term
         with self.restraint('Could not get a result\'s text (' + search_term + ')',
-                            AssertionError='Search Results did not all match the search term (' + search_term + ')'):
+                            AssertionError='Search Results did not all match the search term ('
+                            + search_term + ')'):
             for res in search.get_all_results():
                 if not search_term.casefold() in (res.get_title() + res.get_summary()).casefold():
                     res.view_more_information(True)
@@ -251,7 +253,9 @@ class INV(miklase.MyTestCase):
         # Check each of the results has a name, an email address, and a phone link
         with self.restraint('Results are missing fields'):
             for res in ress:
-                self.assertGreater(res.name(), ''), res.email(), res.phone()
+                res.email()
+                res.phone()
+                self.assertGreater(res.name(), '')
         # Add some filters, and confirm that filtering did, in fact, occur
         with self.restraint('Unable to apply a search filter', AssertionError=
                             'Filtering the search did not change the results present'):
@@ -282,5 +286,4 @@ class INV(miklase.MyTestCase):
         # And, a bit for the languages
         with self.restraint('Could not collect the list of locales',
                             AssertionError='The sitemap/footer locales sets do not match'):
-            loc = {self.dr.base_url + f.replace('.html', '/sitemap.html') for f in fo.get_locales()}
-            self.assertTrue(loc.issubset(sitemap_links))
+            self.assertSetEqual(set(fo.get_locales()), sma.get_locales())

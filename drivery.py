@@ -10,7 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementNotVisibleException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 import bs4
 
@@ -39,8 +39,8 @@ BLIP_SCRIPT = (
     'undingClientRect().top+wp.pageYOffset-wp.innerHeight/2),c.style.animationDuration="0.5s",c.sty'
     'le.animationName="",setTimeout(function(e){e.style.animationName="selhian"},10,c)}}catch(e){}')
 # """Type annotation, referring to either a WebElement, or a list of them."""
-ELEMENT_OR_LIST = Union[WebElement, List[WebElement]] # pylint: disable=E1126
-ELEMENT_LIST = List[WebElement] # pylint: disable=E1126
+ELEMENT_OR_LIST = Union[WebElement, List[WebElement]]
+ELEMENT_LIST = List[WebElement]
 
 def to_list(item) -> list:
     """Wraps the input into a list if it wasn't already one."""
@@ -301,7 +301,7 @@ class Email:
             globs['test_email_password'], globs['asp_from_emails'])
         self.dr = dr
 
-    def get_all_locales(self) -> Set[str]:     # pylint: disable=E1126
+    def get_all_locales(self) -> Set[str]:
         """Collects all of the emails received by this email subaddress,
         and returns a set of Locale codes representing each one found."""
         locs = set()
@@ -318,7 +318,7 @@ class Email:
                 locs = locs.union({x.group().split('=')[-1] for x in hrefs if x})
         return locs
 
-    def get_new_messages(self, really_get_new: bool = True) -> List[str]: # pylint: disable=E1126
+    def get_new_messages(self, really_get_new: bool = True) -> List[str]:
         """Polls the IMAP server untill a (maybe) new email(s) are found, then
         attempts to make sense of their ridiculous transmission formatting."""
         results = []

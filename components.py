@@ -9,6 +9,7 @@ from types import MethodType
 from typing import Set, List, Tuple
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import StaleElementReferenceException
 from drivery import Drivery, SHORT_WAIT
 
 class WrappedElement:
@@ -165,7 +166,8 @@ class Video(WrappedElement):
         self.dr = dr
         # Youku has a state holder in the window object, Brightcove loads along with the page.
         if which:
-            self.element = self.dr.blip(self.dr.quietly_find_elements('.video-js,#youkuplayer')[which])
+            self.element = self.dr.blip(
+                self.dr.quietly_find_elements('.video-js,#youkuplayer')[which])
         else:
             self.element = self.dr.flashy_find_element('.video-js,#youkuplayer')
         self.dr.wait_until(lambda: self.dr.execute_script(
@@ -202,7 +204,8 @@ class WhatYouCanSeeMosaic(WrappedElement):
     def __init__(self, dr: Drivery, which: int = None):
         self.dr = dr
         if which:
-            self.element = self.dr.blip_element(self.dr.quietly_find_elements('div.whatyoucansee div.mosaic')[which])
+            self.element = self.dr.blip_element(
+                self.dr.quietly_find_elements('div.whatyoucansee div.mosaic')[which])
         else:
             self.element = self.dr.flashy_find_element('div.whatyoucansee div.mosaic')
         self.tiles = [x for x in self.dr.quietly_find_elements('.mosaic-item') if x.is_displayed()]
@@ -257,7 +260,7 @@ class WhatYouCanSeeMosaic(WrappedElement):
             """Clicks the Heart button in the tiles content. Has to be open first."""
             self.dr.flashy_find_element('.btn-bubble', self.contentpane).click()
 
-    def random_selection(self, num: int) -> List['MosaicTile']: # pylint: disable=E1126
+    def random_selection(self, num: int) -> List['MosaicTile']:
         """Given a number, gets that many randomly selected tiles from the mosaic."""
         return [self.MosaicTile(self.dr, tile) for tile in random.sample(self.tiles, num)]
 
@@ -493,7 +496,7 @@ class NavMenu(WrappedElement):
         """Gets a set containing the href of each link in the nav menu.
         The Five/Four section panels, that is, not the Icons, or the Sign In thing."""
         return {self.dr.fix_url(x.get_attribute('href')) for x in self.dr.flashy_find_elements(
-            '#nav-bar-top .nav-bar-left a:not([href^="#"]):not([href^="javascript"])', self.element)}
+            '#nav-bar-top .nav-bar-left a[href]:not([href^="#"])', self.element)}
 
     def user_names(self) -> str:
         """Gets the text displayed in the corner that shows the user names.
@@ -506,7 +509,8 @@ class Footer(WrappedElement):
         self.dr = dr
         self.element = self.dr.flashy_find_element('#main-footer')
         attach_links(self, ['splash', 'sitemap', 'privacy-policy', 'terms-and-conditions',
-                            'terms-of-use', 'contact-us', 'about-us', 'contact-us', 'terms-conditions'])
+                            'terms-of-use', 'contact-us', 'about-us', 'contact-us',
+                            'terms-conditions'])
         attach_links(self, ['facebook', 'plus.google', 'youtube', 'twitter', 'instagram', 'weibo'],
                      selector='[href*="{}.com"]')
         attach_links(self, ['wechat'], selector='[href*="#qr_image"],[href*="#china_qr_image"]')
@@ -532,15 +536,21 @@ class Footer(WrappedElement):
               ).select_by_value(locale)
 
 class Sitemap(WrappedElement):
-    """Represents the Sitemap link cloud."""
+    """Represents the Sitemap link cloud"""
     def __init__(self, dr: Drivery):
         self.dr = dr
         self.element = self.dr.flashy_find_element('.sitemap')
         attach_links(self, ['change', 'newsletter-unsubscribe', 'coming-soon'])
 
     def get_all_links(self) -> Set[str]:
-        """Gets a set containing the href of each link in the Sitemap link section."""
-        return {self.dr.fix_url(x.get_attribute('href')) for x in self.dr.flashy_find_elements('a', self.element)}
+        """Gets a set containing the href of each link in the Sitemap link section"""
+        return {self.dr.fix_url(x.get_attribute('href'))
+                for x in self.dr.flashy_find_elements('a', self.element)}
+
+    def get_locales(self) -> Set[str]:
+        """Gets a set of the link hrefs, specifically the locale ones, formatted like /en-ca.html"""
+        return {'/' + self.dr.fix_url(x.get_attribute('href')).split('/')[-2] + '.html'
+                for x in self.dr.flashy_find_elements('a[href*="sitemap.html"]', self.element)}
 
 class FilteredSearch(WrappedElement):
     """Represents the Itinerary or Fact Sheet Search or Generic Filtered Search Components."""
@@ -649,9 +659,10 @@ class FilteredSearch(WrappedElement):
         # The largest number must be the total results, with the other two being 'this many shown'.
         return (1 + counter[1] - counter[0], counter[2])
 
-    def get_all_results(self) -> List['SearchResult']: # pylint: disable=E1126
+    def get_all_results(self) -> List['SearchResult']:
         """Gets all of the search results."""
-        return [self.SearchResult(self.dr, e) for e in self.dr.flashy_find_elements('.mosaic-item,.filter001')]
+        return [self.SearchResult(self.dr, e)
+                for e in self.dr.flashy_find_elements('.mosaic-item,.filter001')]
 
     def get_random_result(self) -> WrappedElement:
         """Picks a random one from the search results."""
@@ -907,7 +918,7 @@ class InteractiveMap(WrappedElement):
                 self.dr.blip_element(self.pins)
                 return len(self.pins)
 
-            def get_names(self) -> List[str]: # pylint: disable=E1126
+            def get_names(self) -> List[str]:
                 """Returns a list of the labels on all of the pins"""
                 self.dr.blip_element(self.pins)
                 return [x.text for x in self.pins]
@@ -1180,7 +1191,7 @@ class MySalesTools(WrappedElement):
             """Clicks the X button, closing the entry."""
             self.dr.flashy_find_element('.icon-close', self.element).click()
 
-    def get_favourites(self) -> List[WrappedElement]: # pylint: disable=E1126
+    def get_favourites(self) -> List[WrappedElement]:
         """Gets all of the saved sales tools entries."""
         return [self.SalesTool(self.dr, x) for x in
                 self.dr.flashy_find_elements('.search-result-row-spacing', self.element)]
@@ -1397,7 +1408,7 @@ class AussieSpecialistPhotos(WrappedElement):
         self.dr = dr
         self.photos = self.dr.flashy_find_elements('.mosaic-item')
 
-    def random_images(self, num: int) -> List[WrappedElement]: # pylint: disable=E1126
+    def random_images(self, num: int) -> List[WrappedElement]:
         """Randomly selects num photos."""
         return [self.Photo(self.dr, x) for x in random.sample(self.photos, num)]
 
@@ -1555,7 +1566,7 @@ class AussieStore(WrappedElement):
                 '.store-order-box-left p:nth-child(2)', self.element).text
             return '\n'.join([x.strip().replace('  ', ' ') for x in text.split('\n')])
 
-        def get_product_names(self) -> List[str]: # pylint: disable=E1126
+        def get_product_names(self) -> List[str]:
             """Gets a list of the names of all of the Products in the Cart."""
             return [x.text.casefold()
                     for x in self.dr.flashy_find_elements('.cell-title', self.element)]
@@ -1876,10 +1887,10 @@ class Livefyre(WrappedElement):
 
         def close_share(self) -> None:
             """Closes the share interface"""
-            # This is so dumb you guys
+            # This is so dumb you guys i mean for real
             try:
                 self.dr.flashy_find_element('.at-expanded-menu-close').click()
-            except:
+            except StaleElementReferenceException:
                 self.dr.flashy_find_element('.at-expanded-menu-close').click()
 
 class BackupHrefs:    # It's a namespace, lots of methods is intentional. pylint: disable=R0904

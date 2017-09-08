@@ -12,6 +12,7 @@ from typing import Tuple
 from multiprocessing import cpu_count, Pool
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import ElementNotVisibleException, ElementNotInteractableException
 import drivery as DR
 import modules as MOD
 import miklase
@@ -27,7 +28,7 @@ def test_dr() -> Tuple[dict, DR.Drivery]:
     """When the module is loaded, call this one to get a prepopulated gdict and Drivery object."""
     d = read_properties()
     d['browser'] = 'chrome'
-    d['locale'] = '/en-gb'
+    d['locale'] = '/en'
     d['cn_mode'] = False
     d['base_url'] = d['environment']
     d['locale_url'] = d['base_url'] + d['locale']
@@ -55,7 +56,7 @@ def launch_test_suite(args: dict) -> list:
 
 def launch_test(args) -> Tuple[str, str, dict]:
     """Do all the things needed to run a test suite. Put this as the target call of a process."""
-    # Put these here to resolve circular importing.
+    # Put these in this method here to avoid circular importing.
     import ASP, AUS, INV
 
     signal.signal(signal.SIGINT, signal.SIG_IGN)    # Set the workers to ignore KeyboardInterrupts.
@@ -113,22 +114,23 @@ def perform_hacks() -> None:
         """Overwrite the WebElement.click method to make sure that it isn't behind the nav menu."""
         try:
             oldclick(*args, **kwargs)
-        except DR.ElementNotVisibleException:
-            time.sleep(1)   # Just. wait. for. a. second.
+        except ElementNotVisibleException:
+            time.sleep(1)   # Just wait till it's finished animating or whatever
             oldclick(*args, **kwargs)
-        except MOD.WebDriverException:  # args[0] will be the 'self' argument, so, the WebElement.
+        except ElementNotInteractableException:  # args[0] will be the 'self': the WebElement
             args[0].parent.execute_script(DR.SCROLL_SCRIPT, args[0])
             oldclick(*args, **kwargs)
     DR.WebElement.click = newclick
 
-    def newcclick(*args, **kwargs):
+    def newctrlclick(self):
         """Create a new method, for control-clicking"""
+        dr = self.parent
         try:
-            ActionChains(args[0].parent).key_down(Keys.CONTROL).click(args[0]).key_up(Keys.CONTROL).perform()
+            ActionChains(dr).key_down(Keys.CONTROL).click(self).key_up(Keys.CONTROL).perform()
         except MOD.WebDriverException:
-            args[0].parent.execute_script(DR.SCROLL_SCRIPT, args[0])
-            ActionChains(args[0].parent).key_down(Keys.CONTROL).click(args[0]).key_up(Keys.CONTROL).perform()
-    DR.WebElement.ctrl_click = newcclick
+            dr.execute_script(DR.SCROLL_SCRIPT, self)
+            ActionChains(dr).key_down(Keys.CONTROL).click(self).key_up(Keys.CONTROL).perform()
+    DR.WebElement.ctrl_click = newctrlclick
 
 def read_properties() -> dict:
     """Read the run options from the properties file and tidy them up a little."""
